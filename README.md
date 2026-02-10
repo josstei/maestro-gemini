@@ -15,6 +15,18 @@ Maestro transforms Gemini CLI into a true multi-agent orchestration platform. In
 - **Least-Privilege Security**: Each subagent receives only the tools required for its role
 - **Standalone Commands**: Direct access to code review, debugging, security audit, and performance analysis without full orchestration
 
+### Workflow Tiers
+
+Maestro adapts its workflow depth to match task complexity:
+
+| Tier | Name | Workflow | Best For |
+|------|------|---------|----------|
+| T1 | Quick | Execute | Single-file fixes, renames, small bugs |
+| T2 | Standard | Plan → Execute | Multi-file features, scoped refactors |
+| T3 | Full | Design → Plan → Execute → Complete | New systems, architectural changes |
+
+Use `/maestro.orchestrate` for automatic classification or `/maestro.quick` to jump straight to T1.
+
 ## Prerequisites
 
 Maestro relies on Gemini CLI's experimental subagent system. You must enable it in your Gemini CLI `settings.json`:
@@ -87,18 +99,34 @@ Automatically detects staged changes or last commit diff and runs a structured c
 
 ### /maestro.orchestrate
 
-Initiates the full Maestro orchestration workflow.
+Initiates a Maestro orchestration workflow with adaptive tier selection.
 
 **Usage**: `/maestro.orchestrate <task description>`
 
 **Behavior**:
 1. Checks for existing active sessions in `.gemini/state/`
 2. If an active session exists, offers to resume or archive it
-3. Begins the four-phase orchestration workflow:
-   - Phase 1: Design Dialogue
-   - Phase 2: Team Assembly & Planning
-   - Phase 3: Execution
-   - Phase 4: Completion & Archival
+3. Classifies the task against a three-dimension rubric (scope, complexity, agent breadth)
+4. Recommends a workflow tier:
+   - **T1 Quick**: Single agent, no planning — for simple, single-file tasks
+   - **T2 Standard**: Lightweight plan, 2-4 agents — for moderate multi-file tasks
+   - **T3 Full**: Full design dialogue, detailed plan, multi-agent execution — for complex tasks
+5. Waits for user confirmation or override
+6. Proceeds with the confirmed tier's workflow
+
+### /maestro.quick
+
+Executes a quick task with a single agent using the T1 workflow.
+
+**Usage**: `/maestro.quick <task description>`
+
+**Behavior**:
+1. Skips classification — enters T1 Quick workflow directly
+2. Selects the best-fit single agent for the task
+3. Delegates with scoped prompt and validation
+4. Writes minimal session state for traceability
+5. Presents completion summary and archives
+6. On failure after one retry, offers escalation to T2 Standard
 
 ### /maestro.resume
 
@@ -208,6 +236,7 @@ Maestro uses skills to encapsulate detailed methodologies that are activated on 
 | `session-management` | Session creation, state updates, resume protocol, and archival | `/maestro.orchestrate`, `/maestro.resume`, `/maestro.archive`, `/maestro.status` |
 | `code-review` | Scope detection, severity classification, and structured review output | `/maestro.review` |
 | `validation` | Build/lint/test pipeline, project type detection, and result interpretation | Post-phase validation during execution |
+| `task-classification` | Evaluates task complexity and recommends a workflow tier | `/maestro.orchestrate` (before Phase 1) |
 
 ## Agent Roster
 
