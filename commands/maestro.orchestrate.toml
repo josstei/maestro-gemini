@@ -1,21 +1,40 @@
-description = "Start a full Maestro orchestration for a complex engineering task"
+description = "Start a Maestro orchestration for an engineering task"
 
 prompt = """Activate Maestro orchestration mode for the following task:
 
 {{args}}
 
-Follow the Maestro orchestration protocol:
+Follow the adaptive orchestration protocol:
 1. Check .gemini/state/ for any existing active sessions
 2. If active session exists: present its status and offer to resume or archive it
-3. If no active session: begin the design dialogue phase
-4. Ask structured questions one at a time to understand requirements
-5. Propose 2-3 architectural approaches with trade-offs
-6. Lead with your recommended approach and explain why
-7. Present the design in sections, validating each one
-8. Once design is approved, write the design document
-9. Generate the implementation plan with phases, agents, and dependencies
-10. Create the session state file
-11. Begin execution phase by phase, delegating to subagents
-12. Update session state after each phase completion
+3. If no active session: activate the task-classification skill
+4. Classify the task against the three-dimension rubric (scope, complexity, agent breadth)
+5. Present the recommended tier (T1/T2/T3) with reasoning using the classification output template
+6. Wait for user confirmation or override
+7. Proceed with the confirmed tier:
 
-Activate the design-dialogue skill to guide the conversation."""
+   T1 Quick:
+   - Select the best-fit single agent based on task domain
+   - Activate the execution skill (T1 Direct Delegation Protocol) and delegation skill
+   - Delegate directly with full task context
+   - Validate results using the validation skill
+   - Write minimal session state using the minimal-session-state template
+   - Present completion summary and archive
+
+   T2 Standard:
+   - Activate the implementation-planning skill in lightweight mode (T2)
+   - Generate a streamlined plan (no design dialogue)
+   - Present the plan for user approval
+   - Create session state with tier: T2 via session-management skill
+   - Activate the execution skill and execute phases per the plan
+   - Archive on completion
+
+   T3 Full:
+   - Activate the design-dialogue skill
+   - Conduct the full design conversation
+   - Generate the complete implementation plan via implementation-planning skill
+   - Create session state with tier: T3 via session-management skill
+   - Execute all phases via execution skill
+   - Run completion protocol and archive
+
+Activate the task-classification skill to begin."""
