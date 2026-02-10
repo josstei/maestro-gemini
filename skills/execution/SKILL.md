@@ -7,6 +7,54 @@ description: Phase execution methodology for orchestration workflows with error 
 
 Activate this skill during Phase 3 (Execution) of Maestro orchestration. This skill provides the protocols for executing implementation plan phases through subagent delegation, handling errors, and completing orchestration sessions.
 
+## Tier-Based Execution Modes
+
+This skill supports three execution modes based on the workflow tier:
+
+- **T1 Quick**: Direct delegation to a single agent without a plan file. See "T1 Direct Delegation Protocol" below.
+- **T2 Standard**: Plan-based execution using a lightweight implementation plan. Uses the standard "Phase Execution Protocol" below.
+- **T3 Full**: Plan-based execution using a full implementation plan. Uses the standard "Phase Execution Protocol" below (unchanged).
+
+## T1 Direct Delegation Protocol
+
+For T1 Quick workflow, execution skips plan lookup entirely. The TechLead constructs the delegation inline.
+
+### Flow
+
+1. Receive the task description and selected agent from the TechLead
+2. Construct a delegation prompt using the delegation skill template with simplified context:
+   - Task description
+   - Tier: T1 Quick
+   - Files to modify/create (identified by the TechLead)
+   - Deliverables
+   - Validation command
+   - Scope boundaries
+3. Delegate to the single selected agent
+4. Process the agent's task report
+5. Run validation using the validation skill (if applicable — skip for read-only agents)
+6. Return results to the TechLead for session state creation
+
+### T1 Error Handling
+
+- **First failure**: Analyze the error, adjust the delegation prompt (more context, narrower scope, different approach), retry once
+- **Second failure**: Do NOT retry again. Escalate to the user with options:
+  1. Retry with adjusted parameters
+  2. Escalate to T2 Standard workflow (re-classify and re-plan)
+  3. Abort
+
+### T1 Completion Summary
+
+After successful execution, present:
+
+```
+Quick Task Complete
+
+Task: [description]
+Agent: [agent-name]
+Files Changed: [list of files created/modified/deleted]
+Validation: [pass/fail/skipped]
+```
+
 ## Phase Execution Protocol
 
 ### Sequential Execution
