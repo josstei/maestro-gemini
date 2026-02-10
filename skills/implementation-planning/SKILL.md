@@ -7,6 +7,49 @@ description: Generates detailed implementation plans from finalized designs
 
 Activate this skill during Phase 2 of Maestro orchestration, after the design document has been approved. This skill provides the methodology for generating detailed, actionable implementation plans that map directly to subagent assignments.
 
+## Tier-Based Planning Modes
+
+This skill supports two planning modes:
+
+- **T2 Standard (Lightweight)**: Streamlined plan with phase decomposition, agent assignments, file inventory, dependencies, and validation. Omits approach comparison, architecture diagrams, risk matrix, and cost estimation.
+- **T3 Full**: Complete implementation plan with all sections. The existing methodology below.
+
+### Detecting the Planning Mode
+
+The TechLead specifies the tier when activating this skill:
+- If tier is T2: Generate a lightweight plan using `templates/lightweight-impl-plan.md`
+- If tier is T3: Generate a full plan using `templates/implementation-plan.md`
+- If no tier specified: Default to T3 (full plan)
+
+### T2 Lightweight Plan Generation
+
+For T2 plans, follow a simplified version of the full methodology:
+
+1. **Input Analysis**: Analyze the task description directly (no design document to reference)
+2. **Phase Decomposition**: Apply the same decomposition principles but expect fewer phases (typically 1-4)
+3. **Skip**: Approach comparison, architecture diagrams, risk classification matrix, cost estimation table, token budget
+4. **Retain**: Phase objectives, agent assignments, file inventory, dependency graph, validation criteria per phase
+5. **Output Location**: `.gemini/plans/YYYY-MM-DD-<topic-slug>-impl-plan.md`
+6. **Template**: Use `templates/lightweight-impl-plan.md`
+
+### T2 Completion Criteria
+
+The lightweight plan is complete when:
+- Every aspect of the task maps to at least one phase
+- All phase dependencies are acyclic
+- Parallel opportunities are identified and marked
+- Each phase has clear validation criteria
+- File ownership is non-overlapping for parallel phases
+- The user has given explicit approval
+
+### T2 Post-Generation
+
+After writing the lightweight plan:
+1. Confirm the file path to the user
+2. Present the phase summary and dependency graph
+3. Ask if the user is ready to proceed to execution
+4. Upon approval, create the session state file via the session-management skill with `tier: "T2"`
+
 ## Plan Generation Methodology
 
 ### Input Analysis
