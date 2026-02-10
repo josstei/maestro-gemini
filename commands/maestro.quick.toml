@@ -1,0 +1,46 @@
+description = "Execute a quick task with a single agent (T1 workflow)"
+
+prompt = """Execute this task using Maestro T1 Quick workflow:
+
+{{args}}
+
+T1 Quick protocol:
+1. Check .gemini/state/ for any existing active sessions
+2. If active session exists: present its status and offer to resume or archive it
+3. Skip classification — this is explicitly T1
+4. Analyze the task to select the best-fit single agent:
+   - Implementation, coding, small feature → coder
+   - Bug fix, investigation → debugger
+   - Add or fix tests → tester
+   - Refactor, restructure → refactor
+   - Security concern → security-engineer
+   - Performance issue → performance-engineer
+   - Documentation update → technical-writer
+   - CI/CD, deployment → devops-engineer
+   - Database, schema, query → data-engineer
+5. Activate the delegation skill for prompt construction
+6. Construct a delegation prompt with:
+   - Clear task description
+   - Tier: T1 Quick
+   - Specific files to modify/create
+   - Concrete deliverables
+   - Validation command
+   - Explicit scope boundaries (Do NOT modify files outside the stated scope)
+7. Delegate to the selected agent
+8. Process the agent's task report
+9. Run validation if applicable using the validation skill
+10. Write minimal session state to .gemini/state/active-session.md using the minimal-session-state template
+11. Present completion summary:
+    Quick Task Complete
+    Task: [description]
+    Agent: [agent-name]
+    Files Changed: [list]
+    Validation: [pass/fail/skipped]
+12. Archive the session state
+
+If the agent fails after one retry, offer the user options:
+- Retry with adjusted parameters
+- Escalate to T2 Standard workflow
+- Abort
+
+Activate the execution skill (T1 Direct Delegation Protocol) and delegation skill."""
