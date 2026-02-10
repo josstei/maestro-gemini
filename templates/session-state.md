@@ -3,6 +3,7 @@ session_id: "<YYYY-MM-DD-topic-slug>"
 created: "<ISO 8601 timestamp>"
 updated: "<ISO 8601 timestamp>"
 status: "in_progress"
+tier: "T3"
 design_document: "<relative path to design doc>"
 implementation_plan: "<relative path to impl plan>"
 current_phase: 1
