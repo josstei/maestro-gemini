@@ -70,6 +70,37 @@ phases:
 # <Topic> Orchestration Log
 ```
 
+### Tier-Aware Session Creation
+
+The session creation process branches based on the workflow tier:
+
+#### T1 Quick Sessions
+
+T1 sessions are created **after** execution (post-hoc), not before. This avoids creating state for tasks that haven't started yet.
+
+1. Use the template from `templates/minimal-session-state.md`
+2. Populate: `session_id`, `created`, `updated`, `status`, `tier: "T1"`, `task`, `agent`
+3. Record `files_created`, `files_modified`, `files_deleted` from the agent's task report
+4. Record `validation.command` and `validation.result`
+5. Record any `errors` from the agent's task report
+6. Set `status` to `completed` or `failed` based on outcome
+7. Write to `.gemini/state/active-session.md`
+
+#### T2 Standard Sessions
+
+T2 sessions are created **before** execution (pre-hoc), same as T3.
+
+1. Use the standard template from `templates/session-state.md`
+2. Set `tier: "T2"`
+3. Set `design_document: null` (no design doc for T2)
+4. Set `implementation_plan` to the lightweight plan path
+5. Initialize phases from the lightweight implementation plan
+6. All other fields follow the standard initialization protocol
+
+#### T3 Full Sessions
+
+No changes. Follow the existing session creation protocol with `tier: "T3"`.
+
 ## State Update Protocol
 
 ### Update Triggers
@@ -144,6 +175,15 @@ Archive session state when:
 - User starts a new orchestration (previous session must be archived first)
 
 ### Archive Steps
+
+### Tier-Specific Archive Behavior
+
+- **T1**: Only the session state file is archived (no design doc or impl plan to move). Skip steps 3 and 4.
+- **T2**: The implementation plan and session state are archived. Skip step 3 (no design doc). Execute step 4 for the impl plan.
+- **T3**: Full archive — design doc, impl plan, and session state are all archived. Execute all steps.
+
+Check the `tier` field in session state frontmatter to determine which files to archive.
+
 1. Create `.gemini/plans/archive/` directory if it does not exist
 2. Create `.gemini/state/archive/` directory if it does not exist
 3. Move design document from `.gemini/plans/` to `.gemini/plans/archive/`
@@ -172,14 +212,18 @@ Resume is triggered by the `/maestro.resume` command or when `/maestro.orchestra
    - Last completed phase (highest ID with `status: completed`)
    - Current active phase (first phase with `status: in_progress` or `pending`)
    - Any failed phases with unresolved errors
-4. **Check Errors**: Identify unresolved errors from previous execution
-5. **Present Summary**: Display status summary to user using the resume format defined in GEMINI.md
-6. **Handle Errors**: If unresolved errors exist:
+4. **Detect Tier**: Read the `tier` field from YAML frontmatter
+   - If `tier: "T1"`: The session has no phases. If status is `failed`, offer to re-delegate to the same agent or escalate to T2.
+   - If `tier: "T2"` or `tier: "T3"`: Continue with the standard phase-based resume protocol below.
+   - If `tier` field is missing: Assume T3 for backward compatibility with pre-tier sessions.
+5. **Check Errors**: Identify unresolved errors from previous execution
+6. **Present Summary**: Display status summary to user using the resume format defined in GEMINI.md
+7. **Handle Errors**: If unresolved errors exist:
    - Present each error with context
    - Offer options: retry, skip, abort, or adjust parameters
    - Wait for user guidance before proceeding
-7. **Continue Execution**: Resume from the first pending or failed phase
-8. **Update State**: Mark resumed phase as `in_progress` and update timestamps
+8. **Continue Execution**: Resume from the first pending or failed phase
+9. **Update State**: Mark resumed phase as `in_progress` and update timestamps
 
 ### Conflict Detection
 When resuming, check for potential conflicts:
