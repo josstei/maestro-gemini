@@ -26,6 +26,12 @@ phases:
     files_created: []
     files_modified: []
     files_deleted: []
+    downstream_context:
+      key_interfaces_introduced: []
+      patterns_established: []
+      integration_points: []
+      assumptions: []
+      warnings: []
     errors: []
     retry_count: 0
 ---

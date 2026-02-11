@@ -160,7 +160,12 @@ When validation fails, provide a structured diagnosis to help the orchestrator d
 2. **Identify involved files**: Which files from the current phase appear in the error output?
 3. **Determine causality**: Is the failure caused by the current phase's changes, or is it a pre-existing issue?
    - Check: Does the failure reference files modified in this phase?
-   - Check: Does `git stash && [validation command] && git stash pop` reproduce the failure? If yes, it's pre-existing.
+   - Check: Run validation against a clean snapshot while always restoring local state:
+     - `git stash push --include-untracked -m "maestro-causality-check"`
+     - `[validation command]` (capture exit code as `validation_exit`)
+     - `git stash pop` (run regardless of `validation_exit`)
+   - If `validation_exit` is non-zero in the clean snapshot, classify the failure as pre-existing.
+   - If `git stash pop` fails, mark the diagnosis as inconclusive until restoration conflicts are resolved.
 4. **Classify resolution path**:
    - **Fixable by same agent**: The error is in files the agent owns, the fix is straightforward (missing import, type mismatch, lint violation). Re-delegate to the same agent with the error context.
    - **Requires different agent**: The error is caused by an interface mismatch between phases. Identify which phase introduced the incompatibility.

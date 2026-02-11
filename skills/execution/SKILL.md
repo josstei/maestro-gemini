@@ -111,6 +111,7 @@ What would you like to do?
 After each subagent completes, parse its Task Report to extract:
 - **Status**: `success`, `failure`, or `partial`
 - **Files Created/Modified/Deleted**: Update session state file manifest
+- **Downstream Context**: Extract Part 2 fields (`Key Interfaces Introduced`, `Patterns Established`, `Integration Points`, `Assumptions`, `Warnings`) into phase `downstream_context`
 - **Validation**: `pass`, `fail`, or `skipped`
 - **Errors**: Append to session state errors array
 
@@ -118,11 +119,12 @@ After each subagent completes, parse its Task Report to extract:
 
 After processing each Task Report:
 1. Update phase `files_created`, `files_modified`, `files_deleted`
-2. Append any errors to phase `errors` array
-3. Aggregate token usage into session `token_usage`
-4. If validation passed: transition phase to `completed`
-5. If validation failed: trigger retry logic
-6. Update `updated` timestamp
+2. Update phase `downstream_context` from the parsed Handoff Report Part 2 (or empty lists when legitimately omitted)
+3. Append any errors to phase `errors` array
+4. Aggregate token usage into session `token_usage`
+5. If validation passed: transition phase to `completed`
+6. If validation failed: trigger retry logic
+7. Update `updated` timestamp
 
 ## Completion Protocol
 

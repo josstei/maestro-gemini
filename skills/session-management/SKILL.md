@@ -30,7 +30,7 @@ Where:
 5. Set overall status to `in_progress`
 6. Set `current_phase` to 1
 7. Record design document and implementation plan paths
-8. Initialize empty token_usage, files, and errors sections
+8. Initialize empty token_usage, file manifests, downstream_context, and errors sections
 
 ### Initial State Template
 
@@ -63,6 +63,12 @@ phases:
     files_created: []
     files_modified: []
     files_deleted: []
+    downstream_context:
+      key_interfaces_introduced: []
+      patterns_established: []
+      integration_points: []
+      assumptions: []
+      warnings: []
     errors: []
     retry_count: 0
 ---
@@ -76,6 +82,7 @@ phases:
 Update session state on every meaningful state change:
 - Phase status transitions
 - File manifest changes
+- Downstream context extraction from completed phases
 - Error occurrences
 - Token usage increments
 - Phase completion or failure
@@ -91,8 +98,9 @@ Update session state on every meaningful state change:
    - `pending` -> `skipped` (user decision only)
 3. **Current Phase**: Update `current_phase` to the ID of the currently executing phase
 4. **File Manifest**: Append to `files_created`, `files_modified`, or `files_deleted` as subagents report changes
-5. **Token Usage**: Aggregate token counts from subagent responses into both `total_*` and `by_agent` sections
-6. **Error Recording**: Append to phase `errors` array with complete metadata
+5. **Downstream Context**: Persist parsed Handoff Report Part 2 fields into phase `downstream_context`
+6. **Token Usage**: Aggregate token counts from subagent responses into both `total_*` and `by_agent` sections
+7. **Error Recording**: Append to phase `errors` array with complete metadata
 
 ### Error Recording Format
 
@@ -123,6 +131,13 @@ After updating YAML frontmatter, append to the Markdown body:
 ### Files Changed
 - Created: [list]
 - Modified: [list]
+
+### Downstream Context
+- Key Interfaces Introduced: [list]
+- Patterns Established: [list]
+- Integration Points: [list]
+- Assumptions: [list]
+- Warnings: [list]
 
 ### Validation Result
 [Pass/Fail with details]

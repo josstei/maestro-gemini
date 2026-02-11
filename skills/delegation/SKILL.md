@@ -14,7 +14,8 @@ Before constructing any delegation prompt, inject the shared agent base protocol
 ### Injection Steps
 1. Read `protocols/agent-base-protocol.md`
 2. Prepend the Pre-Flight Protocol and Output Handoff Contract to the delegation prompt — these appear before the task-specific content
-3. Include relevant Downstream Context from previously completed phases (extracted from session state)
+3. For each phase listed in the current phase's `blocked_by`, read `phases[].downstream_context` from session state and include it in the prompt
+4. If any required `downstream_context` is missing, include an explicit placeholder noting the missing dependency context (never omit silently)
 
 The injected protocol ensures every agent follows consistent pre-work procedures and output formatting regardless of their specialization.
 
@@ -22,7 +23,7 @@ The injected protocol ensures every agent follows consistent pre-work procedures
 
 Every delegation prompt must include a context chain that connects the current phase to prior work:
 
-**Phase Context**: Include Downstream Context blocks from all completed phases that the current phase depends on (identified via `blocked_by` relationships in the implementation plan):
+**Phase Context**: Include Downstream Context blocks from all completed phases that the current phase depends on (identified via `blocked_by` relationships in the implementation plan and sourced from session state `phases[].downstream_context`):
 ```
 Context from completed phases:
 - Phase [N] ([agent]): [Downstream Context summary]
@@ -35,6 +36,9 @@ Context from completed phases:
 **Accumulated Patterns**: Naming conventions, directory organization patterns, and architectural decisions established by earlier phases. This ensures phase 5 does not contradict patterns set in phase 2.
 
 **File Manifest**: Complete list of files created or modified in prior phases, so the agent knows what already exists and can import from or extend those files.
+
+**Missing Context Fallback**: If a blocked dependency has no stored downstream context, include a visible placeholder entry in the prompt:
+`- Phase [N] ([agent]): Downstream Context missing in session state — verify dependency output before implementation`
 
 ### Downstream Consumer Declaration
 
