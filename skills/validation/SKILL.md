@@ -134,3 +134,45 @@ Use manual verification for:
 - Environment-specific configurations
 - Performance improvements (require load testing)
 - Security remediations (require penetration testing)
+
+## Incremental Validation Mode
+
+When full pipeline validation is unnecessary, use targeted validation based on the type of changes in the completed phase:
+
+### Validation Scope by Change Type
+- **Phase created new files only** (no existing files modified): Run lint + type check on the new files only. This provides fast feedback without running the full test suite against unchanged code.
+- **Phase modified existing files**: Run the full test suite. Existing tests serve as behavior-preservation checks — any failure indicates a potential regression.
+- **Phase touched configuration files** (build config, CI config, environment config, dependency manifests): Run the full pipeline (build + lint + type check + all tests). Configuration changes can have cascading effects across the entire project.
+- **Phase only produced documentation or analysis**: Skip validation (record as `skipped` with rationale).
+
+### Scope Detection
+Determine the change type automatically from the completing agent's Task Report:
+1. Parse Files Created and Files Modified lists
+2. Classify each file: source code, test code, configuration, documentation
+3. Apply the most comprehensive validation scope that matches any changed file type (e.g., if one config file and three source files changed, run the full pipeline because config was touched)
+
+## Validation Failure Diagnosis
+
+When validation fails, provide a structured diagnosis to help the orchestrator decide next steps.
+
+### Diagnosis Protocol
+1. **Categorize the failure**: type error, lint error, test failure, build error, runtime error
+2. **Identify involved files**: Which files from the current phase appear in the error output?
+3. **Determine causality**: Is the failure caused by the current phase's changes, or is it a pre-existing issue?
+   - Check: Does the failure reference files modified in this phase?
+   - Check: Does `git stash && [validation command] && git stash pop` reproduce the failure? If yes, it's pre-existing.
+4. **Classify resolution path**:
+   - **Fixable by same agent**: The error is in files the agent owns, the fix is straightforward (missing import, type mismatch, lint violation). Re-delegate to the same agent with the error context.
+   - **Requires different agent**: The error is caused by an interface mismatch between phases. Identify which phase introduced the incompatibility.
+   - **Requires human input**: The error reveals an ambiguity in the design or plan that cannot be resolved without user guidance. Escalate with full context.
+
+### Diagnosis Output Format
+```
+### Validation Diagnosis
+- **Failure Type**: [type error | lint error | test failure | build error]
+- **Failing Files**: [list of files from current phase involved in the failure]
+- **Root Cause**: [brief description of why validation failed]
+- **Pre-existing**: [yes | no — was this failure present before this phase's changes?]
+- **Resolution Path**: [re-delegate to same agent | escalate to user | requires cross-phase fix]
+- **Recommended Action**: [specific next step with context to include in re-delegation or escalation]
+```
