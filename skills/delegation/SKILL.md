@@ -7,6 +7,44 @@ description: Agent delegation best practices for constructing effective subagent
 
 Activate this skill when delegating work to subagents during orchestration execution. This skill provides the templates, rules, and patterns for constructing effective delegation prompts that produce consistent, high-quality results.
 
+## Protocol Injection
+
+Before constructing any delegation prompt, inject the shared agent base protocol:
+
+### Injection Steps
+1. Read `protocols/agent-base-protocol.md`
+2. Prepend the Pre-Flight Protocol and Output Handoff Contract to the delegation prompt — these appear before the task-specific content
+3. Include relevant Downstream Context from previously completed phases (extracted from session state)
+
+The injected protocol ensures every agent follows consistent pre-work procedures and output formatting regardless of their specialization.
+
+### Context Chain Construction
+
+Every delegation prompt must include a context chain that connects the current phase to prior work:
+
+**Phase Context**: Include Downstream Context blocks from all completed phases that the current phase depends on (identified via `blocked_by` relationships in the implementation plan):
+```
+Context from completed phases:
+- Phase [N] ([agent]): [Downstream Context summary]
+  - Interfaces introduced: [list with file locations]
+  - Patterns established: [list]
+  - Integration points: [specific files, functions, endpoints]
+  - Warnings: [list]
+```
+
+**Accumulated Patterns**: Naming conventions, directory organization patterns, and architectural decisions established by earlier phases. This ensures phase 5 does not contradict patterns set in phase 2.
+
+**File Manifest**: Complete list of files created or modified in prior phases, so the agent knows what already exists and can import from or extend those files.
+
+### Downstream Consumer Declaration
+
+Every delegation prompt must declare who will consume the agent's output:
+```
+Your output will be consumed by: [downstream agent name(s)] who need [specific information they require]
+```
+
+This primes the agent to structure their Downstream Context section for maximum utility to the next agent in the chain.
+
 ## Delegation Prompt Template
 
 Every delegation to a subagent must follow this structure:
