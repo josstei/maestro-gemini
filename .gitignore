@@ -24,7 +24,6 @@ Thumbs.db
 
 # AI tooling
 .gemini/
-GEMINI.md
 .claude/
 CLAUDE.md
 # Logs
