@@ -1,6 +1,95 @@
 {
   "name": "maestro",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Multi-agent orchestration extension that assembles specialized dev teams for complex engineering tasks",
-  "contextFileName": "GEMINI.md"
+  "contextFileName": "GEMINI.md",
+  "settings": [
+    {
+      "name": "Default Model",
+      "description": "Model used by all agents unless individually overridden (e.g., gemini-3-pro-preview, gemini-2.5-pro)",
+      "envVar": "MAESTRO_DEFAULT_MODEL",
+      "sensitive": false
+    },
+    {
+      "name": "Writer Model",
+      "description": "Model for technical-writer agent (defaults to gemini-3-flash-preview for cost efficiency)",
+      "envVar": "MAESTRO_WRITER_MODEL",
+      "sensitive": false
+    },
+    {
+      "name": "Default Temperature",
+      "description": "Default temperature for all agents (0.0-1.0, default: 0.2), individual agent temperatures override this",
+      "envVar": "MAESTRO_DEFAULT_TEMPERATURE",
+      "sensitive": false
+    },
+    {
+      "name": "Max Agent Turns",
+      "description": "Maximum turns per subagent execution (default: 25)",
+      "envVar": "MAESTRO_MAX_TURNS",
+      "sensitive": false
+    },
+    {
+      "name": "Agent Timeout",
+      "description": "Default timeout for subagent execution in minutes (default: 10)",
+      "envVar": "MAESTRO_AGENT_TIMEOUT",
+      "sensitive": false
+    },
+    {
+      "name": "Disabled Agents",
+      "description": "Comma-separated list of agents to disable (e.g., security-engineer,devops-engineer), disabled agents won't be assigned phases",
+      "envVar": "MAESTRO_DISABLED_AGENTS",
+      "sensitive": false
+    },
+    {
+      "name": "Max Retries",
+      "description": "Maximum retry attempts per phase before escalating to user (default: 2)",
+      "envVar": "MAESTRO_MAX_RETRIES",
+      "sensitive": false
+    },
+    {
+      "name": "Auto Archive",
+      "description": "Automatically archive sessions on completion (true/false, default: true)",
+      "envVar": "MAESTRO_AUTO_ARCHIVE",
+      "sensitive": false
+    },
+    {
+      "name": "Validation Strictness",
+      "description": "Validation strictness level (strict/normal/lenient): strict fails on warnings, normal fails on errors only, lenient reports but continues (default: normal)",
+      "envVar": "MAESTRO_VALIDATION_STRICTNESS",
+      "sensitive": false
+    },
+    {
+      "name": "State Directory",
+      "description": "Directory for session state and plans, relative to project root (default: .gemini)",
+      "envVar": "MAESTRO_STATE_DIR",
+      "sensitive": false
+    }
+  ],
+  "themes": [
+    {
+      "name": "Maestro",
+      "type": "custom",
+      "text": {
+        "primary": "#E8E1D3",
+        "secondary": "#A89B8C",
+        "link": "#D4A84B",
+        "accent": "#D4A84B",
+        "response": "#E8E1D3"
+      },
+      "Background": "#1A1714",
+      "Foreground": "#E8E1D3",
+      "LightBlue": "#7BA4C7",
+      "AccentBlue": "#5B8CB8",
+      "AccentPurple": "#9B7BB8",
+      "AccentCyan": "#6BB8B2",
+      "AccentGreen": "#8BB86B",
+      "AccentYellow": "#D4A84B",
+      "AccentRed": "#C75B5B",
+      "Comment": "#6B6156",
+      "Gray": "#8A8079",
+      "DiffAdded": "#6B9B4B",
+      "DiffRemoved": "#9B4B4B",
+      "DiffModified": "#5B8CB8"
+    }
+  ]
 }
