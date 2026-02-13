@@ -86,13 +86,23 @@ for PROMPT_FILE in "${PROMPT_FILES[@]}"; do
   echo "Dispatching: $AGENT_NAME"
 
   (
-    timeout "$TIMEOUT_SECS" gemini \
-      -p "$PROMPT_CONTENT" \
-      --yolo \
-      --output-format json \
-      "${MODEL_FLAGS[@]}" \
-      > "$RESULT_JSON" \
-      2> "$RESULT_LOG"
+    if command -v timeout >/dev/null 2>&1; then
+      timeout "$TIMEOUT_SECS" gemini \
+        -p "$PROMPT_CONTENT" \
+        --yolo \
+        --output-format json \
+        ${MODEL_FLAGS[@]+"${MODEL_FLAGS[@]}"} \
+        > "$RESULT_JSON" \
+        2> "$RESULT_LOG"
+    else
+      gemini \
+        -p "$PROMPT_CONTENT" \
+        --yolo \
+        --output-format json \
+        ${MODEL_FLAGS[@]+"${MODEL_FLAGS[@]}"} \
+        > "$RESULT_JSON" \
+        2> "$RESULT_LOG"
+    fi
     echo $? > "$RESULT_EXIT"
   ) &
 
