@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+shopt -s nullglob
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DISPATCH_DIR="${1:-.maestro-parallel}"
@@ -48,9 +49,9 @@ fi
 
 mkdir -p "$RESULT_DIR"
 
-MODEL_FLAG=""
+MODEL_FLAGS=()
 if [[ -n "${MAESTRO_DEFAULT_MODEL:-}" ]]; then
-  MODEL_FLAG="-m $MAESTRO_DEFAULT_MODEL"
+  MODEL_FLAGS=("-m" "$MAESTRO_DEFAULT_MODEL")
 fi
 
 TIMEOUT_MINS="${MAESTRO_AGENT_TIMEOUT:-10}"
@@ -77,6 +78,11 @@ for PROMPT_FILE in "${PROMPT_FILES[@]}"; do
 
   PROMPT_CONTENT=$(cat "$PROMPT_FILE")
 
+  if [[ -z "${PROMPT_CONTENT// /}" ]]; then
+    echo "ERROR: Prompt file $PROMPT_FILE is empty or whitespace-only"
+    exit 1
+  fi
+
   echo "Dispatching: $AGENT_NAME"
 
   (
@@ -84,7 +90,7 @@ for PROMPT_FILE in "${PROMPT_FILES[@]}"; do
       -p "$PROMPT_CONTENT" \
       --yolo \
       --output-format json \
-      $MODEL_FLAG \
+      "${MODEL_FLAGS[@]}" \
       > "$RESULT_JSON" \
       2> "$RESULT_LOG"
     echo $? > "$RESULT_EXIT"
@@ -102,16 +108,13 @@ for i in "${!PIDS[@]}"; do
   PID=${PIDS[$i]}
   AGENT_NAME=${AGENT_NAMES[$i]}
 
-  if wait "$PID" 2>/dev/null; then
-    EXIT_CODE=0
-  else
-    EXIT_CODE=$?
-  fi
+  wait "$PID" 2>/dev/null || true
 
   RESULT_EXIT="$RESULT_DIR/${AGENT_NAME}.exit"
   if [[ -f "$RESULT_EXIT" ]]; then
     EXIT_CODE=$(cat "$RESULT_EXIT")
   else
+    EXIT_CODE=255
     echo "$EXIT_CODE" > "$RESULT_EXIT"
   fi
 
@@ -146,7 +149,7 @@ cat > "$RESULT_DIR/summary.json" <<ENDJSON
   "agents": [
 $(for i in "${!AGENT_NAMES[@]}"; do
     NAME=${AGENT_NAMES[$i]}
-    EXIT=$(cat "$RESULT_DIR/${NAME}.exit" 2>/dev/null || echo "-1")
+    EXIT=$(cat "$RESULT_DIR/${NAME}.exit" 2>/dev/null || echo "255")
     STATUS="success"
     [[ "$EXIT" -eq 124 ]] && STATUS="timeout"
     [[ "$EXIT" -ne 0 && "$EXIT" -ne 124 ]] && STATUS="failed"
