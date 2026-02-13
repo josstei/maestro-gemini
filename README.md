@@ -83,6 +83,43 @@ Maestro reads the session state, presents a status summary, and continues from w
 
 Automatically detects staged changes or last commit diff and runs a structured code review.
 
+## Configuration
+
+### Extension Settings
+
+Maestro provides 10 configurable settings that control agent behavior, workflow preferences, and execution parameters. Configure them via:
+
+```bash
+gemini extensions config maestro
+```
+
+| Setting | Environment Variable | Default | Description |
+|---------|---------------------|---------|-------------|
+| Default Model | `MAESTRO_DEFAULT_MODEL` | `gemini-3-pro-preview` | Model used by all agents unless individually overridden |
+| Writer Model | `MAESTRO_WRITER_MODEL` | `gemini-3-flash-preview` | Model for technical-writer agent |
+| Default Temperature | `MAESTRO_DEFAULT_TEMPERATURE` | `0.2` | Temperature for all agents (0.0-1.0) |
+| Max Agent Turns | `MAESTRO_MAX_TURNS` | `25` | Maximum turns per subagent execution |
+| Agent Timeout | `MAESTRO_AGENT_TIMEOUT` | `10` | Timeout in minutes per subagent |
+| Disabled Agents | `MAESTRO_DISABLED_AGENTS` | _(none)_ | Comma-separated list of agents to exclude |
+| Max Retries | `MAESTRO_MAX_RETRIES` | `2` | Retry attempts per phase before escalation |
+| Auto Archive | `MAESTRO_AUTO_ARCHIVE` | `true` | Archive sessions on completion |
+| Validation Strictness | `MAESTRO_VALIDATION_STRICTNESS` | `normal` | `strict` / `normal` / `lenient` |
+| State Directory | `MAESTRO_STATE_DIR` | `.gemini` | Directory for session state and plans |
+
+Defaults shown are fallback values enforced by the orchestrator when a setting is not configured.
+
+### Theme
+
+Maestro includes a branded dark theme with warm gold accents. After installing the extension, select it from the Gemini CLI theme picker:
+
+```
+Theme: Maestro (maestro)
+```
+
+### Prerequisites
+
+See [Prerequisites](#prerequisites) above for required Gemini CLI settings. Maestro checks for subagent support on startup and offers to enable it if missing.
+
 ## Commands
 
 ### /maestro.orchestrate
