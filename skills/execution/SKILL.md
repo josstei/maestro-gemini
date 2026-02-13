@@ -23,6 +23,10 @@ For phases with dependencies (`blocked_by` is non-empty):
 
 ### Parallel Execution
 
+**Execution Mode Gate**: Parallel execution requires Gemini CLI support for concurrent subagent invocation. Check the orchestrator's Execution Mode declaration in `GEMINI.md`. If the mode is `SEQUENTIAL`, execute all phases sequentially regardless of parallelization markers in the implementation plan. Record that parallel-eligible phases were executed sequentially in session state.
+
+When the mode is `PARALLEL`:
+
 For phases at the same dependency depth with no file overlap:
 
 1. Verify all blocking phases for every phase in the batch are completed
@@ -55,10 +59,10 @@ Record all errors in session state with complete metadata:
 
 ### Retry Logic
 
-- **Maximum 2 retries** per phase before escalating to user
+- **Maximum retries** per phase: controlled by `MAESTRO_MAX_RETRIES` (default: 2). Escalate to user after this limit is reached.
 - **First failure**: Analyze the error, adjust delegation parameters (more context, narrower scope, different approach), retry automatically
-- **Second failure**: Report to user and request guidance
-- **Third failure**: Mark phase as `failed`, stop execution, escalate
+- **Subsequent failures up to limit**: Continue retrying with progressively adjusted parameters
+- **Limit exceeded**: Mark phase as `failed`, stop execution, escalate to user
 
 Increment `retry_count` in session state on each retry attempt.
 
@@ -85,7 +89,7 @@ Present failures to the user in this structured format:
 Phase Execution Failed: [phase-name]
 
 Agent: [agent-name]
-Attempt: [N] of 2
+Attempt: [N] of [MAESTRO_MAX_RETRIES, default 2]
 Error Type: [error-type]
 
 Error Message:

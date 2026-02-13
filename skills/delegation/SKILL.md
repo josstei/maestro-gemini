@@ -49,6 +49,33 @@ Your output will be consumed by: [downstream agent name(s)] who need [specific i
 
 This primes the agent to structure their Downstream Context section for maximum utility to the next agent in the chain.
 
+## Settings Override Application
+
+Before constructing any delegation prompt, resolve configurable parameters:
+
+1. Read the agent's base definition frontmatter (`model`, `temperature`, `max_turns`, `timeout_mins`)
+2. Apply environment variable overrides per the orchestrator's Delegation Override Protocol:
+   - `MAESTRO_DEFAULT_MODEL` → overrides `model` for all agents
+   - `MAESTRO_WRITER_MODEL` → overrides `model` for `technical-writer` only (takes precedence over `MAESTRO_DEFAULT_MODEL`)
+   - `MAESTRO_DEFAULT_TEMPERATURE` → overrides `temperature` for all agents
+   - `MAESTRO_MAX_TURNS` → overrides `max_turns` for all agents
+   - `MAESTRO_AGENT_TIMEOUT` → overrides `timeout_mins` for all agents
+3. Include resolved values in the delegation prompt metadata:
+   ```
+   Agent: [agent-name]
+   Model: [resolved model]
+   Temperature: [resolved temperature]
+   Max Turns: [resolved max_turns]
+   Timeout: [resolved timeout] minutes
+   ```
+4. If the agent appears in `MAESTRO_DISABLED_AGENTS`, do not construct a delegation prompt — report to the orchestrator that the agent is disabled
+
+### Override Precedence
+
+Agent-specific env var > General env var > Agent frontmatter default
+
+Example: For `technical-writer`, if both `MAESTRO_DEFAULT_MODEL=gemini-2.5-pro` and `MAESTRO_WRITER_MODEL=gemini-3-flash-preview` are set, use `gemini-3-flash-preview`.
+
 ## Delegation Prompt Template
 
 Every delegation to a subagent must follow this structure:

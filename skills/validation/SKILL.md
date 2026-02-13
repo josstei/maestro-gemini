@@ -95,6 +95,27 @@ The following are recorded but do not block progression:
 - Coverage decreases (unless coverage threshold is configured)
 - Format-only issues (can be auto-fixed)
 
+## Validation Strictness Modes
+
+The validation strictness is controlled by `MAESTRO_VALIDATION_STRICTNESS` (default: `normal`).
+
+| Mode | Behavior |
+|------|----------|
+| `strict` | Warnings are treated as blocking failures. All lint warnings, deprecation notices, and coverage decreases block phase progression. |
+| `normal` | Only errors block. Warnings are recorded but do not prevent phase completion. This is the default behavior described in the Pass/Fail/Warn sections above. |
+| `lenient` | Nothing blocks automatically. All failures and warnings are recorded in session state and reported to the user, but phase progression continues. The user reviews the accumulated report at completion. |
+
+### Strictness Application
+
+When evaluating each validation step:
+1. Run the validation command and capture the exit code and output
+2. Classify the result as Pass, Fail (Blocking), or Warn (Non-Blocking) using the standard criteria above
+3. Apply the strictness mode:
+   - `strict`: Fail (Blocking) AND Warn (Non-Blocking) both stop progression
+   - `normal`: Only Fail (Blocking) stops progression
+   - `lenient`: Record everything, stop nothing — append all results to session state and continue
+4. If strictness causes a result to be downgraded from blocking to non-blocking, note this in the validation output: "Warning recorded but not blocking (lenient mode)"
+
 ## Post-Phase Validation
 
 ### When to Validate
