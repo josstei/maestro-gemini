@@ -1,23 +1,74 @@
 # Maestro
 
+[![Version](https://img.shields.io/badge/version-1.1.0-blue)](https://github.com/josstei/maestro-gemini/releases)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-extension-orange)](https://geminicli.com)
+
 Multi-agent orchestration extension for Gemini CLI. Maestro assembles specialized development teams and coordinates them through structured design, planning, and execution workflows — plus standalone commands for code review, debugging, security auditing, and performance analysis.
 
-## What is Maestro?
+## Overview
 
-Maestro transforms Gemini CLI into a true multi-agent orchestration platform. Instead of a single AI session handling everything, Maestro delegates work to 12 specialized subagents — each with its own context, tools, and expertise — coordinated by a TechLead orchestrator. Beyond full orchestration workflows, Maestro provides standalone commands for common engineering tasks that can be run independently.
+Maestro transforms Gemini CLI into a multi-agent orchestration platform. Instead of a single AI session handling everything, Maestro delegates work to 12 specialized subagents — each with its own context, tools, and expertise — coordinated by a TechLead orchestrator.
 
 ### Key Capabilities
 
-- **Guided Design Dialogue**: Structured requirements gathering with multiple-choice questions and architectural approach proposals
-- **Automated Planning**: Generates implementation plans with phase dependencies, agent assignments, and parallelization opportunities
-- **Parallel Execution**: Independent phases run concurrently through parallel subagent invocation
-- **Session Persistence**: All orchestration state tracked in YAML+Markdown files for reliable resumption
-- **Least-Privilege Security**: Each subagent receives only the tools required for its role
-- **Standalone Commands**: Direct access to code review, debugging, security audit, and performance analysis without full orchestration
+- **Guided Design Dialogue** — Structured requirements gathering with multiple-choice questions and architectural approach proposals
+- **Automated Planning** — Generates implementation plans with phase dependencies, agent assignments, and parallelization opportunities
+- **Parallel Execution** — Independent phases run concurrently through shell-based parallel dispatch
+- **Session Persistence** — All orchestration state tracked in YAML+Markdown files for reliable resumption
+- **Least-Privilege Security** — Each subagent receives only the tools required for its role
+- **Standalone Commands** — Direct access to code review, debugging, security audit, and performance analysis without full orchestration
+- **Configurable Settings** — 10 environment-variable-driven parameters for model selection, timeouts, validation strictness, and more
 
-## Prerequisites
+## Architecture
 
-Maestro relies on Gemini CLI's experimental subagent system. You must enable it in your Gemini CLI `settings.json`:
+### Orchestration Flow
+
+```mermaid
+graph TB
+    User([User]) -->|/maestro.orchestrate| TL[TechLead Orchestrator]
+
+    TL -->|Phase 1| DD[Design Dialogue]
+    TL -->|Phase 2| IP[Implementation Planning]
+    TL -->|Phase 3| EX[Execution]
+    TL -->|Phase 4| CO[Completion]
+
+    EX -->|Sequential| DA[delegate_to_agent]
+    EX -->|Parallel| PD[parallel-dispatch.sh]
+
+    DA --> Agents
+    PD --> Agents
+
+    subgraph Agents [Specialized Subagents]
+        direction LR
+        A1[architect]
+        A2[coder]
+        A3[tester]
+        A4[debugger]
+        A5[+ 8 more]
+    end
+
+    Agents -->|Results| TL
+    TL -->|State| SS[(Session State)]
+```
+
+### Seven-Layer Component Model
+
+| Layer | Directory | Format | Purpose |
+|-------|-----------|--------|---------|
+| **Orchestrator** | `GEMINI.md` | Markdown | TechLead persona, phase transitions, delegation rules |
+| **Commands** | `commands/` | TOML | CLI command definitions mapping user commands to prompts/skills |
+| **Agents** | `agents/` | Markdown + YAML frontmatter | 12 subagent persona definitions with tool permissions and model config |
+| **Skills** | `skills/` | Markdown (`SKILL.md` per directory) | Reusable methodology modules activated on demand |
+| **Protocols** | `protocols/` | Markdown | Shared behavioral contracts injected into delegation prompts |
+| **Scripts** | `scripts/` | Shell | Execution infrastructure (parallel dispatch) |
+| **Templates** | `templates/` | Markdown | Structure templates for generated artifacts (designs, plans, sessions) |
+
+## Getting Started
+
+### Prerequisites
+
+Maestro relies on Gemini CLI's experimental subagent system. Enable it in your Gemini CLI settings:
 
 ```json
 {
@@ -33,15 +84,17 @@ The `settings.json` file is located at:
 - **macOS/Linux**: `~/.gemini/settings.json`
 - **Windows**: `%USERPROFILE%\.gemini\settings.json`
 
-## Installation
+Maestro checks for subagent support on startup and offers to enable it if missing.
 
-### From Git Repository
+### Installation
+
+**From Git Repository:**
 
 ```bash
 gemini extensions install https://github.com/josstei/maestro-gemini
 ```
 
-### Local Development
+**Local Development:**
 
 ```bash
 git clone https://github.com/josstei/maestro-gemini
@@ -49,11 +102,9 @@ cd maestro-gemini
 gemini extensions link maestro/
 ```
 
-After installation, restart Gemini CLI for the extension to load.
+Restart Gemini CLI after installation for the extension to load.
 
-## Quick Start
-
-### Start a New Orchestration
+### Quick Start
 
 ```
 /maestro.orchestrate Build a REST API for a task management system with user authentication
@@ -66,22 +117,6 @@ Maestro will:
 4. Create a detailed implementation plan with agent assignments
 5. Execute the plan phase by phase, delegating to specialized agents
 6. Track all progress in session state files
-
-### Resume an Interrupted Session
-
-```
-/maestro.resume
-```
-
-Maestro reads the session state, presents a status summary, and continues from where it left off.
-
-### Run a Standalone Code Review
-
-```
-/maestro.review
-```
-
-Automatically detects staged changes or last commit diff and runs a structured code review.
 
 ## Configuration
 
@@ -106,7 +141,7 @@ gemini extensions config maestro
 | Validation Strictness | `MAESTRO_VALIDATION_STRICTNESS` | `normal` | `strict` / `normal` / `lenient` |
 | State Directory | `MAESTRO_STATE_DIR` | `.gemini` | Directory for session state and plans |
 
-Defaults shown are fallback values enforced by the orchestrator when a setting is not configured.
+Defaults are fallback values enforced by the orchestrator when a setting is not configured.
 
 ### Theme
 
@@ -116,9 +151,15 @@ Maestro includes a branded dark theme with warm gold accents. After installing t
 Theme: Maestro (maestro)
 ```
 
-### Prerequisites
+### Model Configuration
 
-See [Prerequisites](#prerequisites) above for required Gemini CLI settings. Maestro checks for subagent support on startup and offers to enable it if missing.
+| Role | Model | Purpose |
+|------|-------|---------|
+| Primary | `gemini-3-pro-preview` | All agents requiring strong reasoning |
+| Cost-optimized | `gemini-3-flash-preview` | technical-writer agent |
+| Fallback | `gemini-2.5-pro` | When Gemini 3 models are unavailable |
+
+Override the primary model for all agents via `MAESTRO_DEFAULT_MODEL`, or just the writer via `MAESTRO_WRITER_MODEL`.
 
 ## Commands
 
@@ -232,19 +273,58 @@ Archives the current active orchestration session.
 3. Moves design document, implementation plan, and session state to archive directories
 4. Verifies archival was successful
 
-## Skills
+## Parallel Execution
 
-Maestro uses skills to encapsulate detailed methodologies that are activated on demand, keeping the base context lean.
+Maestro 1.1.0 introduces shell-based parallel dispatch, enabling independent implementation phases to run concurrently instead of sequentially.
 
-| Skill | Purpose | Activated By |
-|-------|---------|-------------|
-| `design-dialogue` | Structured requirements gathering and architectural design convergence | `/maestro.orchestrate` (Phase 1) |
-| `implementation-planning` | Phase decomposition, agent assignment, and plan generation | `/maestro.orchestrate` (Phase 2) |
-| `execution` | Phase execution protocols, error handling, and completion workflows | `/maestro.orchestrate` (Phase 3), `/maestro.execute`, `/maestro.resume` |
-| `delegation` | Subagent prompt construction, scope boundaries, and parallel delegation | Any phase involving subagent delegation |
-| `session-management` | Session creation, state updates, resume protocol, and archival | `/maestro.orchestrate`, `/maestro.resume`, `/maestro.archive`, `/maestro.status` |
-| `code-review` | Scope detection, severity classification, and structured review output | `/maestro.review` |
-| `validation` | Build/lint/test pipeline, project type detection, and result interpretation | Post-phase validation during execution |
+### How It Works
+
+The TechLead orchestrator uses `scripts/parallel-dispatch.sh` to spawn concurrent Gemini CLI processes that execute independently. This bypasses the sequential `delegate_to_agent` tool scheduler, which processes one tool call at a time.
+
+**Dispatch flow:**
+1. The orchestrator writes self-contained delegation prompts to a dispatch directory
+2. Invokes `parallel-dispatch.sh` via shell
+3. The script spawns one `gemini -p <prompt> --yolo --output-format json` process per prompt file
+4. All agents execute concurrently as independent OS processes
+5. Results are collected with exit codes, logs, and structured JSON output
+6. The orchestrator reads results and updates session state
+
+### When to Use Each Mode
+
+| Use Parallel Dispatch | Use Sequential `delegate_to_agent` |
+|---|---|
+| Phases at the same dependency depth | Phases with shared file dependencies |
+| Non-overlapping file ownership | Phases that may need interactive clarification |
+| Fully self-contained prompts | Single-phase execution |
+| Batch size of 2-4 agents | Fallback when parallel dispatch fails |
+
+### Dispatch Directory Structure
+
+```
+<state_dir>/parallel/<batch-id>/
+├── prompts/
+│   ├── agent-a.txt          # Full delegation prompt
+│   └── agent-b.txt
+└── results/
+    ├── agent-a.json          # Structured JSON output
+    ├── agent-a.exit          # Exit code (0=success, 124=timeout)
+    ├── agent-a.log           # stderr/debug output
+    ├── agent-b.json
+    ├── agent-b.exit
+    ├── agent-b.log
+    └── summary.json          # Batch summary with status per agent
+```
+
+### Environment Overrides
+
+| Variable | Effect on Parallel Dispatch |
+|----------|---------------------------|
+| `MAESTRO_DEFAULT_MODEL` | Passed as `-m` flag to all spawned Gemini processes |
+| `MAESTRO_AGENT_TIMEOUT` | Controls per-agent timeout (default: 10 minutes) |
+
+### Constraints
+
+Parallel agents run as independent CLI processes with no shared context. Each prompt must be complete and self-contained — agents cannot ask follow-up questions or access results from other agents in the same batch.
 
 ## Agent Roster
 
@@ -272,32 +352,19 @@ Maestro coordinates 12 specialized subagents:
 - **Read + Write agents** (refactor, technical-writer): Modify code/docs without shell access
 - **Full access agents** (coder, data-engineer, devops-engineer, tester): Complete implementation capabilities
 
-## Project Output Structure
+## Skills
 
-Maestro creates the following directories in your project:
+Maestro uses skills to encapsulate detailed methodologies that are activated on demand, keeping the base context lean.
 
-```
-<your-project>/
-└── .gemini/
-    ├── plans/                          # Active design docs and implementation plans
-    │   ├── archive/                    # Completed plans
-    │   ├── YYYY-MM-DD-<topic>-design.md
-    │   └── YYYY-MM-DD-<topic>-impl-plan.md
-    └── state/                          # Session tracking
-        ├── archive/                    # Completed sessions
-        └── active-session.md           # Current orchestration state
-```
-
-## Session State
-
-Maestro tracks orchestration progress in `.gemini/state/active-session.md` with:
-
-- **Phase status tracking**: pending, in_progress, completed, failed, skipped
-- **File manifest**: Files created, modified, and deleted per phase
-- **Error tracking**: Per-phase error logs with retry counts and resolution records
-- **Token usage**: Per-agent, per-phase token consumption metrics
-
-All state files use YAML frontmatter for machine-readable metadata and Markdown body for human-readable logs.
+| Skill | Purpose | Activated By |
+|-------|---------|-------------|
+| `design-dialogue` | Structured requirements gathering and architectural design convergence | `/maestro.orchestrate` (Phase 1) |
+| `implementation-planning` | Phase decomposition, agent assignment, and plan generation | `/maestro.orchestrate` (Phase 2) |
+| `execution` | Phase execution protocols, error handling, and completion workflows | `/maestro.orchestrate` (Phase 3), `/maestro.execute`, `/maestro.resume` |
+| `delegation` | Subagent prompt construction, scope boundaries, and parallel delegation | Any phase involving subagent delegation |
+| `session-management` | Session creation, state updates, resume protocol, and archival | `/maestro.orchestrate`, `/maestro.resume`, `/maestro.archive`, `/maestro.status` |
+| `code-review` | Scope detection, severity classification, and structured review output | `/maestro.review` |
+| `validation` | Build/lint/test pipeline, project type detection, and result interpretation | Post-phase validation during execution |
 
 ## Orchestration Workflow
 
@@ -333,6 +400,33 @@ After all phases complete:
 - Plans and state files archived to `archive/` subdirectories
 - Summary delivered with files changed, token usage, and next steps
 
+## Project Output Structure
+
+Maestro creates the following directories in your project:
+
+```
+<your-project>/
+└── .gemini/
+    ├── plans/                          # Active design docs and implementation plans
+    │   ├── archive/                    # Completed plans
+    │   ├── YYYY-MM-DD-<topic>-design.md
+    │   └── YYYY-MM-DD-<topic>-impl-plan.md
+    └── state/                          # Session tracking
+        ├── archive/                    # Completed sessions
+        └── active-session.md           # Current orchestration state
+```
+
+## Session State
+
+Maestro tracks orchestration progress in `.gemini/state/active-session.md` with:
+
+- **Phase status tracking**: pending, in_progress, completed, failed, skipped
+- **File manifest**: Files created, modified, and deleted per phase
+- **Error tracking**: Per-phase error logs with retry counts and resolution records
+- **Token usage**: Per-agent, per-phase token consumption metrics
+
+All state files use YAML frontmatter for machine-readable metadata and Markdown body for human-readable logs.
+
 ## Troubleshooting
 
 ### Extension Not Loading
@@ -360,11 +454,32 @@ After all phases complete:
 - Check the session state file for detailed error logs
 - Common causes: file conflicts, missing dependencies, validation failures
 
-## Model Configuration
+### Parallel Dispatch Issues
 
-- **Primary model**: `gemini-3-pro-preview` for all agents requiring strong reasoning
-- **Cost-optimized**: `gemini-3-flash-preview` for the technical-writer agent
-- **Fallback**: When Gemini 3 models are unavailable, agents fall back to `gemini-2.5-pro`
+**Agents timing out:**
+- Check `MAESTRO_AGENT_TIMEOUT` setting (default: 10 minutes)
+- Review agent logs in `<dispatch-dir>/results/<agent>.log`
+- Reduce batch size to 2 agents if system resources are constrained
+
+**Empty or missing results:**
+- Verify prompt files are non-empty in `<dispatch-dir>/prompts/`
+- Check that `gemini` CLI is on PATH and accessible
+- Review `summary.json` for per-agent status and exit codes
+
+**Parallel dispatch script not found:**
+- Verify `scripts/parallel-dispatch.sh` exists and is executable
+- Run `chmod +x scripts/parallel-dispatch.sh` if permissions are missing
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feat/your-feature`
+3. Make your changes
+4. Test manually by linking the extension: `gemini extensions link maestro/`
+5. Verify commands work in Gemini CLI
+6. Submit a pull request
+
+This is a configuration-only project — there is no build step, test suite, or linting. All changes are validated manually via Gemini CLI.
 
 ## License
 
