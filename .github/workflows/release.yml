@@ -22,7 +22,7 @@ jobs:
         id: changelog
         run: |
           TAG="${GITHUB_REF#refs/tags/v}"
-          NOTES=$(awk "/^## \[${TAG}\]/{found=1; next} /^## \[/{found=0} found" maestro/CHANGELOG.md)
+          NOTES=$(awk "/^## \[${TAG}\]/{found=1; next} /^## \[/{found=0} found" CHANGELOG.md)
           {
             echo "notes<<EOF"
             echo "$NOTES"
