@@ -13,9 +13,10 @@ Before constructing any delegation prompt, inject the shared agent base protocol
 
 ### Injection Steps
 1. Read `protocols/agent-base-protocol.md`
-2. Prepend the Pre-Flight Protocol and Output Handoff Contract to the delegation prompt — these appear before the task-specific content
-3. For each phase listed in the current phase's `blocked_by`, read `phases[].downstream_context` from session state and include it in the prompt
-4. If any required `downstream_context` is missing, include an explicit placeholder noting the missing dependency context (never omit silently)
+2. Read `protocols/filesystem-safety-protocol.md`
+3. Prepend both protocols to the delegation prompt (base protocol first, then filesystem safety) — these appear before the task-specific content
+4. For each phase listed in the current phase's `blocked_by`, read `phases[].downstream_context` from session state and include it in the prompt
+5. If any required `downstream_context` is missing, include an explicit placeholder noting the missing dependency context (never omit silently)
 
 The injected protocol ensures every agent follows consistent pre-work procedures and output formatting regardless of their specialization.
 
