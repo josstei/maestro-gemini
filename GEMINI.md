@@ -35,6 +35,8 @@ When an env var is unset, use the default. When set, override the corresponding 
 
 3. **Disabled Agent Check**: If `MAESTRO_DISABLED_AGENTS` is set, parse the comma-separated list and exclude those agents from the implementation planning agent selection. If a disabled agent is the only specialist for a required task domain, warn the user and suggest alternatives.
 
+4. **Workspace Readiness**: Invoke `./scripts/ensure-workspace.sh` with the resolved `MAESTRO_STATE_DIR` value via `run_shell_command`. If the script exits non-zero, present the error to the user and do not proceed with orchestration.
+
 ## Orchestration Phases
 
 ### Phase 1: Design Dialogue
