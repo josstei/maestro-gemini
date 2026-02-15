@@ -111,7 +111,9 @@ Do NOT:
 ## Scope Boundary Rules
 
 ### Absolute Paths
-Always provide absolute file paths. Never use relative paths or expect agents to search for files.
+Always provide absolute file paths in delegation prompts. Never use relative paths or expect agents to search for files.
+
+For parallel dispatch, the dispatch script automatically prepends the project root directory to every prompt as a safety net. However, delegation prompts should still use absolute paths — the injected root is a fallback for resilience, not a substitute for explicit path construction.
 
 ### Specific Deliverables
 Define exactly what the agent should produce. Vague instructions like "implement the feature" lead to inconsistent results. Instead: "Create UserService class with createUser(), getUserById(), and deleteUser() methods implementing the IUserService interface."
@@ -185,6 +187,15 @@ Do NOT:
 ```
 
 Each prompt must be **fully self-contained** — the agent runs as an independent `gemini` process with no access to the orchestrator's conversation or session context.
+
+### Agent Name Rules
+
+Prompt filenames must follow these rules:
+
+- Use **hyphens**, not underscores: `technical-writer.txt`, not `technical_writer.txt`
+- The filename (minus `.txt` extension) must exactly match an agent definition filename in `agents/`
+- The dispatch script validates agent names at runtime and rejects unrecognized names with a list of available agents
+- This validation catches typos before they waste an API call and a timeout window
 
 ### Tool Restriction Enforcement
 
