@@ -6,6 +6,7 @@ status: "in_progress"
 design_document: "<relative path to design doc>"
 implementation_plan: "<relative path to impl plan>"
 current_phase: 1
+execution_mode: null
 total_phases: <integer>
 
 token_usage:
