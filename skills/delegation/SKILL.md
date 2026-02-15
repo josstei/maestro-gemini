@@ -22,24 +22,14 @@ The injected protocol ensures every agent follows consistent pre-work procedures
 
 ### Context Chain Construction
 
-Every delegation prompt must include a context chain that connects the current phase to prior work:
+Before delegating a phase with dependencies (`blocked_by` is non-empty):
 
-**Phase Context**: Include Downstream Context blocks from all completed phases that the current phase depends on (identified via `blocked_by` relationships in the implementation plan and sourced from session state `phases[].downstream_context`):
-```
-Context from completed phases:
-- Phase [N] ([agent]): [Downstream Context summary]
-  - Interfaces introduced: [list with file locations]
-  - Patterns established: [list]
-  - Integration points: [specific files, functions, endpoints]
-  - Warnings: [list]
-```
+1. Call `maestro_context_chain` with the phase_id and plan_path
+2. The tool reads completed agent results, extracts Downstream Context sections, and assembles them in dependency order
+3. Inject the returned `context_chain` into the delegation prompt under a "## Upstream Context" heading
+4. If `missing_contexts` is non-empty, include a visible placeholder for each missing dependency
 
-**Accumulated Patterns**: Naming conventions, directory organization patterns, and architectural decisions established by earlier phases. This ensures phase 5 does not contradict patterns set in phase 2.
-
-**File Manifest**: Complete list of files created or modified in prior phases, so the agent knows what already exists and can import from or extend those files.
-
-**Missing Context Fallback**: If a blocked dependency has no stored downstream context, include a visible placeholder entry in the prompt:
-`- Phase [N] ([agent]): Downstream Context missing in session state — verify dependency output before implementation`
+This replaces manual reading and assembly of upstream phase results.
 
 ### Downstream Consumer Declaration
 
@@ -223,16 +213,7 @@ Violation of these restrictions constitutes a security boundary breach.
 
 Populate the tool list by reading the agent's definition file (`agents/<agent-name>.md`) and extracting the `tools` array from the YAML frontmatter. This is the only mechanism for enforcing tool permissions on parallel-dispatched agents until the Gemini CLI supports runtime tool restriction flags.
 
-The file writing rules block template:
-
-```
-FILE WRITING RULES (MANDATORY):
-Use ONLY `write_file` to create files and `replace` to modify files.
-Do NOT use run_shell_command with cat, echo, printf, heredocs, or shell redirection (>, >>) to write file content.
-Shell interpretation corrupts YAML, Markdown, and special characters. This rule has NO exceptions.
-```
-
-This block reinforces the Agent Base Protocol's File Writing Rule directly in every delegation prompt, ensuring agents see the prohibition even if they skim the injected protocols.
+Note: File-writing rules are enforced automatically by the BeforeTool hook and safety baseline policy. Do not include file-writing rule blocks in delegation prompts.
 
 ### Dispatch Invocation
 

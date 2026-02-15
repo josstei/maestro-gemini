@@ -24,28 +24,18 @@ Where:
 
 Where `MAESTRO_STATE_DIR` defaults to `.gemini` if not set. All state paths in this skill use `<MAESTRO_STATE_DIR>` as their base directory. In procedural steps, `<state_dir>` represents the resolved value of this variable.
 
-### State File Access
+### State Access
 
-All reads and writes to files within `<MAESTRO_STATE_DIR>` must go through the dedicated state I/O scripts. These scripts bypass ignore patterns that prevent `read_file` from accessing the state directory.
+All session state operations use MCP tools:
 
-**Reading state files:**
-```bash
-run_shell_command: ./scripts/read-state.sh <relative-path>
-```
+- **Reading state**: `maestro_session_read` with optional `section` parameter
+- **Creating sessions**: `maestro_session_write` with `action: "create"`
+- **Updating phases**: `maestro_session_write` with `action: "update_phase"`
+- **Recording errors**: `maestro_session_write` with `action: "add_error"`
+- **Updating files**: `maestro_session_write` with `action: "add_files"`
+- **Completing sessions**: `maestro_session_write` with `action: "complete"`
 
-Example: `./scripts/read-state.sh .gemini/state/active-session.md`
-
-**Writing state files:**
-Use `write_file` as the primary mechanism for state file writes. When content must be piped from a shell command, use:
-
-```bash
-run_shell_command: echo '...' | ./scripts/write-state.sh <relative-path>
-```
-
-**Rules:**
-- Never use `read_file` for paths inside `<MAESTRO_STATE_DIR>` — these files are in ignored directories and `read_file` may fail or return errors
-- The `write-state.sh` script writes atomically (temp file + `mv`) to prevent partial writes
-- Both scripts validate against absolute paths and path traversal
+Do not use `read-state.sh`, `write-state.sh`, or `write_file` for session state files. MCP tools handle schema validation, atomic writes, and structured output.
 
 ### Initialization Steps
 1. Resolve state directory from `MAESTRO_STATE_DIR` (default: `.gemini`)
@@ -209,7 +199,7 @@ Resume is triggered by the `/maestro.resume` command or when `/maestro.orchestra
 
 ### Resume Steps
 
-1. **Read State**: Read state via run_shell_command: `./scripts/read-state.sh <MAESTRO_STATE_DIR>/state/active-session.md` (resolve `MAESTRO_STATE_DIR`, default: `.gemini`)
+1. **Read State**: Call `maestro_session_read` with `section: "full"` to get the complete session state
 2. **Parse Frontmatter**: Extract YAML frontmatter for session metadata
 3. **Identify Position**: Determine:
    - Last completed phase (highest ID with `status: completed`)

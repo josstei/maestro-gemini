@@ -21,20 +21,32 @@ Before executing any phases in Phase 3:
 - When parallel is selected and a batch contains only one phase, fall back to sequential for that batch (no benefit from parallel with a single agent)
 - When sequential is selected and the plan identifies parallelizable phases, execute them sequentially in dependency order — do not reorder the plan
 
-## State File Access
+## State Access
 
-All reads of files within `<MAESTRO_STATE_DIR>` (including parallel dispatch results) must use the dedicated state I/O script to bypass ignore patterns:
+All session state operations use MCP tools instead of raw file I/O:
 
-```bash
-run_shell_command: ./scripts/read-state.sh <relative-path>
-```
+| Operation | Tool | Action |
+|-----------|------|--------|
+| Read session state | `maestro_session_read` | Use `section` parameter for targeted reads |
+| Update phase status | `maestro_session_write` | `action: "update_phase"` |
+| Record errors | `maestro_session_write` | `action: "add_error"` |
+| Update file manifest | `maestro_session_write` | `action: "add_files"` |
+| Track progress | `maestro_progress` | `action: "update"` on each transition |
+| Read dispatch results | `maestro_dispatch_status` | `action: "batch_status"` or `"agent_result"` |
+| Build context chain | `maestro_context_chain` | Before delegating phases with dependencies |
+| Validate plan | `maestro_validate_plan` | Before Phase 3 execution begins |
 
-This applies to:
-- Reading `summary.json` from parallel dispatch results
-- Reading individual agent `.json` output files
-- Reading `active-session.md` for state checks
+Never use `read_file`, `read-state.sh`, or `write-state.sh` for session state. These are superseded by MCP tools.
 
-Never use `read_file` for paths inside `<MAESTRO_STATE_DIR>`.
+## Pre-Execution Validation
+
+Before beginning Phase 3 execution:
+
+1. Call `maestro_validate_plan` with the implementation plan path
+2. If `valid` is `false`, present errors to the user and do not proceed
+3. If warnings exist, present them but allow the user to proceed
+4. Use the returned `dependency_graph.parallel_batches` to inform batch construction
+5. Use `dependency_graph.critical_path` to estimate execution order
 
 ## Phase Execution Protocol
 
@@ -70,10 +82,10 @@ For phases at the same dependency depth with no file overlap, use shell-based pa
 6. The script spawns one `gemini -p <prompt> --yolo --output-format json` process per prompt file
 7. All agents execute concurrently as independent CLI processes
 8. The script waits for all agents, collects exit codes, and writes `results/summary.json`
-9. Read the batch summary via run_shell_command: `./scripts/read-state.sh <state_dir>/parallel/<batch-id>/results/summary.json`
-10. For each agent, read its JSON output via run_shell_command: `./scripts/read-state.sh <state_dir>/parallel/<batch-id>/results/<agent-name>.json` and parse the Task Report
-11. Update session state for all phases in the batch
-12. Only proceed to the next batch when all phases in the current batch are completed
+9. Call `maestro_dispatch_status` with `action: "batch_status"` and the batch_id to get structured results
+10. For failed agents, call `maestro_dispatch_status` with `action: "agent_result"` to get detailed output
+11. Call `maestro_progress` with `action: "update"` for each completed/failed phase
+12. Call `maestro_session_write` with `action: "update_phase"` for each phase in the batch
 
 #### Parallel Dispatch Constraints
 
