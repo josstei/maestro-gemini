@@ -1,0 +1,71 @@
+{
+  "hooks": {
+    "SessionStart": {
+      "hooks": [
+        {
+          "type": "command",
+          "name": "maestro-session-lifecycle",
+          "command": "${extensionPath}/hooks/session-lifecycle.sh start",
+          "timeout": 10000,
+          "description": "Initialize workspace, detect active sessions, inject context"
+        }
+      ]
+    },
+    "SessionEnd": {
+      "hooks": [
+        {
+          "type": "command",
+          "name": "maestro-session-lifecycle",
+          "command": "${extensionPath}/hooks/session-lifecycle.sh end",
+          "timeout": 10000,
+          "description": "Auto-archive completed sessions, generate summary"
+        }
+      ]
+    },
+    "BeforeTool": {
+      "matcher": "write_file|replace|run_shell_command",
+      "hooks": [
+        {
+          "type": "command",
+          "name": "maestro-tool-compliance",
+          "command": "${extensionPath}/hooks/tool-compliance.sh",
+          "timeout": 5000,
+          "description": "Block shell redirects, heredocs, echo > for file writing"
+        }
+      ]
+    },
+    "BeforeToolSelection": {
+      "hooks": [
+        {
+          "type": "command",
+          "name": "maestro-tool-filter",
+          "command": "${extensionPath}/hooks/tool-filter.sh",
+          "timeout": 5000,
+          "description": "Restrict available tools based on active agent role"
+        }
+      ]
+    },
+    "AfterAgent": {
+      "hooks": [
+        {
+          "type": "command",
+          "name": "maestro-output-validator",
+          "command": "${extensionPath}/hooks/agent-output-validator.sh",
+          "timeout": 10000,
+          "description": "Validate agent output against handoff contract schema"
+        }
+      ]
+    },
+    "PreCompress": {
+      "hooks": [
+        {
+          "type": "command",
+          "name": "maestro-context-preserver",
+          "command": "${extensionPath}/hooks/context-preserver.sh",
+          "timeout": 5000,
+          "description": "Preserve session state before context compression"
+        }
+      ]
+    }
+  }
+}
