@@ -38,7 +38,7 @@ When an env var is unset, use the default. When set, override the corresponding 
 
 3. **Disabled Agent Check**: If `MAESTRO_DISABLED_AGENTS` is set, parse the comma-separated list and exclude those agents from the implementation planning agent selection. If a disabled agent is the only specialist for a required task domain, warn the user and suggest alternatives.
 
-4. **Workspace Readiness**: Invoke `./scripts/ensure-workspace.sh` with the resolved `MAESTRO_STATE_DIR` value via `run_shell_command`. If the script exits non-zero, present the error to the user and do not proceed with orchestration.
+Note: Workspace initialization is handled automatically by the SessionStart hook. You do not need to run `ensure-workspace.sh` manually.
 
 ## Orchestration Phases
 
@@ -117,11 +117,28 @@ Parallel execution uses `scripts/parallel-dispatch.sh` to spawn independent `gem
 
 **Constraint:** Parallel agents run as independent CLI processes with no shared context. Prompts must be complete and self-contained. See the execution skill for the full Parallel Dispatch Protocol.
 
-## Content Writing Rule
+## Automated Enforcement (Hooks)
 
-Always use `write_file` for creating or modifying files with structured content (YAML, Markdown, JSON, code). Never use `run_shell_command` with heredocs, `cat`, `printf`, or `echo` for file content — shell interpretation corrupts special characters.
+The following are enforced automatically by Gemini CLI hooks — do NOT include these as instructions in delegation prompts:
+- **File-writing restrictions**: BeforeTool hook blocks shell redirects (`echo >`, heredocs, `cat <<`). Safety baseline policy provides backup enforcement.
+- **Tool access restrictions**: BeforeToolSelection hook filters available tools per agent role.
+- **Session state preservation**: PreCompress hook preserves orchestration state before context compression.
+- **Agent output validation**: AfterAgent hook checks for required Task Report and Downstream Context sections.
 
-Reserve `run_shell_command` for commands that execute programs (build, test, lint, dispatch scripts, git operations), not for writing file content.
+Focus delegation prompts on: task description, scope boundaries, downstream consumers, validation criteria.
+
+## Orchestration Tools (MCP: maestro)
+
+Use these tools for all orchestration state operations. They replace raw file I/O with validated, structured operations.
+
+| Tool | When to Use |
+|------|-------------|
+| `maestro_session_read` | Before any phase transition. Check current state. Use `section` parameter to minimize context usage. |
+| `maestro_session_write` | After phase completion, on errors, session create/complete. |
+| `maestro_progress` | After dispatching agents. Before reporting status to user. |
+| `maestro_validate_plan` | After Phase 2 produces a plan. Before Phase 3 execution begins. |
+| `maestro_dispatch_status` | After parallel batch completes. Before deciding next batch. |
+| `maestro_context_chain` | Before delegating any phase with `blocked_by` dependencies. Inject returned `context_chain` into delegation prompt. |
 
 ## Delegation Override Protocol
 
