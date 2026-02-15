@@ -99,6 +99,7 @@ export async function progress(
       const completed = entries.filter((e) => e.status === "completed");
       const failed = entries.filter((e) => e.status === "failed");
       const completedPhases = new Set(completed.map((e) => e.phase_id));
+      const failedPhases = new Set(failed.map((e) => e.phase_id));
 
       let wallTime = 0;
       if (entries.length > 0) {
@@ -110,7 +111,7 @@ export async function progress(
       return {
         total_phases: phases.size,
         completed_phases: completedPhases.size,
-        failed_phases: failed.length,
+        failed_phases: failedPhases.size,
         wall_time_seconds: wallTime,
         total_entries: entries.length,
       };

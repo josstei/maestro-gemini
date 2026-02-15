@@ -36,8 +36,8 @@ export async function dispatchStatus(
           if (await fileExists(summaryPath)) {
             try {
               const content = await readFileContent(summaryPath);
-              const summary = JSON.parse(content) as BatchSummary;
-              status = summary.batch_status;
+              const parsed = BatchSummary.safeParse(JSON.parse(content));
+              status = parsed.success ? parsed.data.batch_status : "parse_error";
             } catch {
               status = "parse_error";
             }

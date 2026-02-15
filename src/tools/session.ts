@@ -5,7 +5,7 @@ import {
   Phase,
 } from "../lib/schema.js";
 import {
-  readSessionState,
+  readSessionStateRaw,
   writeSessionState,
 } from "../lib/state.js";
 import { createLogger } from "../lib/logger.js";
@@ -16,11 +16,13 @@ export async function sessionRead(
   rawInput: unknown,
 ): Promise<Record<string, unknown>> {
   const input = SessionReadInput.parse(rawInput);
-  const state = await readSessionState();
+  const raw = await readSessionStateRaw();
 
-  if (!state) {
+  if (!raw) {
     return { exists: false };
   }
+
+  const state = raw.state;
 
   switch (input.section) {
     case "metadata":
@@ -142,11 +144,12 @@ export async function sessionWrite(
     }
 
     case "update_phase": {
-      const state = await readSessionState();
-      if (!state) {
+      const raw = await readSessionStateRaw();
+      if (!raw) {
         return { success: false, error: "No active session found" };
       }
 
+      const { state, body: existingBody } = raw;
       const phase = state.phases.find((p) => p.id === input.phase_id);
       if (!phase) {
         return {
@@ -168,8 +171,7 @@ export async function sessionWrite(
       state.updated = now;
       state.current_phase = input.phase_id;
 
-      const body = `# Orchestration Log\n`;
-      await writeSessionState(state, body);
+      await writeSessionState(state, existingBody);
       logger.info("Phase updated", {
         phase_id: input.phase_id,
         status: input.phase_status,
@@ -178,11 +180,12 @@ export async function sessionWrite(
     }
 
     case "add_error": {
-      const state = await readSessionState();
-      if (!state) {
+      const raw = await readSessionStateRaw();
+      if (!raw) {
         return { success: false, error: "No active session found" };
       }
 
+      const { state, body: existingBody } = raw;
       const phaseId = Number(input.error.phase);
       const phase = state.phases.find((p) => p.id === phaseId);
       if (!phase) {
@@ -203,18 +206,18 @@ export async function sessionWrite(
       phase.retry_count = input.error.retry_count;
       state.updated = now;
 
-      const body = `# Orchestration Log\n`;
-      await writeSessionState(state, body);
+      await writeSessionState(state, existingBody);
       logger.info("Error recorded", { phase: input.error.phase });
       return { success: true };
     }
 
     case "add_files": {
-      const state = await readSessionState();
-      if (!state) {
+      const raw = await readSessionStateRaw();
+      if (!raw) {
         return { success: false, error: "No active session found" };
       }
 
+      const { state, body: existingBody } = raw;
       const phase = state.phases.find((p) => p.id === input.phase_id);
       if (!phase) {
         return {
@@ -228,22 +231,22 @@ export async function sessionWrite(
       phase.files_deleted.push(...input.files.deleted);
       state.updated = now;
 
-      const body = `# Orchestration Log\n`;
-      await writeSessionState(state, body);
+      await writeSessionState(state, existingBody);
       return { success: true };
     }
 
     case "complete": {
-      const state = await readSessionState();
-      if (!state) {
+      const raw = await readSessionStateRaw();
+      if (!raw) {
         return { success: false, error: "No active session found" };
       }
 
+      const { state, body: existingBody } = raw;
       state.status = "completed";
       state.updated = now;
 
-      const body = `# Orchestration Log\n\n## Summary\n${input.summary ?? "Session completed."}\n`;
-      await writeSessionState(state, body);
+      const summarySection = `\n\n## Summary\n${input.summary ?? "Session completed."}\n`;
+      await writeSessionState(state, existingBody + summarySection);
       logger.info("Session completed", {
         session_id: state.session_id,
       });

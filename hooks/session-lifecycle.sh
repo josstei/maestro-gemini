@@ -23,9 +23,9 @@ case "$ACTION" in
     fi
 
     if [[ -f "$SESSION_PATH" ]]; then
-      SESSION_ID=$(grep -m1 '^session_id:' "$SESSION_PATH" | sed 's/^session_id:\s*//' | tr -d '"' 2>/dev/null) || SESSION_ID="unknown"
-      CURRENT_PHASE=$(grep -m1 '^current_phase:' "$SESSION_PATH" | sed 's/^current_phase:\s*//' 2>/dev/null) || CURRENT_PHASE="unknown"
-      STATUS=$(grep -m1 '^status:' "$SESSION_PATH" | sed 's/^status:\s*//' | tr -d '"' 2>/dev/null) || STATUS="unknown"
+      SESSION_ID=$(grep -m1 '^session_id:' "$SESSION_PATH" | sed 's/^session_id:[[:space:]]*//' | tr -d '"' 2>/dev/null) || SESSION_ID="unknown"
+      CURRENT_PHASE=$(grep -m1 '^current_phase:' "$SESSION_PATH" | sed 's/^current_phase:[[:space:]]*//' 2>/dev/null) || CURRENT_PHASE="unknown"
+      STATUS=$(grep -m1 '^status:' "$SESSION_PATH" | sed 's/^status:[[:space:]]*//' | tr -d '"' 2>/dev/null) || STATUS="unknown"
 
       printf '{"systemMessage":"[Maestro] Active session detected: %s (phase %s, status: %s). Use /maestro.resume to continue or /maestro.archive to start fresh.","continue":true}\n' \
         "$SESSION_ID" "$CURRENT_PHASE" "$STATUS"
@@ -36,10 +36,10 @@ case "$ACTION" in
 
   end)
     if [[ -f "$SESSION_PATH" ]]; then
-      STATUS=$(grep -m1 '^status:' "$SESSION_PATH" | sed 's/^status:\s*//' | tr -d '"' 2>/dev/null) || STATUS=""
+      STATUS=$(grep -m1 '^status:' "$SESSION_PATH" | sed 's/^status:[[:space:]]*//' | tr -d '"' 2>/dev/null) || STATUS=""
 
       if [[ "$STATUS" == "completed" ]]; then
-        SESSION_ID=$(grep -m1 '^session_id:' "$SESSION_PATH" | sed 's/^session_id:\s*//' | tr -d '"' 2>/dev/null) || SESSION_ID="session"
+        SESSION_ID=$(grep -m1 '^session_id:' "$SESSION_PATH" | sed 's/^session_id:[[:space:]]*//' | tr -d '"' 2>/dev/null) || SESSION_ID="session"
         ARCHIVE_DIR="${CWD}/${STATE_DIR}/state/archive"
         mkdir -p "$ARCHIVE_DIR" 2>/dev/null || true
         mv "$SESSION_PATH" "${ARCHIVE_DIR}/${SESSION_ID}.md" 2>/dev/null || true

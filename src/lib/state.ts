@@ -1,7 +1,5 @@
-import { readFile, writeFile, rename, readdir } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { readFile, writeFile, rename, readdir, appendFile as fsAppendFile, access, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
-import { mkdir } from "node:fs/promises";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { SessionState } from "./schema.js";
 import { createLogger } from "./logger.js";
@@ -39,18 +37,23 @@ export function resolveStatePath(relativePath: string): string {
   return join(process.cwd(), relativePath);
 }
 
-export async function readSessionState(): Promise<SessionState | null> {
+interface SessionStateWithBody {
+  state: SessionState;
+  body: string;
+}
+
+export async function readSessionStateRaw(): Promise<SessionStateWithBody | null> {
   const stateDir = resolveStateDir();
   const sessionPath = resolveStatePath(
     join(stateDir, "state", "active-session.md"),
   );
 
-  if (!existsSync(sessionPath)) {
+  if (!(await fileExists(sessionPath))) {
     return null;
   }
 
   const content = await readFile(sessionPath, "utf-8");
-  const { frontmatter } = parseFrontmatter<unknown>(content);
+  const { frontmatter, body } = parseFrontmatter<unknown>(content);
   const result = SessionState.safeParse(frontmatter);
 
   if (!result.success) {
@@ -61,7 +64,12 @@ export async function readSessionState(): Promise<SessionState | null> {
     return null;
   }
 
-  return result.data;
+  return { state: result.data, body };
+}
+
+export async function readSessionState(): Promise<SessionState | null> {
+  const raw = await readSessionStateRaw();
+  return raw?.state ?? null;
 }
 
 export async function writeSessionState(
@@ -91,14 +99,13 @@ export async function appendToFile(
   absolutePath: string,
   content: string,
 ): Promise<void> {
-  const { appendFile } = await import("node:fs/promises");
   const parentDir = dirname(absolutePath);
   await mkdir(parentDir, { recursive: true });
-  await appendFile(absolutePath, content, "utf-8");
+  await fsAppendFile(absolutePath, content, "utf-8");
 }
 
 export async function listDirectories(dirPath: string): Promise<string[]> {
-  if (!existsSync(dirPath)) {
+  if (!(await fileExists(dirPath))) {
     return [];
   }
   const entries = await readdir(dirPath, { withFileTypes: true });
@@ -106,5 +113,10 @@ export async function listDirectories(dirPath: string): Promise<string[]> {
 }
 
 export async function fileExists(absolutePath: string): Promise<boolean> {
-  return existsSync(absolutePath);
+  try {
+    await access(absolutePath);
+    return true;
+  } catch {
+    return false;
+  }
 }

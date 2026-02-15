@@ -5,8 +5,11 @@ import {
   resolveStatePath,
 } from "../lib/state.js";
 import { parseFrontmatter } from "../lib/state.js";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 interface ValidationError {
   type: "error";
@@ -22,7 +25,7 @@ interface ValidationWarning {
 
 function getAgentsDir(): string {
   const extensionDir =
-    process.env["EXTENSION_PATH"] ?? join(process.cwd(), "..");
+    process.env["EXTENSION_PATH"] ?? join(__dirname, "..");
   return join(extensionDir, "agents");
 }
 
@@ -251,7 +254,7 @@ export async function validatePlan(
     const agentsDir = getAgentsDir();
     for (const agentName of agents) {
       const agentFile = join(agentsDir, `${agentName}.md`);
-      if (!existsSync(agentFile)) {
+      if (!(await fileExists(agentFile))) {
         warnings.push({
           type: "warning",
           phase_id: pid,
