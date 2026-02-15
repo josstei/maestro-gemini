@@ -3,6 +3,13 @@
   "version": "1.1.0",
   "description": "Multi-agent orchestration extension that assembles specialized dev teams for complex engineering tasks",
   "contextFileName": "GEMINI.md",
+  "mcpServers": {
+    "maestro": {
+      "command": "node",
+      "args": ["${extensionPath}/dist/index.js"],
+      "cwd": "${workspacePath}"
+    }
+  },
   "settings": [
     {
       "name": "Default Model",
