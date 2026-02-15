@@ -43,6 +43,18 @@ If any convention is ambiguous or no precedent exists, default to the most commo
 
 ---
 
+## File Writing Protocol
+
+NEVER use `run_shell_command` to create or write file content. This includes `cat`, `printf`, `echo`, heredocs (`<< EOF`), and any other shell-based file writing mechanism.
+
+ALWAYS use `write_file` for creating files and `replace` for modifying file content.
+
+Rationale: Shell interpretation corrupts content containing YAML frontmatter markers (`#`), Markdown syntax (backticks, brackets), history expansion characters (`!`), and multiline strings. The `write_file` tool bypasses shell interpretation entirely and handles encoding safely.
+
+This rule has no exceptions. If `write_file` is not in your authorized tool list, you cannot create files — report the limitation in your Task Report rather than attempting shell workarounds.
+
+---
+
 ## Output Handoff Contract
 
 Every agent must conclude with a **Handoff Report** containing two parts. This replaces the basic Task Report with a format designed for downstream consumption.
