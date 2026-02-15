@@ -1,0 +1,34 @@
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = "rm\\s+-rf\\s+/"
+decision = "deny"
+deny_message = "Destructive recursive deletion from root is blocked by Maestro safety policy."
+priority = 900
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = "git\\s+push\\s+--force\\s+(origin\\s+)?(main|master)"
+decision = "deny"
+deny_message = "Force push to main/master is blocked by Maestro safety policy."
+priority = 900
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = "git\\s+reset\\s+--hard"
+decision = "deny"
+deny_message = "Hard reset is blocked by Maestro safety policy. Use explicit user confirmation."
+priority = 900
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = "(echo|printf|cat\\s*<<).*>"
+decision = "deny"
+deny_message = "File content must be written using write_file or replace tools, not shell redirects."
+priority = 800
+
+[[rule]]
+toolName = ["write_file", "replace"]
+argsPattern = "\\.(env|pem|key|credentials)"
+decision = "deny"
+deny_message = "Writing to sensitive files (.env, .pem, .key, .credentials) is blocked by Maestro safety policy."
+priority = 850

@@ -1,0 +1,5 @@
+[[rule]]
+toolName = ["read_file", "grep_search", "list_directory", "web_search", "write_file", "replace", "run_shell_command"]
+decision = "allow"
+priority = 500
+modes = ["yolo"]
