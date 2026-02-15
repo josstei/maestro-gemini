@@ -6,17 +6,7 @@ This protocol is injected into every delegation prompt by the delegation skill. 
 
 ## CRITICAL: File Writing Rule
 
-ALWAYS use `write_file` for creating files and `replace` for modifying files.
-
-NEVER use `run_shell_command` to write file content. This includes:
-- `cat`, `cat >>`, `cat << EOF`
-- `echo`, `printf`
-- Heredocs (`<< EOF`, `<< 'EOF'`)
-- Any shell redirection for content (`>`, `>>`)
-
-Shell interpretation corrupts YAML frontmatter, Markdown syntax, backticks, brackets, and special characters. This rule has NO exceptions.
-
-If `write_file` is not in your authorized tool list, you cannot create files. Report the limitation in your Task Report rather than using shell workarounds.
+ALWAYS use `write_file` for creating files and `replace` for modifying files. NEVER use `run_shell_command` to write file content (cat, echo, printf, heredocs, shell redirection). This rule is enforced by Gemini CLI hooks — violations will be automatically blocked.
 
 ---
 
