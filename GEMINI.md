@@ -30,6 +30,9 @@ Before any orchestration command:
 | Auto Archive | `MAESTRO_AUTO_ARCHIVE` | `true` | Session completion |
 | Validation Strictness | `MAESTRO_VALIDATION_STRICTNESS` | `normal` | Post-phase validation |
 | State Directory | `MAESTRO_STATE_DIR` | `.gemini` | Session state and plan paths |
+| Max Concurrent | `MAESTRO_MAX_CONCURRENT` | `0` (unlimited) | Parallel dispatch max simultaneous agents |
+| Stagger Delay | `MAESTRO_STAGGER_DELAY` | `0` (none) | Seconds between parallel agent launches |
+| Execution Mode | `MAESTRO_EXECUTION_MODE` | `ask` | Phase 3 dispatch: `parallel`, `sequential`, or `ask` |
 
 When an env var is unset, use the default. When set, override the corresponding agent definition value in delegation prompts. Log resolved non-default settings at session start for transparency.
 
@@ -53,15 +56,51 @@ Verify all deliverables. Run final validation. Archive session state. Present su
 
 ## Execution Mode
 
-**Current mode: PARALLEL (shell-based)**
+Maestro supports two execution modes for Phase 3. The mode is controlled by `MAESTRO_EXECUTION_MODE`:
 
-Parallel execution uses `scripts/parallel-dispatch.sh` to spawn independent `gemini` CLI processes that run concurrently. This bypasses the sequential `delegate_to_agent` tool scheduler (which processes one tool call at a time due to `CoreToolScheduler` queue design).
+- `ask` (default): Present the user with a choice before beginning Phase 3 execution
+- `parallel`: Use parallel dispatch without prompting
+- `sequential`: Use sequential delegation without prompting
+
+### Mode Selection Prompt
+
+When `MAESTRO_EXECUTION_MODE` is `ask`, present this choice before Phase 3 begins:
+
+---
+
+**Execution Mode Selection**
+
+Your implementation plan has [N] phases ([M] parallelizable).
+
+**Option 1: Parallel Dispatch (faster)**
+- Parallelizable phases run as concurrent `gemini` CLI processes via `scripts/parallel-dispatch.sh`
+- Agents operate in **autonomous mode (`--yolo`)**: all tool calls (file writes, shell commands, file deletions) are auto-approved without your confirmation
+- You review results after each batch completes, not during execution
+- Requires trust in the delegation prompts and tool restriction enforcement
+- Best for: well-defined tasks with clear file ownership boundaries
+
+**Option 2: Sequential Delegation (safer)**
+- Each phase executes one at a time via `delegate_to_agent`
+- Standard tool approval rules apply — you confirm sensitive operations
+- You can intervene between phases if results are unexpected
+- Slower but gives you full visibility and control
+- Best for: exploratory tasks, unfamiliar codebases, security-sensitive work
+
+Which mode would you like to use?
+
+---
+
+Record the user's choice in session state as `execution_mode`. When `MAESTRO_EXECUTION_MODE` is pre-set to `parallel` or `sequential`, skip the prompt and log the mode at session start.
+
+### Parallel Dispatch Details
+
+Parallel execution uses `scripts/parallel-dispatch.sh` to spawn independent `gemini` CLI processes that run concurrently. This bypasses the sequential `delegate_to_agent` tool scheduler.
 
 **How it works:**
 1. The orchestrator writes delegation prompts to `<state_dir>/parallel/<batch-id>/prompts/`
 2. Invokes `./scripts/parallel-dispatch.sh <dispatch-dir>` via `run_shell_command`
 3. The script spawns one `gemini -p <prompt> --yolo --output-format json` process per prompt file
-4. All agents execute concurrently as independent processes
+4. All agents execute concurrently as independent processes (subject to `MAESTRO_MAX_CONCURRENT` cap)
 5. The script collects results to `<dispatch-dir>/results/` and writes `summary.json`
 6. The orchestrator reads results and updates session state
 
@@ -77,6 +116,12 @@ Parallel execution uses `scripts/parallel-dispatch.sh` to spawn independent `gem
 - Fallback when parallel dispatch fails
 
 **Constraint:** Parallel agents run as independent CLI processes with no shared context. Prompts must be complete and self-contained. See the execution skill for the full Parallel Dispatch Protocol.
+
+## Content Writing Rule
+
+Always use `write_file` for creating or modifying files with structured content (YAML, Markdown, JSON, code). Never use `run_shell_command` with heredocs, `cat`, `printf`, or `echo` for file content — shell interpretation corrupts special characters.
+
+Reserve `run_shell_command` for commands that execute programs (build, test, lint, dispatch scripts, git operations), not for writing file content.
 
 ## Delegation Override Protocol
 
