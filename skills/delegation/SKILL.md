@@ -204,9 +204,10 @@ Parallel-dispatched agents run with `--yolo` (auto-approve all tool calls), whic
 1. Agent Base Protocol (from `protocols/agent-base-protocol.md`)
 2. Filesystem Safety Protocol (from `protocols/filesystem-safety-protocol.md`)
 3. **TOOL RESTRICTIONS block (immediately here, before any task content)**
-4. Context chain from prior phases
-5. Task-specific instructions
-6. Scope boundaries and prohibitions
+4. **FILE WRITING RULES block (immediately after tool restrictions)**
+5. Context chain from prior phases
+6. Task-specific instructions
+7. Scope boundaries and prohibitions
 
 The tool restriction block template:
 
@@ -221,6 +222,17 @@ Violation of these restrictions constitutes a security boundary breach.
 ```
 
 Populate the tool list by reading the agent's definition file (`agents/<agent-name>.md`) and extracting the `tools` array from the YAML frontmatter. This is the only mechanism for enforcing tool permissions on parallel-dispatched agents until the Gemini CLI supports runtime tool restriction flags.
+
+The file writing rules block template:
+
+```
+FILE WRITING RULES (MANDATORY):
+Use ONLY `write_file` to create files and `replace` to modify files.
+Do NOT use run_shell_command with cat, echo, printf, heredocs, or shell redirection (>, >>) to write file content.
+Shell interpretation corrupts YAML, Markdown, and special characters. This rule has NO exceptions.
+```
+
+This block reinforces the Agent Base Protocol's File Writing Rule directly in every delegation prompt, ensuring agents see the prohibition even if they skim the injected protocols.
 
 ### Dispatch Invocation
 
