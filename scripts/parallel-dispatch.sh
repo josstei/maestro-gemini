@@ -91,6 +91,9 @@ if [[ "${BASH_VERSINFO[0]:-0}" -ge 5 ]] || \
   SUPPORTS_WAIT_N=true
 fi
 
+EXTENSION_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+AGENTS_DIR="$EXTENSION_DIR/agents"
+
 PIDS=()
 AGENT_NAMES=()
 START_TIME=$(date +%s)
@@ -115,6 +118,14 @@ for PROMPT_FILE in "${PROMPT_FILES[@]}"; do
     exit 1
   fi
   AGENT_NAMES+=("$AGENT_NAME")
+
+  NORMALIZED_NAME=$(echo "$AGENT_NAME" | tr '_' '-')
+  if [[ -d "$AGENTS_DIR" ]] && [[ ! -f "$AGENTS_DIR/${NORMALIZED_NAME}.md" ]]; then
+    echo "ERROR: Agent '${AGENT_NAME}' not found in ${AGENTS_DIR}/" >&2
+    AVAILABLE=$(ls "$AGENTS_DIR"/*.md 2>/dev/null | xargs -I{} basename {} .md | tr '\n' ', ' | sed 's/,$//')
+    [[ -n "$AVAILABLE" ]] && echo "  Available agents: ${AVAILABLE}" >&2
+    exit 1
+  fi
 
   RESULT_JSON="$RESULT_DIR/${AGENT_NAME}.json"
   RESULT_EXIT="$RESULT_DIR/${AGENT_NAME}.exit"
