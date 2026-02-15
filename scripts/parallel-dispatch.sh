@@ -33,6 +33,8 @@ Environment:
   MAESTRO_DEFAULT_MODEL      Override model for all agents
   MAESTRO_AGENT_TIMEOUT      Timeout in minutes (default: 10)
   MAESTRO_CLEANUP_DISPATCH   Remove prompt files after dispatch (default: false)
+  MAESTRO_MAX_CONCURRENT      Max agents running simultaneously (default: 0 = unlimited)
+  MAESTRO_STAGGER_DELAY       Seconds between agent launches (default: 0 = no delay)
 EOF
   exit 1
 }
@@ -67,16 +69,44 @@ if [[ "$TIMEOUT_MINS" -gt 60 ]]; then
 fi
 TIMEOUT_SECS=$((TIMEOUT_MINS * 60))
 
+MAX_CONCURRENT="${MAESTRO_MAX_CONCURRENT:-0}"
+MAX_CONCURRENT="${MAX_CONCURRENT#"${MAX_CONCURRENT%%[!0]*}"}"
+[[ -z "$MAX_CONCURRENT" ]] && MAX_CONCURRENT=0
+if ! [[ "$MAX_CONCURRENT" =~ ^[0-9]+$ ]]; then
+  echo "ERROR: MAESTRO_MAX_CONCURRENT must be a non-negative integer (got: ${MAESTRO_MAX_CONCURRENT:-})" >&2
+  exit 1
+fi
+
+STAGGER_DELAY="${MAESTRO_STAGGER_DELAY:-0}"
+STAGGER_DELAY="${STAGGER_DELAY#"${STAGGER_DELAY%%[!0]*}"}"
+[[ -z "$STAGGER_DELAY" ]] && STAGGER_DELAY=0
+if ! [[ "$STAGGER_DELAY" =~ ^[0-9]+$ ]]; then
+  echo "ERROR: MAESTRO_STAGGER_DELAY must be a non-negative integer (got: ${MAESTRO_STAGGER_DELAY:-})" >&2
+  exit 1
+fi
+
+SUPPORTS_WAIT_N=false
+if [[ "${BASH_VERSINFO[0]:-0}" -ge 5 ]] || \
+   { [[ "${BASH_VERSINFO[0]:-0}" -eq 4 ]] && [[ "${BASH_VERSINFO[1]:-0}" -ge 3 ]]; }; then
+  SUPPORTS_WAIT_N=true
+fi
+
 PIDS=()
 AGENT_NAMES=()
 START_TIME=$(date +%s)
+
+[[ "$MAX_CONCURRENT" -eq 0 ]] && CONCURRENT_DISPLAY="unlimited" || CONCURRENT_DISPLAY="$MAX_CONCURRENT"
 
 echo "MAESTRO PARALLEL DISPATCH"
 echo "========================="
 echo "Agents: ${#PROMPT_FILES[@]}"
 echo "Timeout: ${TIMEOUT_MINS} minutes"
 echo "Model: ${MAESTRO_DEFAULT_MODEL:-default}"
+echo "Max Concurrent: $CONCURRENT_DISPLAY"
+echo "Stagger Delay: ${STAGGER_DELAY}s"
 echo ""
+
+LAUNCHED=0
 
 for PROMPT_FILE in "${PROMPT_FILES[@]}"; do
   AGENT_NAME=$(basename "$PROMPT_FILE" .txt | tr -cd 'a-zA-Z0-9_-')
@@ -103,6 +133,14 @@ for PROMPT_FILE in "${PROMPT_FILES[@]}"; do
     exit 1
   fi
 
+  if [[ "$MAX_CONCURRENT" -gt 0 ]] && [[ "$LAUNCHED" -ge "$MAX_CONCURRENT" ]]; then
+    if [[ "$SUPPORTS_WAIT_N" == true ]]; then
+      wait -n 2>/dev/null || true
+    else
+      wait "${PIDS[$(( LAUNCHED - MAX_CONCURRENT ))]}" 2>/dev/null || true
+    fi
+  fi
+
   echo "Dispatching: $AGENT_NAME"
 
   (
@@ -127,6 +165,11 @@ for PROMPT_FILE in "${PROMPT_FILES[@]}"; do
   ) &
 
   PIDS+=($!)
+  LAUNCHED=$((LAUNCHED + 1))
+
+  if [[ "$STAGGER_DELAY" -gt 0 ]] && [[ "$PROMPT_FILE" != "${PROMPT_FILES[-1]}" ]]; then
+    sleep "$STAGGER_DELAY"
+  fi
 done
 
 echo ""
