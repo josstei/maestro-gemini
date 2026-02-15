@@ -7,6 +7,35 @@ description: Phase execution methodology for orchestration workflows with error 
 
 Activate this skill during Phase 3 (Execution) of Maestro orchestration. This skill provides the protocols for executing implementation plan phases through subagent delegation, handling errors, and completing orchestration sessions.
 
+## Execution Mode Gate
+
+Before executing any phases in Phase 3:
+
+1. Read `MAESTRO_EXECUTION_MODE` (default: `ask`)
+2. If `ask`: present the execution mode selection prompt defined in `GEMINI.md`
+3. Record the user's choice in session state as `execution_mode`
+4. If `parallel` or `sequential`: use the pre-selected mode and log it
+5. For the remainder of this session, use the selected mode for all batches
+
+**Mode-specific behavior:**
+- When parallel is selected and a batch contains only one phase, fall back to sequential for that batch (no benefit from parallel with a single agent)
+- When sequential is selected and the plan identifies parallelizable phases, execute them sequentially in dependency order — do not reorder the plan
+
+## State File Access
+
+All reads of files within `<MAESTRO_STATE_DIR>` (including parallel dispatch results) must use the dedicated state I/O script to bypass ignore patterns:
+
+```bash
+run_shell_command: ./scripts/read-state.sh <relative-path>
+```
+
+This applies to:
+- Reading `summary.json` from parallel dispatch results
+- Reading individual agent `.json` output files
+- Reading `active-session.md` for state checks
+
+Never use `read_file` for paths inside `<MAESTRO_STATE_DIR>`.
+
 ## Phase Execution Protocol
 
 ### Sequential Execution
@@ -41,8 +70,8 @@ For phases at the same dependency depth with no file overlap, use shell-based pa
 6. The script spawns one `gemini -p <prompt> --yolo --output-format json` process per prompt file
 7. All agents execute concurrently as independent CLI processes
 8. The script waits for all agents, collects exit codes, and writes `results/summary.json`
-9. Read the batch summary from `<state_dir>/parallel/<batch-id>/results/summary.json`
-10. For each agent, read its JSON output from `results/<agent-name>.json` and parse the Task Report
+9. Read the batch summary via run_shell_command: `./scripts/read-state.sh <state_dir>/parallel/<batch-id>/results/summary.json`
+10. For each agent, read its JSON output via run_shell_command: `./scripts/read-state.sh <state_dir>/parallel/<batch-id>/results/<agent-name>.json` and parse the Task Report
 11. Update session state for all phases in the batch
 12. Only proceed to the next batch when all phases in the current batch are completed
 
