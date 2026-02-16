@@ -60,7 +60,7 @@ The extension entry point is `gemini-extension.json` in the project root:
 {
   "name": "maestro",
   "version": "1.1.1",
-  "description": "Multi-agent orchestration extension that assembles specialized dev teams for complex engineering tasks",
+  "description": "Multi-agent development orchestration platform — 12 specialists, 4-phase orchestration, parallel dispatch, persistent sessions, and standalone review/debug/security/perf commands",
   "contextFileName": "GEMINI.md"
 }
 ```
@@ -263,6 +263,8 @@ Scripts provide operational utilities:
 - **read-state.sh**: Reads session state YAML frontmatter for resumption
 - **write-state.sh**: Updates session state atomically
 - **validate-agent-permissions.sh**: Checks agent tool permissions against required tools for a task
+- **sync-version.js**: Synchronizes version from `package.json` to `gemini-extension.json` during releases
+- **test-parallel-dispatch.sh**: Proof-of-concept test for parallel dispatch functionality
 
 These scripts bridge the gap between declarative configuration and runtime execution. They handle system-level operations that cannot be expressed purely in prompts.
 
@@ -647,7 +649,7 @@ Maestro enforces least-privilege tool access based on agent role:
 
 **Agents**: architect, api-designer, code-reviewer
 
-**Tools**: `read_file`, `glob`, `search_file_content`, `web_search`
+**Tools**: `read_file`, `glob`, `search_file_content`; architect additionally has `google_web_search`
 
 **Rationale**: These agents perform analysis and produce recommendations. They should not modify code or execute commands. Read-only access prevents accidental changes and enforces their advisory role.
 
@@ -675,7 +677,7 @@ Maestro enforces least-privilege tool access based on agent role:
 
 **Agents**: refactor, technical-writer
 
-**Tools**: `read_file`, `glob`, `search_file_content`, `write_file`, `replace_in_file`
+**Tools**: `read_file`, `glob`, `search_file_content`, `write_file`, `replace`
 
 **Rationale**: Code and documentation modifications that do not require shell execution (no builds, no tests, no deploys).
 
@@ -688,7 +690,7 @@ Maestro enforces least-privilege tool access based on agent role:
 
 **Agents**: coder, data-engineer, devops-engineer, tester
 
-**Tools**: `read_file`, `glob`, `search_file_content`, `write_file`, `replace_in_file`, `run_shell_command`
+**Tools**: `read_file`, `glob`, `search_file_content`, `write_file`, `replace`, `run_shell_command`
 
 **Rationale**: Complete implementation tasks that require writing code, running builds, executing tests, and deploying infrastructure.
 
