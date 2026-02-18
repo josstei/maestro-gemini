@@ -2,6 +2,8 @@ description = "Display the current orchestration session status"
 
 prompt = """Display the current orchestration session status.
 
+{{args}}
+
 ## Instructions
 
 The current session state is provided below:
