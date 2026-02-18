@@ -200,7 +200,19 @@ Prompt filenames must follow these rules:
 
 ### Tool Restriction Enforcement
 
-Parallel-dispatched agents run with `--yolo` (auto-approve all tool calls), which bypasses the tool permission model defined in agent frontmatter. To enforce least-privilege, every parallel dispatch prompt **must** include an explicit tool restriction block. The required prompt structure is:
+Maestro v1.2 enforces tool permissions at two levels:
+
+**Level 1: Hooks-based enforcement (primary)**
+
+The `BeforeTool` hook (`hooks/before-tool.sh`) intercepts every tool call and blocks unauthorized usage based on the agent's permissions in `hooks/permissions.json`. This works for both sequential delegation and parallel dispatch:
+- Sequential (`delegate_to_agent`): Agent identity tracked via state file (set by `BeforeAgent` hook)
+- Parallel (`parallel-dispatch.sh`): Agent identity set via `MAESTRO_CURRENT_AGENT` env var per spawned process
+
+The `BeforeToolSelection` hook provides a UX optimization by suggesting available tools to the model before selection, reducing wasted tool calls. This is NOT a security boundary (union aggregation can only add tools).
+
+**Level 2: Prompt-based enforcement (defense-in-depth)**
+
+Parallel-dispatched agents run with `--yolo` (auto-approve all tool calls). As defense-in-depth alongside hooks enforcement, every parallel dispatch prompt **must** still include an explicit tool restriction block:
 
 1. Agent Base Protocol (from `protocols/agent-base-protocol.md`)
 2. Filesystem Safety Protocol (from `protocols/filesystem-safety-protocol.md`)
@@ -222,7 +234,7 @@ Do NOT use any tools not listed above. Specifically:
 Violation of these restrictions constitutes a security boundary breach.
 ```
 
-Populate the tool list by reading the agent's definition file (`agents/<agent-name>.md`) and extracting the `tools` array from the YAML frontmatter. This is the only mechanism for enforcing tool permissions on parallel-dispatched agents until the Gemini CLI supports runtime tool restriction flags.
+Populate the tool list by reading the agent's definition file (`agents/<agent-name>.md`) and extracting the `tools` array from the YAML frontmatter.
 
 The file writing rules block template:
 
