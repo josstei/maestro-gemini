@@ -52,6 +52,7 @@ Maestro transforms Gemini CLI into a multi-agent orchestration platform. Instead
 - **Automated Planning** — Generates implementation plans with phase dependencies, agent assignments, and parallelization opportunities
 - **Parallel Execution** — Independent phases run concurrently through shell-based parallel dispatch
 - **Session Persistence** — All orchestration state tracked in YAML+Markdown files for reliable resumption
+- **Hooks-Based Tool Enforcement** — Lifecycle hooks enforce agent tool permissions at the middleware level
 - **Least-Privilege Security** — Each subagent receives only the tools required for its role
 - **Standalone Commands** — Direct access to code review, debugging, security audit, and performance analysis without full orchestration
 - **Configurable Settings** — 13 environment-variable-driven parameters for model selection, timeouts, validation strictness, and more
@@ -91,7 +92,7 @@ gemini extensions install https://github.com/josstei/maestro-gemini
 ```bash
 git clone https://github.com/josstei/maestro-gemini
 cd maestro-gemini
-gemini extensions link maestro/
+gemini extensions link .
 ```
 
 Restart Gemini CLI after installation for the extension to load.
@@ -268,11 +269,24 @@ All settings are optional. The orchestrator uses the defaults shown above when a
 
 | Role | Model | Purpose |
 |------|-------|---------|
-| Primary | `gemini-3-pro-preview` | All agents requiring strong reasoning |
-| Cost-optimized | `gemini-3-flash-preview` | technical-writer agent |
-| Fallback | `gemini-2.5-pro` | When Gemini 3 models are unavailable |
+| Dynamic routing | `auto` | All agents — Gemini CLI selects optimal model per turn |
+| Fallback | `gemini-2.5-pro` | When dynamic routing is unavailable |
 
-Override the primary model for all agents via `MAESTRO_DEFAULT_MODEL`, or just the writer via `MAESTRO_WRITER_MODEL`.
+All agents use `model: auto` by default, enabling Gemini CLI's `ModelRouterService` for per-turn model selection. Override via `MAESTRO_DEFAULT_MODEL` or `MAESTRO_WRITER_MODEL`.
+
+### Hooks
+
+Maestro uses Gemini CLI's hooks system for lifecycle middleware:
+
+| Hook | Purpose |
+|------|---------|
+| SessionStart | Generate permissions manifest, initialize session state |
+| BeforeToolSelection | Suggest available tools for active agent (UX hint) |
+| BeforeTool | **Primary gate**: block unauthorized tool calls per agent permissions |
+| BeforeAgent | Track active agent identity, inject session context |
+| AfterAgent | Validate handoff report format, clear agent tracking |
+
+Hook handlers are in `hooks/` and registered via `hooks/hooks.json`. Permissions are compiled from agent frontmatter at session start into `hooks/permissions.json`.
 
 ## Architecture
 
@@ -362,18 +376,18 @@ Maestro coordinates 12 specialized subagents:
 
 | Agent | Specialization | Tools | Model |
 |-------|---------------|-------|-------|
-| architect | System design, technology selection, component design | read, glob, search, web search | Pro |
-| api-designer | REST/GraphQL endpoint design, API contracts | read, glob, search | Pro |
-| coder | Feature implementation, clean code, SOLID principles | read, glob, search, write, replace, shell | Pro |
-| code-reviewer | Code quality review, best practices, security | read, glob, search | Pro |
-| data-engineer | Schema design, query optimization, ETL pipelines | read, glob, search, write, replace, shell | Pro |
-| debugger | Root cause analysis, log analysis, execution tracing | read, glob, search, shell | Pro |
-| devops-engineer | CI/CD pipelines, containerization, infrastructure | read, glob, search, write, replace, shell | Pro |
-| performance-engineer | Profiling, bottleneck identification, optimization | read, glob, search, shell | Pro |
-| refactor | Code modernization, technical debt, design patterns | read, glob, search, write, replace | Pro |
-| security-engineer | Vulnerability assessment, OWASP, threat modeling | read, glob, search, shell | Pro |
-| tester | Unit/integration/E2E tests, TDD, coverage analysis | read, glob, search, write, replace, shell | Pro |
-| technical-writer | API docs, READMEs, architecture documentation | read, glob, search, write, replace | Flash |
+| architect | System design, technology selection, component design | read, glob, search, web search | auto |
+| api-designer | REST/GraphQL endpoint design, API contracts | read, glob, search | auto |
+| coder | Feature implementation, clean code, SOLID principles | read, glob, search, write, replace, shell | auto |
+| code-reviewer | Code quality review, best practices, security | read, glob, search | auto |
+| data-engineer | Schema design, query optimization, ETL pipelines | read, glob, search, write, replace, shell | auto |
+| debugger | Root cause analysis, log analysis, execution tracing | read, glob, search, shell | auto |
+| devops-engineer | CI/CD pipelines, containerization, infrastructure | read, glob, search, write, replace, shell | auto |
+| performance-engineer | Profiling, bottleneck identification, optimization | read, glob, search, shell | auto |
+| refactor | Code modernization, technical debt, design patterns | read, glob, search, write, replace | auto |
+| security-engineer | Vulnerability assessment, OWASP, threat modeling | read, glob, search, shell | auto |
+| tester | Unit/integration/E2E tests, TDD, coverage analysis | read, glob, search, write, replace, shell | auto |
+| technical-writer | API docs, READMEs, architecture documentation | read, glob, search, write, replace | auto |
 
 ### Tool Access Philosophy
 
@@ -523,11 +537,11 @@ All state files use YAML frontmatter for machine-readable metadata and Markdown 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feat/your-feature`
 3. Make your changes
-4. Test manually by linking the extension: `gemini extensions link maestro/`
+4. Test manually by linking the extension: `gemini extensions link .`
 5. Verify commands work in Gemini CLI
 6. Submit a pull request
 
-This is a configuration-only project — there is no build step, test suite, or linting. All changes are validated manually via Gemini CLI.
+Run the hooks integration tests with `bash tests/run-all.sh`. All other changes are validated manually via Gemini CLI.
 
 ## License
 
