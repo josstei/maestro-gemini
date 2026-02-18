@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$HOOK_DIR/lib/common.sh"
 
-INPUT=$(read_stdin)
-SESSION_ID=$(json_get "$INPUT" "session_id")
-CWD=$(json_get "$INPUT" "cwd")
-PROMPT=$(json_get "$INPUT" "prompt")
+main() {
+  INPUT=$(read_stdin)
+  SESSION_ID=$(json_get "$INPUT" "session_id")
+  CWD=$(json_get "$INPUT" "cwd")
+  PROMPT=$(json_get "$INPUT" "prompt")
 
-AGENT_NAME=$(json_get "$INPUT" "agent_name")
+  AGENT_NAME=$(json_get "$INPUT" "agent_name")
 
-PROMPT_DETECTED_AGENT=$(python3 - "$PROMPT" <<'PYEOF' 2>/dev/null || echo ""
+  PROMPT_DETECTED_AGENT=$(python3 - "$PROMPT" <<'PYEOF' 2>/dev/null || echo ""
 import sys, re
 
 KNOWN_AGENTS = [
@@ -31,20 +31,20 @@ print('')
 PYEOF
 )
 
-if [ -z "$AGENT_NAME" ] && [ -n "$PROMPT_DETECTED_AGENT" ]; then
-  AGENT_NAME="$PROMPT_DETECTED_AGENT"
-fi
+  if [ -z "$AGENT_NAME" ] && [ -n "$PROMPT_DETECTED_AGENT" ]; then
+    AGENT_NAME="$PROMPT_DETECTED_AGENT"
+  fi
 
-if [ -n "$AGENT_NAME" ] && validate_session_id "$SESSION_ID" 2>/dev/null; then
-  set_active_agent "$SESSION_ID" "$AGENT_NAME"
-  log_hook "INFO" "BeforeAgent: Detected agent '$AGENT_NAME' — set active agent [session=$SESSION_ID]"
-fi
+  if [ -n "$AGENT_NAME" ] && validate_session_id "$SESSION_ID" 2>/dev/null; then
+    set_active_agent "$SESSION_ID" "$AGENT_NAME"
+    log_hook "INFO" "BeforeAgent: Detected agent '$AGENT_NAME' — set active agent [session=$SESSION_ID]"
+  fi
 
-SESSION_STATE="$CWD/.gemini/state/active-session.md"
-CONTEXT_PARTS=""
+  SESSION_STATE="$CWD/.gemini/state/active-session.md"
+  CONTEXT_PARTS=""
 
-if [ -f "$SESSION_STATE" ]; then
-  CONTEXT_PARTS=$(python3 - "$SESSION_STATE" <<'PYEOF' 2>/dev/null || echo ""
+  if [ -f "$SESSION_STATE" ]; then
+    CONTEXT_PARTS=$(python3 - "$SESSION_STATE" <<'PYEOF' 2>/dev/null || echo ""
 import re, sys
 with open(sys.argv[1], 'r') as f:
     content = f.read()
@@ -58,11 +58,14 @@ if match2:
 if parts:
     print('Active session: ' + ', '.join(parts))
 PYEOF
-  )
-fi
+    )
+  fi
 
-if [ -n "$CONTEXT_PARTS" ]; then
-  respond_with_context "BeforeAgent" "$CONTEXT_PARTS"
-else
-  respond_allow
-fi
+  if [ -n "$CONTEXT_PARTS" ]; then
+    respond_with_context "BeforeAgent" "$CONTEXT_PARTS"
+  else
+    respond_allow
+  fi
+}
+
+safe_main main

@@ -1,29 +1,29 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$HOOK_DIR/lib/common.sh"
 
-INPUT=$(read_stdin)
-SESSION_ID=$(json_get "$INPUT" "session_id")
+main() {
+  INPUT=$(read_stdin)
+  SESSION_ID=$(json_get "$INPUT" "session_id")
 
-ACTIVE_AGENT=$(get_active_agent "$SESSION_ID" 2>/dev/null || echo "")
+  ACTIVE_AGENT=$(get_active_agent "$SESSION_ID" 2>/dev/null || echo "")
 
-if [ -z "$ACTIVE_AGENT" ]; then
-  echo '{}'
-  exit 0
-fi
+  if [ -z "$ACTIVE_AGENT" ]; then
+    echo '{}'
+    return 0
+  fi
 
-MODEL_OVERRIDE=""
+  MODEL_OVERRIDE=""
 
-if [ "$ACTIVE_AGENT" = "technical-writer" ] && [ -n "${MAESTRO_WRITER_MODEL:-}" ]; then
-  MODEL_OVERRIDE="$MAESTRO_WRITER_MODEL"
-elif [ -n "${MAESTRO_DEFAULT_MODEL:-}" ]; then
-  MODEL_OVERRIDE="$MAESTRO_DEFAULT_MODEL"
-fi
+  if [ "$ACTIVE_AGENT" = "technical-writer" ] && [ -n "${MAESTRO_WRITER_MODEL:-}" ]; then
+    MODEL_OVERRIDE="$MAESTRO_WRITER_MODEL"
+  elif [ -n "${MAESTRO_DEFAULT_MODEL:-}" ]; then
+    MODEL_OVERRIDE="$MAESTRO_DEFAULT_MODEL"
+  fi
 
-if [ -n "$MODEL_OVERRIDE" ]; then
-  python3 -c "
+  if [ -n "$MODEL_OVERRIDE" ]; then
+    python3 -c "
 import json, sys
 print(json.dumps({
     'hookSpecificOutput': {
@@ -34,6 +34,9 @@ print(json.dumps({
     }
 }))
 " "$MODEL_OVERRIDE"
-else
-  echo '{}'
-fi
+  else
+    echo '{}'
+  fi
+}
+
+safe_main main

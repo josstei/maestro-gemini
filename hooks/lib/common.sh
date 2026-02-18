@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
 MAESTRO_HOOKS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-MAESTRO_ROOT="$(cd "$MAESTRO_HOOKS_DIR/.." && pwd)"
 
 read_stdin() {
   if [ -t 0 ]; then
@@ -122,5 +120,13 @@ clear_active_agent() {
   fi
   local state_dir="/tmp/maestro-hooks"
   rm -f "$state_dir/$session_id/active-agent"
+}
+
+safe_main() {
+  local main_fn="$1"
+  if ! "$main_fn"; then
+    log_hook "ERROR" "Hook failed — returning safe allow"
+    echo '{"decision":"allow"}'
+  fi
 }
 
