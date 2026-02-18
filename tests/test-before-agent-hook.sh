@@ -39,9 +39,9 @@ else
   exit 1
 fi
 
-echo "Test 3: Falls back to prompt-based word-boundary detection when agent_name absent"
+echo "Test 3: Falls back to prompt-based delegation-pattern detection when agent_name absent"
 rm -rf "$STATE_DIR/test-ba-004" 2>/dev/null || true
-INPUT_FALLBACK='{"session_id":"test-ba-004","transcript_path":"/tmp/t","cwd":"/tmp","hook_event_name":"BeforeAgent","timestamp":"2026-02-17T00:00:00Z","prompt":"You are the tester agent. Run the test suite."}'
+INPUT_FALLBACK='{"session_id":"test-ba-004","transcript_path":"/tmp/t","cwd":"/tmp","hook_event_name":"BeforeAgent","timestamp":"2026-02-17T00:00:00Z","prompt":"delegate to tester to run the test suite"}'
 OUTPUT=$(echo "$INPUT_FALLBACK" | bash "$HOOK" 2>/dev/null)
 
 python3 - "$OUTPUT" <<'PYEOF' || { echo "FAIL: Invalid JSON for fallback detection"; exit 1; }
@@ -53,7 +53,7 @@ PYEOF
 
 TRACKED_FALLBACK=$(cat "$STATE_DIR/test-ba-004/active-agent" 2>/dev/null || echo "")
 if [ "$TRACKED_FALLBACK" = "tester" ]; then
-  echo "PASS: Active agent set to 'tester' via prompt-based fallback"
+  echo "PASS: Active agent set to 'tester' via prompt-based delegation-pattern fallback"
 else
   echo "FAIL: Expected 'tester' in active-agent via fallback, got '$TRACKED_FALLBACK'"
   exit 1
@@ -99,5 +99,17 @@ assert decision == 'allow', f'Expected allow decision, got {data}'
 print("PASS: Returns allow when no session state")
 PYEOF
 
-rm -rf "$STATE_DIR/test-ba-001" "$STATE_DIR/test-ba-002" "$STATE_DIR/test-ba-003" "$STATE_DIR/test-ba-004" 2>/dev/null || true
+echo "Test 6: Casual agent name mention does not trigger detection"
+rm -rf "$STATE_DIR/test-ba-casual" 2>/dev/null || true
+INPUT_CASUAL='{"session_id":"test-ba-casual","transcript_path":"/tmp/t","cwd":"/tmp","hook_event_name":"BeforeAgent","timestamp":"2026-02-17T00:00:00Z","prompt":"You are the tester agent. Run the test suite."}'
+echo "$INPUT_CASUAL" | bash "$HOOK" 2>/dev/null
+TRACKED_CASUAL=$(cat "$STATE_DIR/test-ba-casual/active-agent" 2>/dev/null || echo "")
+if [ -z "$TRACKED_CASUAL" ]; then
+  echo "PASS: Casual agent name mention did not set active-agent"
+else
+  echo "FAIL: Expected no active-agent for casual mention, got '$TRACKED_CASUAL'"
+  exit 1
+fi
+
+rm -rf "$STATE_DIR/test-ba-001" "$STATE_DIR/test-ba-002" "$STATE_DIR/test-ba-003" "$STATE_DIR/test-ba-004" "$STATE_DIR/test-ba-casual" 2>/dev/null || true
 echo "=== All BeforeAgent hook tests passed ==="

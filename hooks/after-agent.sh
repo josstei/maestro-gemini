@@ -10,7 +10,8 @@ main() {
 
   AGENT_NAME=$(get_active_agent "$SESSION_ID")
 
-  if [ -n "$AGENT_NAME" ]; then
+  AGENT_NAME_LOWER=$(echo "$AGENT_NAME" | tr '[:upper:]' '[:lower:]')
+  if [ -n "$AGENT_NAME" ] && [ "$AGENT_NAME_LOWER" != "techlead" ] && [ "$AGENT_NAME_LOWER" != "orchestrator" ]; then
     STOP_HOOK_LOWER=$(echo "$STOP_HOOK_ACTIVE" | tr '[:upper:]' '[:lower:]')
 
     TMPFILE=$(mktemp)

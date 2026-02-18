@@ -23,8 +23,11 @@ KNOWN_AGENTS = [
 
 prompt = sys.argv[1].lower()
 for agent in KNOWN_AGENTS:
-    pattern = r'\b' + re.escape(agent) + r'\b'
-    if re.search(pattern, prompt):
+    DELEGATION_PATTERNS = [
+        r'(?:delegate|transfer|hand\s*off|dispatch|invoke)\s+(?:to\s+)?(?:the\s+)?' + re.escape(agent) + r'\b',
+        r'@' + re.escape(agent) + r'\b',
+    ]
+    if any(re.search(p, prompt) for p in DELEGATION_PATTERNS):
         print(agent)
         sys.exit(0)
 
