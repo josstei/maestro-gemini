@@ -10,8 +10,9 @@ main() {
 
   AGENT_NAME=$(get_active_agent "$SESSION_ID")
 
-  STOP_HOOK_LOWER=$(echo "$STOP_HOOK_ACTIVE" | tr '[:upper:]' '[:lower:]')
-  if [ -n "$AGENT_NAME" ] && [ "$STOP_HOOK_LOWER" != "true" ]; then
+  if [ -n "$AGENT_NAME" ]; then
+    STOP_HOOK_LOWER=$(echo "$STOP_HOOK_ACTIVE" | tr '[:upper:]' '[:lower:]')
+
     TMPFILE=$(mktemp)
     echo "$INPUT" > "$TMPFILE"
     VALIDATION=$(python3 - "$TMPFILE" <<'PYEOF' 2>/dev/null || echo "OK"
@@ -22,14 +23,14 @@ with open(sys.argv[1], 'r') as f:
 
 response = data.get('prompt_response', '')
 
-has_task_report = 'Task Report' in response or 'Status:' in response
-has_downstream = 'Downstream Context' in response or 'downstream' in response.lower()
+has_task_report = '## Task Report' in response or '# Task Report' in response
+has_downstream = '## Downstream Context' in response or '# Downstream Context' in response
 
 warnings = []
 if not has_task_report:
-    warnings.append('Missing Task Report section')
+    warnings.append('Missing Task Report section (expected ## Task Report heading)')
 if not has_downstream:
-    warnings.append('Missing Downstream Context section')
+    warnings.append('Missing Downstream Context section (expected ## Downstream Context heading)')
 
 if warnings:
     print('WARN: ' + '; '.join(warnings))
@@ -41,12 +42,16 @@ PYEOF
 
     if [[ "$VALIDATION" == WARN:* ]]; then
       REASON="${VALIDATION#WARN: }"
-      log_hook "WARN" "AfterAgent [$AGENT_NAME]: $VALIDATION — requesting retry"
-      python3 - "$REASON" <<'PYEOF'
+      if [ "$STOP_HOOK_LOWER" = "true" ]; then
+        log_hook "WARN" "AfterAgent [$AGENT_NAME]: Retry still malformed: $REASON — allowing to prevent infinite loop"
+      else
+        log_hook "WARN" "AfterAgent [$AGENT_NAME]: $VALIDATION — requesting retry"
+        python3 - "$REASON" <<'PYEOF'
 import sys, json
-print(json.dumps({"decision": "block", "reason": "Handoff report validation failed: " + sys.argv[1] + ". Please include both a Task Report section and a Downstream Context section in your response."}))
+print(json.dumps({"decision": "deny", "reason": "Handoff report validation failed: " + sys.argv[1] + ". Please include both a ## Task Report section and a ## Downstream Context section in your response."}))
 PYEOF
-      return 0
+        return 0
+      fi
     else
       log_hook "INFO" "AfterAgent [$AGENT_NAME]: Handoff report validated"
     fi
