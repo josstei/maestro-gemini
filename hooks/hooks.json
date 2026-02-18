@@ -2,13 +2,14 @@
   "hooks": {
     "SessionStart": [
       {
+        "matcher": "startup",
         "hooks": [
           {
             "type": "command",
             "command": "bash ${extensionPath}/hooks/session-start.sh",
             "name": "maestro-session-start",
             "description": "Initialize Maestro workspace state directory for the session",
-            "timeout": 15000
+            "timeout": 5000
           }
         ]
       }
@@ -54,12 +55,25 @@
     ],
     "SessionEnd": [
       {
+        "matcher": "exit",
         "hooks": [
           {
             "type": "command",
             "command": "bash ${extensionPath}/hooks/session-end.sh",
-            "name": "maestro-session-end",
-            "description": "Clean up temporary state files",
+            "name": "maestro-session-end-exit",
+            "description": "Clean up temporary state files on exit",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "matcher": "logout",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${extensionPath}/hooks/session-end.sh",
+            "name": "maestro-session-end-logout",
+            "description": "Clean up temporary state files on logout",
             "timeout": 5000
           }
         ]

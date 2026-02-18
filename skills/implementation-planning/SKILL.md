@@ -163,8 +163,16 @@ Include this table in every implementation plan:
 ## Plan Document Generation
 
 ### Output Location
-Write the completed implementation plan to:
-`.gemini/plans/YYYY-MM-DD-<topic-slug>-impl-plan.md`
+
+Write the completed implementation plan to both locations:
+
+1. **Project archive** (permanent reference): `.gemini/plans/YYYY-MM-DD-<topic-slug>-impl-plan.md`
+2. **CLI plans directory** (required by `exit_plan_mode`): Copy the same file to `~/.gemini/tmp/plans/` via `run_shell_command`:
+   ```bash
+   mkdir -p ~/.gemini/tmp/plans && cp .gemini/plans/YYYY-MM-DD-<topic-slug>-impl-plan.md ~/.gemini/tmp/plans/
+   ```
+
+The `exit_plan_mode` tool requires `plan_path` to point to the `~/.gemini/tmp/plans/` copy, not the project-level archive.
 
 ### Document Structure
 Use the implementation plan template from `templates/implementation-plan.md`.
@@ -205,6 +213,6 @@ After writing the implementation plan:
 2. Present the dependency graph and execution strategy
 3. Highlight parallel execution opportunities
 4. Provide token budget estimates
-5. Call `exit_plan_mode` to present the completed plan for user approval before proceeding
+5. Call `exit_plan_mode` with `plan_path` set to the `~/.gemini/tmp/plans/` copy to present the plan for user approval
 6. Ask if the user is ready to proceed to execution (Phase 3)
 7. Upon approval, create the session state file via the session-management skill

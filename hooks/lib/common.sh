@@ -78,7 +78,7 @@ log_hook() {
 
 validate_session_id() {
   local session_id="$1"
-  if [[ ! "$session_id" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+  if [[ ! "$session_id" =~ ^[a-zA-Z0-9_-]+$ ]]; then
     log_hook "ERROR" "Invalid session_id: contains unsafe characters"
     return 1
   fi

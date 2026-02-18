@@ -12,8 +12,8 @@ Activate this skill when delegating work to subagents during orchestration execu
 Before constructing any delegation prompt, inject the shared agent base protocol:
 
 ### Injection Steps
-1. Read `protocols/agent-base-protocol.md`
-2. Read `protocols/filesystem-safety-protocol.md`
+1. Read `skills/delegation/protocols/agent-base-protocol.md`
+2. Read `skills/delegation/protocols/filesystem-safety-protocol.md`
 3. Prepend both protocols to the delegation prompt (base protocol first, then filesystem safety) — these appear before the task-specific content
 4. For each phase listed in the current phase's `blocked_by`, read `phases[].downstream_context` from session state and include it in the prompt
 5. If any required `downstream_context` is missing, include an explicit placeholder noting the missing dependency context (never omit silently)
@@ -159,7 +159,7 @@ Parallel delegation uses `scripts/parallel-dispatch.sh` to spawn independent `ge
 For each agent in a parallel batch, write a complete prompt file to `<state_dir>/parallel/<batch-id>/prompts/<agent-name>.txt`:
 
 ```
-[Injected base protocol from protocols/agent-base-protocol.md and protocols/filesystem-safety-protocol.md]
+[Injected base protocol from skills/delegation/protocols/agent-base-protocol.md and skills/delegation/protocols/filesystem-safety-protocol.md]
 
 Task: [One-line description]
 
@@ -210,8 +210,8 @@ Tool permissions are enforced natively via the `tools:` array in each agent's YA
 
 Parallel-dispatched agents run with `--yolo` (auto-approve all tool calls). As defense-in-depth alongside native enforcement, every parallel dispatch prompt **must** still include an explicit tool restriction block:
 
-1. Agent Base Protocol (from `protocols/agent-base-protocol.md`)
-2. Filesystem Safety Protocol (from `protocols/filesystem-safety-protocol.md`)
+1. Agent Base Protocol (from `skills/delegation/protocols/agent-base-protocol.md`)
+2. Filesystem Safety Protocol (from `skills/delegation/protocols/filesystem-safety-protocol.md`)
 3. **TOOL RESTRICTIONS block (immediately here, before any task content)**
 4. **FILE WRITING RULES block (immediately after tool restrictions)**
 5. Context chain from prior phases
