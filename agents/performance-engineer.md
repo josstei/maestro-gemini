@@ -1,5 +1,6 @@
 ---
 name: performance-engineer
+kind: local
 description: "Performance engineering specialist for bottleneck identification, profiling, and optimization. Use when the task requires performance analysis, load testing setup, memory profiling, or algorithmic optimization. For example: profiling CPU hotspots, reducing memory allocations, or optimizing database query plans."
 display_name: Performance Engineer
 tools:
@@ -7,6 +8,7 @@ tools:
   - list_directory
   - glob
   - grep_search
+  - read_many_files
   - run_shell_command
   - google_web_search
 temperature: 0.2

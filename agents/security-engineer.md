@@ -1,5 +1,6 @@
 ---
 name: security-engineer
+kind: local
 description: "Security engineering specialist for vulnerability assessment, threat modeling, and security best practices. Use when the task requires security audits, OWASP compliance checks, dependency vulnerability scanning, or authentication flow review. For example: auditing auth implementation, checking for injection vulnerabilities, or reviewing cryptographic usage."
 display_name: Security Engineer
 tools:

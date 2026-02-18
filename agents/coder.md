@@ -1,5 +1,6 @@
 ---
 name: coder
+kind: local
 description: "Implementation specialist for writing clean, well-structured code following established patterns and SOLID principles. Use when the task requires feature implementation, writing new modules, or building out functionality from specifications. For example: building a new API endpoint, implementing a service class, or writing utility functions."
 display_name: Coder
 tools:

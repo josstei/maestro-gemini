@@ -1,5 +1,6 @@
 ---
 name: tester
+kind: local
 description: "Testing specialist for unit tests, integration tests, test coverage analysis, and TDD workflows. Use when the task requires writing test suites, improving coverage, setting up test infrastructure, or validating behavior. For example: writing unit tests for a service class, setting up integration test fixtures, or creating end-to-end test scenarios."
 display_name: Tester
 tools:
