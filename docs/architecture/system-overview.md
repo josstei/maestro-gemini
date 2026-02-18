@@ -704,7 +704,12 @@ Maestro enforces least-privilege tool access based on agent role:
 
 ### Tool Enforcement
 
-Tool permissions are defined in agent frontmatter `tools:` fields and enforced by the Gemini CLI's tool registry. When an agent is loaded, only the tools listed in its frontmatter are registered — unlisted tools are invisible to the agent's model. This is enforced at the registry level, not the policy level, so it cannot be bypassed by `--yolo` mode. Agents are auto-registered as callable tools at extension load time.
+Tool permissions are defined in agent frontmatter `tools:` fields and enforced differently depending on execution mode:
+
+- **Sequential delegation** (subagent tool calls): The Gemini CLI enforces tool restrictions via registry filtering — only listed tools are registered for the subagent, making unlisted tools invisible. This is at the registry level, not policy, so `--yolo` cannot bypass it.
+- **Parallel dispatch** (`gemini -p` processes): Each process runs as the main agent with full tool access. Prompt-based enforcement (injected TOOL RESTRICTIONS blocks) provides defense-in-depth, with `--yolo` auto-approving all tool calls.
+
+Agents are auto-registered as callable tools at extension load time.
 
 ## Model Configuration
 

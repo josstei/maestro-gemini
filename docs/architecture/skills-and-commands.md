@@ -35,15 +35,15 @@ Skills are on-demand methodology modules defined as Markdown files with YAML fro
 
 ### Activation Mechanism
 
-Skills are activated by referencing them in command prompt text (e.g., "Activate the design-dialogue skill to guide the conversation."). When the Gemini CLI processes this text, it detects skill references and injects the corresponding `SKILL.md` content into the conversation context for the duration of the operation. This is a text-based convention within the prompt, not a formal API or function call.
+Skills are activated via the `activate_skill` tool call. When the orchestrator or an agent calls `activate_skill`, the Gemini CLI presents a user confirmation dialog (extension-provided skills are never builtin and always require explicit consent unless an auto-approve policy is configured). Upon confirmation, the CLI injects the corresponding `SKILL.md` content and its directory contents into the conversation context.
 
 ```mermaid
 flowchart TD
-    A[User types command] --> B[Gemini CLI reads TOML]
-    B --> C[Extract skill references from prompt]
-    C --> D[Inject SKILL.md content into context]
-    D --> E[Orchestrator receives expanded context]
-    E --> F[Follow skill procedures]
+    A[Orchestrator decides skill is needed] --> B[Call activate_skill tool]
+    B --> C{User confirmation dialog}
+    C -->|Approved| D[Inject SKILL.md + directory into context]
+    C -->|Denied| E[Proceed without skill]
+    D --> F[Follow skill procedures]
 ```
 
 ### Why On-Demand?
@@ -222,15 +222,15 @@ Commands use Gemini CLI template syntax:
 - `{{args}}`: Substitutes user-provided arguments
 - `<user-request>{{args}}</user-request>`: Sandbox user input to prevent prompt injection attacks
 
-### Skill Injection
+### Skill Activation
 
-Commands activate skills by including skill activation directives in the prompt text. For example:
+Commands instruct the orchestrator to activate skills via the `activate_skill` tool. Command prompts include activation directives such as:
 
 ```
 Activate the design-dialogue skill to guide the conversation.
 ```
 
-When the Gemini CLI processes this, it injects the corresponding `skills/design-dialogue/SKILL.md` content into the conversation.
+The orchestrator calls `activate_skill` which triggers a user confirmation dialog. Upon approval, the CLI injects the `skills/design-dialogue/SKILL.md` content and directory into the context.
 
 ### File Injection
 

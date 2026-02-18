@@ -225,7 +225,7 @@ When calling an agent tool (e.g., `coder(prompt: "...")`), the Gemini CLI enforc
 
 #### Parallel Delegation
 
-For parallel dispatch (independent `gemini -p` processes), agents are not loaded from extension definitions — each process runs as a standalone Gemini CLI instance. Tool restrictions rely on prompt-based enforcement as defense-in-depth. The delegation skill injects explicit tool restriction blocks into every parallel delegation prompt:
+For parallel dispatch (independent `gemini -p` processes), each process runs as the **main agent** — not as a subagent. The extension is loaded and agents are registered, but the prompt executes directly with full tool access since no specific subagent is invoked. Tool restrictions rely on prompt-based enforcement as defense-in-depth, and `--yolo` auto-approves all tool calls for these processes. The delegation skill injects explicit tool restriction blocks into every parallel delegation prompt:
 
 ```
 TOOL RESTRICTIONS (MANDATORY):
