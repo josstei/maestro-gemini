@@ -185,7 +185,7 @@ ${PROMPT_CONTENT}"
   PIDS+=($!)
   LAUNCHED=$((LAUNCHED + 1))
 
-  if [[ "$STAGGER_DELAY" -gt 0 ]] && [[ "$PROMPT_FILE" != "${PROMPT_FILES[-1]}" ]]; then
+  if [[ "$STAGGER_DELAY" -gt 0 ]] && [[ "$PROMPT_FILE" != "${PROMPT_FILES[${#PROMPT_FILES[@]}-1]}" ]]; then
     sleep "$STAGGER_DELAY"
   fi
 done
