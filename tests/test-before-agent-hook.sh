@@ -19,10 +19,10 @@ assert isinstance(data, dict), "Output must be a JSON object"
 print("PASS: Returns valid JSON")
 PYEOF
 
-echo "Test 2: Detects agent name from agent_name field and sets active-agent"
+echo "Test 2: Detects agent name from MAESTRO_CURRENT_AGENT env var and sets active-agent"
 rm -rf "$STATE_DIR/test-ba-001" 2>/dev/null || true
-INPUT_AGENT='{"session_id":"test-ba-001","transcript_path":"/tmp/t","cwd":"/tmp","hook_event_name":"BeforeAgent","timestamp":"2026-02-17T00:00:00Z","agent_name":"coder","prompt":"Implement the TODO API endpoint."}'
-OUTPUT=$(echo "$INPUT_AGENT" | bash "$HOOK" 2>/dev/null)
+INPUT_AGENT='{"session_id":"test-ba-001","transcript_path":"/tmp/t","cwd":"/tmp","hook_event_name":"BeforeAgent","timestamp":"2026-02-17T00:00:00Z","prompt":"Implement the TODO API endpoint."}'
+OUTPUT=$(MAESTRO_CURRENT_AGENT="coder" bash "$HOOK" <<< "$INPUT_AGENT" 2>/dev/null)
 
 python3 - "$OUTPUT" <<'PYEOF' || { echo "FAIL: Invalid JSON for agent detection"; exit 1; }
 import json, sys
@@ -33,7 +33,7 @@ PYEOF
 
 TRACKED=$(cat "$STATE_DIR/test-ba-001/active-agent" 2>/dev/null || echo "")
 if [ "$TRACKED" = "coder" ]; then
-  echo "PASS: Active agent set to 'coder' from agent_name field"
+  echo "PASS: Active agent set to 'coder' from MAESTRO_CURRENT_AGENT env var"
 else
   echo "FAIL: Expected 'coder' in active-agent, got '$TRACKED'"
   exit 1

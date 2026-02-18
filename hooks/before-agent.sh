@@ -9,9 +9,10 @@ main() {
   CWD=$(json_get "$INPUT" "cwd")
   PROMPT=$(json_get "$INPUT" "prompt")
 
-  AGENT_NAME=$(json_get "$INPUT" "agent_name")
+  AGENT_NAME="${MAESTRO_CURRENT_AGENT:-}"
 
-  PROMPT_DETECTED_AGENT=$(python3 - "$PROMPT" <<'PYEOF' 2>/dev/null || echo ""
+  if [ -z "$AGENT_NAME" ]; then
+    AGENT_NAME=$(python3 - "$PROMPT" <<'PYEOF' 2>/dev/null || echo ""
 import sys, re
 
 KNOWN_AGENTS = [
@@ -29,10 +30,7 @@ for agent in KNOWN_AGENTS:
 
 print('')
 PYEOF
-)
-
-  if [ -z "$AGENT_NAME" ] && [ -n "$PROMPT_DETECTED_AGENT" ]; then
-    AGENT_NAME="$PROMPT_DETECTED_AGENT"
+    )
   fi
 
   if [ -n "$AGENT_NAME" ] && validate_session_id "$SESSION_ID" 2>/dev/null; then
