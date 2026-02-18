@@ -2,7 +2,6 @@
 name: devops-engineer
 kind: local
 description: "DevOps specialist for CI/CD pipelines, containerization, deployment automation, and infrastructure configuration. Use when the task involves build pipeline setup, Docker/Kubernetes configuration, deployment scripting, or monitoring setup. For example: writing a GitHub Actions workflow, creating a Dockerfile, or configuring Terraform."
-display_name: DevOps Engineer
 tools:
   - read_file
   - list_directory
