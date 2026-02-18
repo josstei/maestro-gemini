@@ -74,6 +74,7 @@ design_document: ".gemini/plans/<design-doc-filename>"
 implementation_plan: ".gemini/plans/<impl-plan-filename>"
 current_phase: 1
 total_phases: <integer from impl plan>
+execution_mode: null
 
 token_usage:
   total_input: 0
