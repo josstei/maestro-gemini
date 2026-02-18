@@ -803,6 +803,8 @@ Measurement Plan:
 
 This section walks through the Design → Plan → Execute → Complete lifecycle from a user perspective.
 
+> **Skill Activation Prompts**: Each skill activated during orchestration requires a user confirmation dialog in the Gemini CLI. Extension-provided skills are never auto-approved. During a full `/maestro:orchestrate` workflow, expect 3-5 confirmation prompts — one per phase skill activation. To suppress these prompts, configure an auto-approve policy in your Gemini CLI settings.
+
 ```mermaid
 flowchart TD
     Start([Start Orchestration]) --> Design[Phase 1: Design Dialogue]
