@@ -5,61 +5,42 @@ All notable changes to Maestro will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.1] - 2026-02-18
-
-### Fixed
-
-- Fixed `search_file_content` → `grep_search` across all documentation (canonical tool name)
-- Fixed `excludeTools` patterns to use proper regex syntax instead of shell glob syntax
-- Removed redundant hook-based permission enforcement (`before-tool.sh`, `before-tool-selection.sh`, `after-tool.sh`) — native frontmatter `tools:` handles this
-- Fixed all agent definitions: added `display_name`, expanded tool access to include `grep_search`, improved descriptions
-- Removed `permissions.json` and `generate-permissions.sh` (redundant permissions manifest superseded by native enforcement)
-- Removed `validate-agent-permissions.sh` (validated against removed permissions manifest)
-
-### Added
-
-- `settings` declarations in `gemini-extension.json` for `MAESTRO_DEFAULT_MODEL` and `MAESTRO_WRITER_MODEL` environment variables
-- `BeforeModel` hook for per-agent model override via environment variables
-- `write_todos` phase progress tracking in orchestrator
-- `enter_plan_mode`/`exit_plan_mode` for read-only Phase 1-2
-- `save_memory` for cross-session knowledge persistence at Phase 4
-- `get_internal_docs` reference for self-documenting CLI capabilities
-
-### Removed
-
-- `before-tool.sh`, `before-tool-selection.sh`, `after-tool.sh` hooks (redundant with native frontmatter tool enforcement)
-- `permissions.json` and `generate-permissions.sh` (redundant permissions manifest)
-- `validate-agent-permissions.sh` (validated against removed permissions)
-
 ## [1.2.0] - 2026-02-18
 
 ### Added
 
-- **Hooks-based lifecycle middleware** — 5 hook handlers for SessionStart, BeforeToolSelection, BeforeTool, BeforeAgent, AfterAgent
-- **Tool permission enforcement** — BeforeTool blocks unauthorized tool calls (primary gate); BeforeToolSelection suggests available tools (UX optimization)
-- **Model inheritance** — All agents use inherited model selection (omit `model` field, inheriting from main session)
-- **Agent tracking** — BeforeAgent/AfterAgent track active agent for permission enforcement in parallel dispatch
-- **Handoff report validation** — AfterAgent validates agent output includes Task Report and Downstream Context
-- **Permissions manifest** — `hooks/generate-permissions.sh` compiles agent frontmatter into permissions.json (stdlib only, no pyyaml)
-- **Integration test suite** — `tests/run-all.sh` with tests for permissions, hooks, and tool enforcement
+- **Hooks-based lifecycle middleware** — 5 hook handlers: SessionStart, BeforeAgent, AfterAgent, BeforeModel, SessionEnd
+- **Agent tracking** — BeforeAgent/AfterAgent hooks track active agent identity across parallel dispatch
+- **Handoff report validation** — AfterAgent hook validates agent output includes Task Report and Downstream Context
+- **Model inheritance** — All agents omit the `model` field, inheriting the main session's model selection
+- **Integration test suite** — `tests/run-all.sh` with tests for hook lifecycle events
 - **macOS timeout fallback** — Cancel-file-based watchdog with SIGTERM/SIGKILL for systems without GNU `timeout`
+- `settings` declarations in `gemini-extension.json` for `MAESTRO_DEFAULT_MODEL` and `MAESTRO_WRITER_MODEL` environment variables (parallel dispatch)
+- `write_todos` phase progress tracking in orchestrator
+- `enter_plan_mode`/`exit_plan_mode` for read-only Phase 1-2
+- `save_memory` for cross-session knowledge persistence at Phase 4
 
 ### Changed
 
 - All agents: removed hardcoded models (inherit from main session)
-- All agents: `search_file_content` to `grep_search` (canonical tool name)
+- All agents: `search_file_content` renamed to `grep_search` (canonical tool name)
 - All agents: unified Handoff Report output contract
 - `parallel-dispatch.sh`: sets `MAESTRO_CURRENT_AGENT` per spawned process
-- `GEMINI.md`: updated agent roster, settings, and hooks documentation
-- `delegation` skill: documents hooks-based enforcement as primary, prompt-based as defense-in-depth
+- `delegation` skill: prompt-based enforcement documented as defense-in-depth (native frontmatter is primary gate)
 
 ### Fixed
 
-- Tool permission enforcement is now middleware-based (hooks) instead of prompt-only
+- `excludeTools` patterns corrected to use proper regex syntax instead of shell glob syntax
+- All agent definitions: added `display_name`, expanded tool access to include `grep_search`, improved descriptions
 - macOS timeout support in parallel dispatch
 - README local development link command (`gemini extensions link .`)
 - Inconsistent agent output contracts unified
-- `validate-agent-permissions.sh` updated for grep_search
+
+### Removed
+
+- `before-tool.sh`, `before-tool-selection.sh`, `after-tool.sh` hooks — native frontmatter `tools:` handles tool enforcement
+- `permissions.json` and `generate-permissions.sh` — redundant with native frontmatter enforcement
+- `validate-agent-permissions.sh` — validated against the removed permissions manifest
 
 ## [1.1.1] - 2026-02-15
 

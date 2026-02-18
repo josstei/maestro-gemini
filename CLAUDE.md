@@ -18,9 +18,9 @@ gemini extensions link .
 npm version <patch|minor|major>
 
 # Test commands (manual, in Gemini CLI after linking)
-/maestro.orchestrate "Build a simple TODO app"
-/maestro.review
-/maestro.status
+/maestro:orchestrate "Build a simple TODO app"
+/maestro:review
+/maestro:status
 ```
 
 There is no build or lint step. Hooks integration tests are available:
@@ -85,7 +85,7 @@ State transitions: `pending` → `in_progress` → `completed`/`failed`/`skipped
 
 - **YAML frontmatter** on all agent/skill/template Markdown files defines metadata (name, tools, model, temperature, max_turns, timeout_mins)
 - **TOML** for command definitions (maps CLI commands to prompts with skill/file injection)
-- **File naming**: agents use kebab-case (`api-designer.md`), commands use dot-notation (`maestro.orchestrate.toml`), plans use date-prefixed slugs (`YYYY-MM-DD-<topic>-design.md`)
+- **File naming**: agents use kebab-case (`api-designer.md`), commands use directory nesting (`commands/maestro/orchestrate.toml`), producing colon-namespaced CLI commands (`/maestro:orchestrate`), plans use date-prefixed slugs (`YYYY-MM-DD-<topic>-design.md`)
 - **Error handling**: automatic retry (max 2) per phase before user escalation
 - **Parallel execution**: implementation plans identify independent phases for concurrent subagent dispatch
 

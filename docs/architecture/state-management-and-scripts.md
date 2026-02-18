@@ -616,42 +616,6 @@ This script validates that parallel dispatch correctly:
 
 It serves as a functional test for the parallel execution system.
 
-### validate-agent-permissions.sh
-
-Validates that agent tool permissions conform to the least-privilege security model.
-
-**Usage:**
-```bash
-./scripts/validate-agent-permissions.sh
-```
-
-**Behavior:**
-
-1. Reads all agent Markdown files from `agents/` directory
-2. Extracts `tools:` array from YAML frontmatter
-3. Validates that each tool is in the list of valid tools:
-   - `read_file`
-   - `glob`
-   - `grep_search`
-   - `write_file`
-   - `replace`
-   - `run_shell_command`
-   - `google_web_search`
-4. For read-only agents (`architect`, `api-designer`, `code-reviewer`), validates that they do not have write-capable tools:
-   - `write_file`
-   - `replace`
-   - `run_shell_command`
-5. Reports all violations
-6. Exits with error count (0 = success)
-
-**Error Messages:**
-
-- `ERROR: <agent> has unrecognized tool: <tool>`
-- `ERROR: Read-only agent <agent> has forbidden tool: <tool>`
-- `FAILED: <N> permission violation(s) found.`
-
-This script enforces the principle that analysis-only agents (`architect`, `api-designer`, `code-reviewer`) cannot modify files or execute shell commands.
-
 ## Parallel Execution System
 
 The parallel execution system allows independent phases to run concurrently via shell-based process spawning, bypassing the sequential `delegate_to_agent` tool scheduler.

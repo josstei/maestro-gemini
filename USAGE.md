@@ -1228,8 +1228,8 @@ Maestro works out of the box with sensible defaults. To customize behavior, set 
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `MAESTRO_DEFAULT_MODEL` | `gemini-3-pro-preview` | Model used by all agents unless individually overridden |
-| `MAESTRO_WRITER_MODEL` | `gemini-3-flash-preview` | Model for technical-writer agent (cost-optimized) |
+| `MAESTRO_DEFAULT_MODEL` | _(inherit from main session)_ | Model override for agents dispatched via parallel execution (has no effect on sequential delegation) |
+| `MAESTRO_WRITER_MODEL` | _(inherit from main session)_ | Model override for the technical-writer agent in parallel execution (has no effect on sequential delegation) |
 | `MAESTRO_DEFAULT_TEMPERATURE` | `0.2` | Temperature for all agents (0.0-1.0) |
 | `MAESTRO_MAX_TURNS` | `25` | Maximum turns per subagent execution |
 | `MAESTRO_AGENT_TIMEOUT` | `10` | Timeout in minutes per subagent |
@@ -1410,7 +1410,7 @@ flowchart LR
 Token usage is tracked in session state and displayed in `/maestro:status` and completion summaries.
 
 **Optimization Tips**:
-- Use `MAESTRO_WRITER_MODEL=gemini-3-flash-preview` for documentation (3x cheaper than Pro)
+- Set `MAESTRO_WRITER_MODEL` to a cost-optimized model for documentation agents in parallel dispatch
 - Limit agent turns with `MAESTRO_MAX_TURNS` for exploratory tasks
 - Break large tasks into smaller orchestrations to isolate token costs
 - Review token usage with `/maestro:status` before proceeding to expensive phases

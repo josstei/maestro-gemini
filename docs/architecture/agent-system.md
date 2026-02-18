@@ -43,7 +43,6 @@ tools:
   - write_file
   - replace
   - run_shell_command
-model: gemini-3-pro-preview
 temperature: 0.2
 max_turns: 25
 timeout_mins: 10
@@ -67,7 +66,7 @@ timeout_mins: 10
 - `run_shell_command` - Execute shell commands
 - `google_web_search` - Web search for research tasks
 
-**model**: LLM model identifier. Supports Gemini 3 models (`gemini-3-pro-preview`, `gemini-3-flash-preview`) with automatic fallback to `gemini-2.5-pro` when Gemini 3 is unavailable.
+**model**: LLM model identifier. Omitted for all current agents — each agent inherits the model from the main Gemini CLI session. May be specified to pin an agent to a specific model when needed.
 
 **temperature**: Sampling temperature (0.0-1.0). Lower values (0.2-0.3) for deterministic tasks, higher values (0.5-0.7) for creative tasks.
 
@@ -92,18 +91,18 @@ Agents do not run as persistent processes. Each delegation spawns a fresh agent 
 
 | Agent | Role | Tool Tier | Model | Temp | Turns | Timeout |
 |-------|------|-----------|-------|------|-------|---------|
-| **architect** | System design, architecture patterns, technology selection | Read-only | gemini-3-pro-preview | 0.3 | 15 | 5 min |
-| **api-designer** | REST/GraphQL contract design, endpoint specification | Read-only | gemini-3-pro-preview | 0.3 | 15 | 5 min |
-| **code-reviewer** | Code quality assessment, SOLID compliance, security review | Read-only | gemini-3-pro-preview | 0.2 | 15 | 5 min |
-| **coder** | Feature implementation, clean code, SOLID principles | Full access | gemini-3-pro-preview | 0.2 | 25 | 10 min |
-| **data-engineer** | Database schema, migrations, query optimization, ETL | Full access | gemini-3-pro-preview | 0.2 | 20 | 8 min |
-| **debugger** | Root cause analysis, bug investigation, log analysis | Read + shell | gemini-3-pro-preview | 0.2 | 20 | 8 min |
-| **devops-engineer** | CI/CD pipelines, containerization, infrastructure automation | Full access | gemini-3-pro-preview | 0.2 | 20 | 8 min |
-| **performance-engineer** | Profiling, bottleneck identification, optimization recommendations | Read + shell | gemini-3-pro-preview | 0.2 | 20 | 8 min |
-| **refactor** | Code modernization, structural improvement, pattern application | Read + write | gemini-3-pro-preview | 0.2 | 25 | 10 min |
-| **security-engineer** | Vulnerability assessment, OWASP compliance, threat modeling | Read + shell | gemini-3-pro-preview | 0.2 | 20 | 8 min |
-| **technical-writer** | Documentation, READMEs, API docs, developer guides | Read + write | gemini-3-flash-preview | 0.3 | 15 | 5 min |
-| **tester** | Test creation, TDD workflows, coverage analysis | Full access | gemini-3-pro-preview | 0.2 | 25 | 10 min |
+| **architect** | System design, architecture patterns, technology selection | Read-only | _(inherit)_ | 0.3 | 15 | 5 min |
+| **api-designer** | REST/GraphQL contract design, endpoint specification | Read-only | _(inherit)_ | 0.3 | 15 | 5 min |
+| **code-reviewer** | Code quality assessment, SOLID compliance, security review | Read-only | _(inherit)_ | 0.2 | 15 | 5 min |
+| **coder** | Feature implementation, clean code, SOLID principles | Full access | _(inherit)_ | 0.2 | 25 | 10 min |
+| **data-engineer** | Database schema, migrations, query optimization, ETL | Full access | _(inherit)_ | 0.2 | 20 | 8 min |
+| **debugger** | Root cause analysis, bug investigation, log analysis | Read + shell | _(inherit)_ | 0.2 | 20 | 8 min |
+| **devops-engineer** | CI/CD pipelines, containerization, infrastructure automation | Full access | _(inherit)_ | 0.2 | 20 | 8 min |
+| **performance-engineer** | Profiling, bottleneck identification, optimization recommendations | Read + shell | _(inherit)_ | 0.2 | 20 | 8 min |
+| **refactor** | Code modernization, structural improvement, pattern application | Read + write | _(inherit)_ | 0.2 | 25 | 10 min |
+| **security-engineer** | Vulnerability assessment, OWASP compliance, threat modeling | Read + shell | _(inherit)_ | 0.2 | 20 | 8 min |
+| **technical-writer** | Documentation, READMEs, API docs, developer guides | Read + write | _(inherit)_ | 0.3 | 15 | 5 min |
+| **tester** | Test creation, TDD workflows, coverage analysis | Full access | _(inherit)_ | 0.2 | 25 | 10 min |
 
 ### Specialization Breakdown
 
@@ -226,7 +225,7 @@ When using `gemini delegate_to_agent`, the Gemini CLI enforces tool restrictions
 
 #### Parallel Delegation
 
-When using `scripts/parallel-dispatch.sh` with `--yolo` flag, tool restrictions are NOT enforced by the CLI. Instead, the delegation skill injects explicit tool restriction blocks into every parallel delegation prompt:
+Tool permissions are enforced via native `tools:` frontmatter for sequential delegation. For parallel dispatch (independent `gemini -p` processes), tool restrictions rely on prompt-based enforcement as defense-in-depth, since headless processes don't load agent definitions. The delegation skill injects explicit tool restriction blocks into every parallel delegation prompt:
 
 ```
 TOOL RESTRICTIONS (MANDATORY):
@@ -237,8 +236,6 @@ Do NOT use any tools not listed above. Specifically:
 - Do NOT create, modify, or delete files unless authorized above
 Violation of these restrictions constitutes a security boundary breach.
 ```
-
-This prompt-based enforcement is the only mechanism for maintaining least-privilege in parallel dispatch until the Gemini CLI supports runtime tool restriction flags.
 
 ### Tool Selection Rationale
 
@@ -613,94 +610,47 @@ Agents report errors in the Task Report Errors field. The orchestrator implement
 
 ## Model Assignment Strategy
 
-### Primary Model: Gemini 3 Pro
+### Session Inheritance
 
-```mermaid
-graph LR
-    subgraph "Gemini 3 Pro Preview"
-        direction TB
-        A1[architect]
-        A2[api-designer]
-        A3[code-reviewer]
-        A4[coder]
-        A5[data-engineer]
-        A6[debugger]
-        A7[devops-engineer]
-        A8[performance-engineer]
-        A9[refactor]
-        A10[security-engineer]
-        A11[tester]
-    end
+All agents omit the `model` frontmatter field and inherit the model from the main Gemini CLI session. Whichever model the user started their Gemini CLI session with is the model every subagent runs on. This ensures consistent behavior across the agent team and requires no per-agent model configuration.
 
-    subgraph "Gemini 3 Flash Preview"
-        direction TB
-        A12[technical-writer]
-    end
+There is no separate model tier for `technical-writer` or any other agent. All 12 agents share the same inherited model.
 
-    subgraph "Fallback: Gemini 2.5 Pro"
-        direction TB
-        FB[All agents when<br/>Gemini 3 unavailable]
-    end
+### Overriding the Model for Parallel Dispatch
 
-    style A1 fill:#4ecdc4
-    style A2 fill:#4ecdc4
-    style A3 fill:#4ecdc4
-    style A4 fill:#4ecdc4
-    style A5 fill:#4ecdc4
-    style A6 fill:#4ecdc4
-    style A7 fill:#4ecdc4
-    style A8 fill:#4ecdc4
-    style A9 fill:#4ecdc4
-    style A10 fill:#4ecdc4
-    style A11 fill:#4ecdc4
-    style A12 fill:#ffa500
-    style FB fill:#95e1d3
+`MAESTRO_DEFAULT_MODEL` is the only supported model override. It applies exclusively to parallel dispatch via the `--model` CLI flag passed to each independent `gemini -p` process. It has no effect on sequential delegation, where the spawned subagent inherits the session model from the parent process.
+
+To run all parallel-dispatched agents on a specific model:
+
+```bash
+export MAESTRO_DEFAULT_MODEL=gemini-2.0-flash
 ```
 
-All agents use `gemini-3-pro-preview` except `technical-writer`. This provides:
-- High reasoning capability for complex implementation and analysis tasks
-- Consistency across agent outputs
-- Sufficient context window for large file analysis
+For parallel dispatch of `technical-writer` specifically:
 
-Configuration: `model: gemini-3-pro-preview`
+```bash
+export MAESTRO_WRITER_MODEL=gemini-2.0-flash
+```
 
-### Exception: Technical Writer Uses Flash
-
-The `technical-writer` agent uses `gemini-3-flash-preview` for:
-- Faster execution on documentation tasks
-- Lower cost for high-volume documentation generation
-- Sufficient capability for structured writing tasks
-
-Documentation does not require the same reasoning depth as architecture design or implementation. Flash model provides adequate quality with better performance.
-
-Configuration: `model: gemini-3-flash-preview`
-
-### Fallback: Gemini 2.5 Pro
-
-When Gemini 3 models are unavailable (API error, regional restriction, deprecation), the system automatically falls back to `gemini-2.5-pro`. This fallback is transparent to the orchestrator and requires no configuration changes.
-
-The fallback logic resides in the Gemini CLI, not in Maestro configuration.
+`MAESTRO_WRITER_MODEL` takes precedence over `MAESTRO_DEFAULT_MODEL` for `technical-writer` in parallel dispatch contexts.
 
 ### Environment Variable Overrides
 
 The delegation skill applies environment variable overrides before constructing delegation prompts:
 
-#### Global Overrides
+#### Parallel Dispatch Overrides
 
-- `MAESTRO_DEFAULT_MODEL` - Overrides `model` for all agents
+- `MAESTRO_DEFAULT_MODEL` - Sets `--model` flag for all parallel `gemini -p` processes
+- `MAESTRO_WRITER_MODEL` - Sets `--model` flag for `technical-writer` parallel processes only (takes precedence over `MAESTRO_DEFAULT_MODEL`)
 - `MAESTRO_DEFAULT_TEMPERATURE` - Overrides `temperature` for all agents
 - `MAESTRO_MAX_TURNS` - Overrides `max_turns` for all agents
 - `MAESTRO_AGENT_TIMEOUT` - Overrides `timeout_mins` for all agents
-
-#### Agent-Specific Overrides
-
-- `MAESTRO_WRITER_MODEL` - Overrides `model` for `technical-writer` only (takes precedence over `MAESTRO_DEFAULT_MODEL`)
 
 #### Precedence
 
 Agent-specific environment variable > General environment variable > Agent frontmatter default
 
-Example: For `technical-writer`, if both `MAESTRO_DEFAULT_MODEL=gemini-2.5-pro` and `MAESTRO_WRITER_MODEL=gemini-3-flash-preview` are set, the agent uses `gemini-3-flash-preview`.
+Example: For `technical-writer` parallel dispatch, if both `MAESTRO_DEFAULT_MODEL=gemini-2.5-pro` and `MAESTRO_WRITER_MODEL=gemini-2.0-flash` are set, the process uses `gemini-2.0-flash`.
 
 #### Agent Disabling
 
@@ -789,7 +739,6 @@ tools:
   - read_file
   - glob
   - grep_search
-model: gemini-3-pro-preview
 temperature: 0.2
 max_turns: 15
 timeout_mins: 5
@@ -833,16 +782,6 @@ gemini extensions link .
 gemini delegate_to_agent agent=agent-name prompt="Test task description"
 ```
 
-### 6. Validate Permissions
-
-Run the permission validation script:
-
-```bash
-./scripts/validate-agent-permissions.sh
-```
-
-This confirms the new agent's tool permissions conform to the least-privilege model.
-
 ## Best Practices
 
 ### Agent Definition Maintenance
@@ -880,7 +819,7 @@ This confirms the new agent's tool permissions conform to the least-privilege mo
 ### Performance Optimization
 
 - Use parallel dispatch for independent phases
-- Assign lower-cost flash model to high-volume documentation tasks
+- Set `MAESTRO_WRITER_MODEL` to a faster model for high-volume documentation parallel dispatch
 - Set aggressive timeouts for bounded analysis tasks
 - Use lower turn limits for deterministic tasks
 - Monitor actual turn usage and timeout rates to calibrate limits

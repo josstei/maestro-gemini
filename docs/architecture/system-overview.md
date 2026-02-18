@@ -59,7 +59,7 @@ The extension entry point is `gemini-extension.json` in the project root:
 ```json
 {
   "name": "maestro",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Multi-agent development orchestration platform — 12 specialists, 4-phase orchestration, parallel dispatch, persistent sessions, and standalone review/debug/security/perf commands",
   "contextFileName": "GEMINI.md"
 }
@@ -114,14 +114,14 @@ graph TB
         T7D["Structure templates for<br/>generated artifacts"]
     end
 
-    subgraph Layer6["Layer 6: Scripts"]
-        T6[scripts/*.sh]
-        T6D["Execution infrastructure<br/>workspace prep, parallel dispatch"]
+    subgraph Layer6["Layer 6: Hooks"]
+        T6[hooks/hooks.json + *.sh]
+        T6D["Lifecycle middleware<br/>agent tracking, session init, handoff validation"]
     end
 
-    subgraph Layer5["Layer 5: Protocols"]
-        T5[protocols/*.md]
-        T5D["Shared behavioral contracts<br/>injected into delegation prompts"]
+    subgraph Layer5["Layer 5: Scripts"]
+        T5[scripts/*.sh]
+        T5D["Execution infrastructure<br/>workspace prep, parallel dispatch"]
     end
 
     subgraph Layer4["Layer 4: Skills"]
@@ -147,9 +147,9 @@ graph TB
     Layer1 --> Layer2
     Layer2 --> Layer3
     Layer2 --> Layer4
-    Layer1 --> Layer5
-    Layer3 --> Layer6
-    Layer4 --> Layer7
+    Layer3 --> Layer5
+    Layer4 --> Layer6
+    Layer5 --> Layer7
 
     style Layer1 fill:#ff6b6b,color:#000
     style Layer2 fill:#ffa500,color:#000
@@ -211,7 +211,7 @@ Each agent file specifies:
 
 - **Name**: Unique identifier used in delegation prompts
 - **Description**: Role summary and domain expertise
-- **Model**: Which Gemini model variant to use (pro vs flash)
+- **Model**: Omitted; agents inherit the model from the active Gemini CLI session
 - **Temperature**: Creativity parameter (0.0-1.0, typically 0.2 for consistency)
 - **Max Turns**: Maximum conversation turns before timeout
 - **Timeout**: Maximum execution time in minutes
@@ -237,20 +237,7 @@ Skills encapsulate detailed protocols that would bloat the base context if alway
 
 Skills keep the orchestrator context lean by providing just-in-time methodology. They are activated via explicit directives in command prompts or orchestrator logic.
 
-### Layer 5: Protocols
-
-**Directory**: `protocols/`
-**Format**: Markdown
-**Purpose**: Shared behavioral contracts injected into delegation prompts
-
-Protocols define cross-cutting concerns that apply to multiple agents:
-
-- **agent-base-protocol.md**: Universal rules for all subagents (scope boundaries, completion criteria, error escalation)
-- **filesystem-safety-protocol.md**: File operation safeguards (backup before overwrite, atomic writes, path validation)
-
-When the orchestrator constructs a delegation prompt, it injects relevant protocol files to ensure consistent behavior across all subagents. Protocols are embedded in delegation prompts via file concatenation.
-
-### Layer 6: Scripts
+### Layer 5: Scripts
 
 **Directory**: `scripts/`
 **Format**: Shell (Bash)
@@ -262,11 +249,25 @@ Scripts provide operational utilities:
 - **parallel-dispatch.sh**: Spawns concurrent Gemini CLI processes for independent phases, collects results
 - **read-state.sh**: Reads session state YAML frontmatter for resumption
 - **write-state.sh**: Updates session state atomically
-- **validate-agent-permissions.sh**: Checks agent tool permissions against required tools for a task
 - **sync-version.js**: Synchronizes version from `package.json` to `gemini-extension.json` during releases
 - **test-parallel-dispatch.sh**: Proof-of-concept test for parallel dispatch functionality
 
 These scripts bridge the gap between declarative configuration and runtime execution. They handle system-level operations that cannot be expressed purely in prompts.
+
+### Layer 6: Hooks
+
+**Directory**: `hooks/`
+**Format**: JSON manifest (`hooks.json`) + Shell scripts
+**Purpose**: Lifecycle middleware registered with the Gemini CLI extension system
+
+Hooks handle cross-cutting concerns that fire at specific points in the agent execution lifecycle:
+
+- **Agent tracking**: Records which agents are invoked and their execution context
+- **Session initialization**: Prepares workspace and state directories before orchestration begins
+- **Handoff report validation**: Verifies that agent handoff reports meet expected structure before the orchestrator processes them
+- **Model config**: Applies model overrides from environment variables at agent launch time
+
+Tool permissions are enforced natively via agent frontmatter `tools:` fields rather than through hook scripts. The `hooks.json` manifest registers each hook with its trigger event and target script.
 
 ### Layer 7: Templates
 
@@ -707,29 +708,28 @@ Tool permissions are defined in agent frontmatter and enforced by the Gemini CLI
 
 ## Model Configuration
 
-Maestro uses Gemini 3 preview models for strong reasoning with Gemini 2.5 as fallback:
+Maestro agents do not hardcode a model. All agents inherit the model from the active Gemini CLI session, ensuring the user's model selection is respected without any per-agent override.
 
 ### Default Model Assignment
 
-- **Primary**: `gemini-3-pro-preview` for all agents requiring strong reasoning (11/12 agents)
-- **Cost-Optimized**: `gemini-3-flash-preview` for technical-writer (documentation generation)
-- **Fallback**: `gemini-2.5-pro` when Gemini 3 models are unavailable
+- **All agents**: _(inherit from main session)_ — no model field is set in agent frontmatter
+- Model selection is controlled entirely by the user's Gemini CLI session or environment variable overrides
 
 ### Model Override Mechanism
 
 Users can override models via environment variables:
 
-- `MAESTRO_DEFAULT_MODEL`: Changes primary model for all agents
-- `MAESTRO_WRITER_MODEL`: Changes model specifically for technical-writer
+- `MAESTRO_DEFAULT_MODEL`: Sets a model for all agents, overriding the session default
+- `MAESTRO_WRITER_MODEL`: Sets a model specifically for technical-writer
 
 Example configuration:
 
 ```bash
 export MAESTRO_DEFAULT_MODEL="gemini-2.5-pro"
-export MAESTRO_WRITER_MODEL="gemini-3-flash-preview"
+export MAESTRO_WRITER_MODEL="gemini-2.5-flash"
 ```
 
-This switches all agents to Gemini 2.5 Pro except the writer, which stays on Flash for cost optimization.
+This directs all agents to use Gemini 2.5 Pro except the writer, which uses Flash for cost optimization.
 
 ### Temperature Configuration
 
@@ -752,8 +752,8 @@ Maestro provides 13 environment variables for runtime customization:
 
 | Variable | Default | Type | Purpose |
 |----------|---------|------|---------|
-| `MAESTRO_DEFAULT_MODEL` | `gemini-3-pro-preview` | string | Primary model for all agents |
-| `MAESTRO_WRITER_MODEL` | `gemini-3-flash-preview` | string | Model for technical-writer |
+| `MAESTRO_DEFAULT_MODEL` | _(inherit from main session)_ | string | Primary model for all agents |
+| `MAESTRO_WRITER_MODEL` | _(inherit from main session)_ | string | Model for technical-writer |
 | `MAESTRO_DEFAULT_TEMPERATURE` | `0.2` | float | Creativity parameter (0.0-1.0) |
 | `MAESTRO_MAX_TURNS` | `25` | integer | Max conversation turns per agent |
 | `MAESTRO_AGENT_TIMEOUT` | `10` | integer | Timeout in minutes per agent |
@@ -803,7 +803,7 @@ This enables project-specific customization or integration with existing directo
 
 ## Validation and Testing
 
-Maestro has no build step, no linting, and no automated test suite. Validation is entirely manual through Gemini CLI.
+Maestro has no build step and no linting. Integration tests for the hooks system are available via `bash tests/run-all.sh`. End-to-end orchestration validation is manual through Gemini CLI.
 
 ### Manual Testing Workflow
 

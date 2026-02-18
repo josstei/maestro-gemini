@@ -272,7 +272,7 @@ All settings are optional. The orchestrator uses the defaults shown above when a
 | Inherited | _(main session model)_ | All agents inherit the model from the main Gemini CLI session |
 | Override | `MAESTRO_DEFAULT_MODEL` | Set to a specific model (e.g., `gemini-2.5-pro`) to override all agents |
 
-All agents omit the `model` field by default, inheriting the main session's model selection. Override via `MAESTRO_DEFAULT_MODEL` or `MAESTRO_WRITER_MODEL` environment variables.
+All agents omit the `model` field by default, inheriting the main session's model selection. Override via `MAESTRO_DEFAULT_MODEL` or `MAESTRO_WRITER_MODEL` environment variables. These overrides apply to parallel dispatch only — sequentially delegated subagents always inherit the main session model.
 
 ### Hooks
 
@@ -322,17 +322,16 @@ graph TB
 
 ### Component Model
 
-Maestro is built from eight layers, each with a distinct responsibility:
+Maestro is built from seven layers, each with a distinct responsibility:
 
 | Layer | Directory | Format | Purpose |
 |-------|-----------|--------|---------|
 | **Orchestrator** | `GEMINI.md` | Markdown | TechLead persona, phase transitions, delegation rules |
 | **Commands** | `commands/` | TOML | CLI command definitions mapping user commands to prompts/skills |
 | **Agents** | `agents/` | Markdown + YAML frontmatter | 12 subagent persona definitions with tool permissions and model config |
-| **Skills** | `skills/` | Markdown (`SKILL.md` per directory) | Reusable methodology modules activated on demand |
-| **Protocols** | `protocols/` | Markdown | Shared behavioral contracts injected into delegation prompts |
+| **Skills** | `skills/` | Markdown (`SKILL.md` per directory) | Reusable methodology modules with embedded protocols |
 | **Scripts** | `scripts/` | Shell | Execution infrastructure (parallel dispatch) |
-| **Hooks** | `hooks/` | JSON + Shell | Lifecycle middleware for tool enforcement, agent tracking, session init |
+| **Hooks** | `hooks/` | JSON + Shell | Lifecycle middleware for agent tracking, model config, session init, and handoff validation |
 | **Templates** | `templates/` | Markdown | Structure templates for generated artifacts (designs, plans, sessions) |
 
 ### Workflow Phases
