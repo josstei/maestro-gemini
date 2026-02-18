@@ -9,6 +9,7 @@ tools:
   - glob
   - grep_search
   - read_many_files
+  - ask_user
 temperature: 0.2
 max_turns: 15
 timeout_mins: 5

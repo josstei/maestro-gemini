@@ -13,6 +13,9 @@ tools:
   - run_shell_command
   - google_web_search
   - write_todos
+  - read_many_files
+  - web_fetch
+  - get_internal_docs
 temperature: 0.2
 max_turns: 20
 timeout_mins: 8

@@ -11,6 +11,7 @@ tools:
   - google_web_search
   - read_many_files
   - ask_user
+  - web_fetch
 temperature: 0.3
 max_turns: 15
 timeout_mins: 5

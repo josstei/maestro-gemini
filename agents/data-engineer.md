@@ -12,6 +12,8 @@ tools:
   - replace
   - run_shell_command
   - write_todos
+  - read_many_files
+  - google_web_search
 temperature: 0.2
 max_turns: 20
 timeout_mins: 8

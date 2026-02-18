@@ -11,6 +11,8 @@ tools:
   - write_file
   - replace
   - read_many_files
+  - google_web_search
+  - get_internal_docs
 temperature: 0.3
 max_turns: 15
 timeout_mins: 5

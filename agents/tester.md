@@ -13,6 +13,9 @@ tools:
   - run_shell_command
   - write_todos
   - activate_skill
+  - read_many_files
+  - ask_user
+  - google_web_search
 temperature: 0.2
 max_turns: 25
 timeout_mins: 10

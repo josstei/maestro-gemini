@@ -10,6 +10,8 @@ tools:
   - grep_search
   - read_many_files
   - ask_user
+  - google_web_search
+  - web_fetch
 temperature: 0.3
 max_turns: 15
 timeout_mins: 5
