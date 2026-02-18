@@ -140,7 +140,7 @@ Reserve `run_shell_command` for commands that execute programs (build, test, lin
 When constructing delegation prompts, apply settings overrides in this order:
 
 1. Start with the agent's base definition (from `agents/<name>.md` frontmatter)
-2. For parallel dispatch, model selection is applied via the `--model` CLI flag using `MAESTRO_DEFAULT_MODEL` (or `MAESTRO_WRITER_MODEL` for technical-writer). For sequential subagent calls, model selection is inherited from the main session — BeforeModel hooks cannot override the model field.
+2. For parallel dispatch, model selection is applied via the `--model` CLI flag using `MAESTRO_DEFAULT_MODEL` (or `MAESTRO_WRITER_MODEL` for technical-writer). For sequential subagent calls, model selection is inherited from the main session and cannot be overridden per-agent.
 3. Override `temperature` with `MAESTRO_DEFAULT_TEMPERATURE` if set
 4. Override `max_turns` with `MAESTRO_MAX_TURNS` if set
 5. Override `timeout_mins` with `MAESTRO_AGENT_TIMEOUT` if set
@@ -193,5 +193,4 @@ Maestro v1.2 uses Gemini CLI's hooks system for lifecycle middleware. Hooks are 
 | SessionStart | Workspace initialization |
 | BeforeAgent | Agent tracking + context injection |
 | AfterAgent | Handoff report validation |
-| BeforeModel | Reserved for future config overrides (model override not possible via hooks) |
 | SessionEnd | Cleanup |

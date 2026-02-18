@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Hooks-based lifecycle middleware** — 5 hook handlers: SessionStart, BeforeAgent, AfterAgent, BeforeModel, SessionEnd
+- **Hooks-based lifecycle middleware** — 4 hook handlers: SessionStart, BeforeAgent, AfterAgent, SessionEnd
 - **Agent tracking** — BeforeAgent/AfterAgent hooks track active agent identity across parallel dispatch
 - **Handoff report validation** — AfterAgent hook validates agent output includes Task Report and Downstream Context
 - **Model inheritance** — All agents omit the `model` field, inheriting the main session's model selection

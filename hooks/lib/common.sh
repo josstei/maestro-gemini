@@ -133,6 +133,10 @@ clear_active_agent() {
 }
 
 safe_main() {
+  # NOTE: The `decision` field is only enforced by the CLI for hooks that
+  # support blocking (BeforeAgent, AfterAgent). For advisory-only hooks
+  # (SessionStart, SessionEnd), the CLI ignores `decision` entirely — no
+  # caller checks it. We still emit it for contract consistency.
   local main_fn="$1"
   if ! "$main_fn"; then
     log_hook "ERROR" "Hook failed — returning safe allow"

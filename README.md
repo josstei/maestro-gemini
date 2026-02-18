@@ -283,7 +283,6 @@ Maestro uses Gemini CLI's hooks system for lifecycle middleware. Tool permission
 | SessionStart | Initialize session state, inject workspace context |
 | BeforeAgent | Track active agent identity, inject session context |
 | AfterAgent | Validate handoff report format, clear agent tracking |
-| BeforeModel | Apply per-agent model overrides via environment variables |
 | SessionEnd | Finalize session state, clean up tracking files |
 
 Hook handlers are in `hooks/` and registered via `hooks/hooks.json`.
