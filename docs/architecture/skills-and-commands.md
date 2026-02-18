@@ -42,7 +42,7 @@ flowchart TD
     A[Orchestrator decides skill is needed] --> B[Call activate_skill tool]
     B --> C{User confirmation dialog}
     C -->|Approved| D[Inject SKILL.md + directory into context]
-    C -->|Denied| E[Proceed without skill]
+    C -->|Denied| E[Abort phase — required skill unavailable]
     D --> F[Follow skill procedures]
 ```
 

@@ -97,7 +97,7 @@ Your implementation plan has [N] phases ([M] parallelizable).
 
 **Option 2: Sequential Delegation (more controlled)**
 - Each phase executes one at a time via direct subagent tool invocation
-- Subagents still run in autonomous mode (YOLO) — tool calls are auto-approved
+- Subagents operate within your current approval settings — if you started the session with `--yolo`, tool calls are auto-approved; otherwise, you may be prompted per-tool
 - You can review results and intervene between phases
 - Slower but gives you inter-phase visibility and control
 - Best for: exploratory tasks, unfamiliar codebases, sequential dependencies
