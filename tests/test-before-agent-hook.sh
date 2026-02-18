@@ -99,5 +99,5 @@ assert decision == 'allow', f'Expected allow decision, got {data}'
 print("PASS: Returns allow when no session state")
 PYEOF
 
-rm -rf "$STATE_DIR/test-789" "$STATE_DIR/test-ba-001" "$STATE_DIR/test-ba-002" "$STATE_DIR/test-ba-003" "$STATE_DIR/test-ba-004" 2>/dev/null || true
+rm -rf "$STATE_DIR/test-ba-001" "$STATE_DIR/test-ba-002" "$STATE_DIR/test-ba-003" "$STATE_DIR/test-ba-004" 2>/dev/null || true
 echo "=== All BeforeAgent hook tests passed ==="
