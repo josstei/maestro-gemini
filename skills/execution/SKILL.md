@@ -60,7 +60,7 @@ For phases at the same dependency depth with no file overlap, use shell-based pa
 
 1. Verify all blocking phases for every phase in the batch are completed
 2. Update all batch phases to `in_progress` simultaneously in session state
-3. Call `write_todos` to reflect the full batch as in-progress before dispatch
+3. Call `write_todos` with a single composite item: "Executing batch: Phase N, M, O" as `in_progress` (only one todo can be `in_progress` at a time — the CLI enforces this constraint)
 4. Ensure the batch-specific dispatch directory exists before writing prompt files:
    ```bash
    mkdir -p <state_dir>/parallel/<batch-id>/prompts

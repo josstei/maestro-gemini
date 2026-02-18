@@ -40,7 +40,7 @@ When an env var is unset, use the default. Log resolved non-default settings at 
 
 ### Phase 1: Design Dialogue
 
-At the start of Phase 1, call `enter_plan_mode` to switch the CLI to read-only mode. This enforces that no file writes can occur during the design conversation, preventing accidental modifications during requirements gathering.
+At the start of Phase 1, if Plan Mode is available (`experimental.plan: true` in settings), call `enter_plan_mode` to switch the CLI to read-only mode. This enforces that no file writes can occur during the design conversation, preventing accidental modifications during requirements gathering. If Plan Mode is not available, proceed in normal mode and use `ask_user` approval gates to confirm design decisions before moving to Phase 2.
 
 Activate `design-dialogue` skill. Gather requirements through structured questions. Propose approaches. Produce an approved design document.
 
@@ -58,7 +58,7 @@ At the end of Phase 2, after the implementation plan is finalized:
 
 Activate `execution` skill and `delegation` skill. Execute phases sequentially (or in parallel when available), delegating to subagents with full context. Update session state after each phase. Handle errors via retry logic.
 
-At the start of Phase 3, call `write_todos` to populate all implementation phases as `pending`. Update each phase to `in_progress` when delegating to a subagent, and `completed` when the phase finishes successfully (or `cancelled` if skipped). This provides live progress visibility in the CLI UI.
+At the start of Phase 3, call `write_todos` to populate all implementation phases as `pending`. For sequential execution, update each phase to `in_progress` when delegating and `completed` when finished. For parallel batches, use a single composite todo item (e.g., "Executing batch: Phase 2, 3, 4") as `in_progress` — only one todo can be `in_progress` at a time. Track individual phase status in session state YAML, not in `write_todos`.
 
 ### Phase 4: Completion
 
