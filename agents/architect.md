@@ -5,9 +5,9 @@ kind: local
 tools:
   - read_file
   - glob
-  - search_file_content
+  - grep_search
   - google_web_search
-model: gemini-3-pro-preview
+model: auto
 temperature: 0.3
 max_turns: 15
 timeout_mins: 5

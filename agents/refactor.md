@@ -5,10 +5,10 @@ kind: local
 tools:
   - read_file
   - glob
-  - search_file_content
+  - grep_search
   - write_file
   - replace
-model: gemini-3-pro-preview
+model: auto
 temperature: 0.2
 max_turns: 25
 timeout_mins: 10
