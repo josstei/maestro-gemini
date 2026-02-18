@@ -50,9 +50,13 @@ Activate `implementation-planning` skill. Decompose the design into phases with 
 
 At the end of Phase 2, after the implementation plan is finalized:
 
-1. **Write the plan** to `~/.gemini/tmp/plans/` — this is the only writable location during Plan Mode
-2. **Call `exit_plan_mode`** with `plan_path` set to the `~/.gemini/tmp/plans/...` path to present the plan to the user for approval and switch back to write mode
-3. **After approval**, copy the plan to `.gemini/plans/YYYY-MM-DD-<slug>-impl-plan.md` as a permanent project reference
+- **If Plan Mode is active** (`experimental.plan: true`):
+  1. **Write the plan** to `~/.gemini/tmp/plans/` — the only writable location during Plan Mode
+  2. **Call `exit_plan_mode`** with `plan_path` set to the `~/.gemini/tmp/plans/...` path to present the plan for approval and switch back to write mode
+  3. **After approval**, copy the plan to `.gemini/plans/YYYY-MM-DD-<slug>-impl-plan.md` as a permanent project reference
+- **If Plan Mode is not active**:
+  1. **Write the plan** directly to `.gemini/plans/YYYY-MM-DD-<slug>-impl-plan.md`
+  2. **Call `ask_user`** with `type: 'yesno'` to obtain explicit approval before proceeding to Phase 3
 
 ### Phase 3: Execution
 
