@@ -12,8 +12,6 @@ main() {
 
   AGENT_NAME_LOWER=$(echo "$AGENT_NAME" | tr '[:upper:]' '[:lower:]')
   if [ -n "$AGENT_NAME" ] && [ "$AGENT_NAME_LOWER" != "techlead" ] && [ "$AGENT_NAME_LOWER" != "orchestrator" ]; then
-    STOP_HOOK_LOWER="$STOP_HOOK_ACTIVE"
-
     TMPFILE=$(mktemp)
     echo "$INPUT" > "$TMPFILE"
     VALIDATION=$(python3 - "$TMPFILE" <<'PYEOF' 2>/dev/null || echo "OK"
@@ -43,7 +41,7 @@ PYEOF
 
     if [[ "$VALIDATION" == WARN:* ]]; then
       REASON="${VALIDATION#WARN: }"
-      if [ "$STOP_HOOK_LOWER" = "true" ]; then
+      if [ "$STOP_HOOK_ACTIVE" = "true" ]; then
         log_hook "WARN" "AfterAgent [$AGENT_NAME]: Retry still malformed: $REASON — allowing to prevent infinite loop"
       else
         log_hook "WARN" "AfterAgent [$AGENT_NAME]: $VALIDATION — requesting retry"

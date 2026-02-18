@@ -48,15 +48,7 @@ PYEOF
 }
 
 respond_allow() {
-  local msg="${1:-}"
-  if [ -n "$msg" ]; then
-    python3 - "$msg" <<'PYEOF'
-import sys, json
-print(json.dumps({"decision": "allow", "systemMessage": sys.argv[1]}))
-PYEOF
-  else
-    echo '{"decision":"allow"}'
-  fi
+  echo '{"decision":"allow"}'
 }
 
 respond_block() {
