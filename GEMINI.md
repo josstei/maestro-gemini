@@ -151,7 +151,7 @@ Use the path from `MAESTRO_STATE_DIR` (default: `.gemini`) as the base directory
 
 ## Skills Reference
 
-Each `activate_skill` call triggers a user confirmation dialog in the Gemini CLI. Extension-provided skills are never builtin and are never auto-approved. A full orchestration workflow activates 3-5 skills across phases.
+Each `activate_skill` call triggers a user confirmation dialog in the Gemini CLI. Extension-provided skills are never builtin and require explicit user confirmation unless an auto-approve policy is configured. A full orchestration workflow activates 3-5 skills across phases.
 
 | Skill | Activation | Purpose |
 |-------|-----------|---------|
