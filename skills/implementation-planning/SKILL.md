@@ -164,15 +164,11 @@ Include this table in every implementation plan:
 
 ### Output Location
 
-Write the completed implementation plan to both locations:
+Write the completed implementation plan to the project archive:
 
-1. **Project archive** (permanent reference): `.gemini/plans/YYYY-MM-DD-<topic-slug>-impl-plan.md`
-2. **CLI plans directory** (required by `exit_plan_mode`): Copy the same file to `~/.gemini/tmp/plans/` via `run_shell_command`:
-   ```bash
-   mkdir -p ~/.gemini/tmp/plans && cp .gemini/plans/YYYY-MM-DD-<topic-slug>-impl-plan.md ~/.gemini/tmp/plans/
-   ```
+- **Project archive** (permanent reference): `.gemini/plans/YYYY-MM-DD-<topic-slug>-impl-plan.md`
 
-The `exit_plan_mode` tool requires `plan_path` to point to the `~/.gemini/tmp/plans/` copy, not the project-level archive.
+The `exit_plan_mode` tool resolves `plan_path` relative to the project root. Pass the `.gemini/plans/...` path directly. If the tool returns an access error indicating it requires a different path, follow its error message guidance to copy the file to the correct location.
 
 ### Document Structure
 Use the implementation plan template from `templates/implementation-plan.md`.
@@ -213,6 +209,6 @@ After writing the implementation plan:
 2. Present the dependency graph and execution strategy
 3. Highlight parallel execution opportunities
 4. Provide token budget estimates
-5. Call `exit_plan_mode` with `plan_path` set to the `~/.gemini/tmp/plans/` copy to present the plan for user approval
+5. Call `exit_plan_mode` with `plan_path` set to the project-local plan path (`.gemini/plans/...`) to present the plan for user approval — if the tool returns an access error, follow its guidance to copy the file to the required location first
 6. Ask if the user is ready to proceed to execution (Phase 3)
 7. Upon approval, create the session state file via the session-management skill
