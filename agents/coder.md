@@ -79,6 +79,11 @@ Before reporting completion:
 4. Run the validation command from the delegation prompt
 5. If validation fails, diagnose the failure, fix the issue, and re-validate — never report a failing validation as success
 
+## Skill Activation
+
+You have access to `activate_skill` for loading methodology modules when needed:
+- **validation**: Activate to discover and run the project's build, lint, and test pipeline after implementation
+
 ## Anti-Patterns
 
 - Writing implementation code before defining its interface or type contract

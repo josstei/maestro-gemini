@@ -7,6 +7,8 @@ description: Guides structured design conversations for complex engineering task
 
 Activate this skill when beginning Phase 1 of Maestro orchestration. If Plan Mode is available (`experimental.plan: true` in settings), call `enter_plan_mode` at the start of Phase 1 to indicate that design work is in progress. If Plan Mode is not available, proceed in normal mode — use `ask_user` with `type: 'yesno'` for design approvals and `type: 'choice'` for approach selection. This skill provides the structured methodology for conducting design conversations that converge on approved architectural designs.
 
+**User confirmation sequence**: Phase 1 entry triggers two user-facing confirmations — first the `activate_skill` consent dialog (required for non-builtin skills), then the `enter_plan_mode` transition (if Plan Mode is enabled). Both are expected; do not treat the second confirmation as redundant or skip it.
+
 ## Question Framework
 
 ### Principles
@@ -51,18 +53,21 @@ Ask questions in this order to progressively narrow the design space:
 
 ### Question Format
 
-Present questions using this structure:
+Use `ask_user` with `type: 'choice'` for structured selections:
 
 ```
-**[Topic Area]**: [Clear, specific question]
-
-Options:
-1. **[Option A]** (Recommended) — [Why this is recommended, key benefits]
-2. **[Option B]** — [When this makes sense, trade-offs]
-3. **[Option C]** — [When this makes sense, trade-offs]
-
-My recommendation: [Option X] because [concise rationale tied to what we know so far].
+ask_user(
+  question: "[Topic Area]: [Clear, specific question]",
+  type: "choice",
+  choices: [
+    "[Option A] (Recommended) — [Why this is recommended, key benefits]",
+    "[Option B] — [When this makes sense, trade-offs]",
+    "[Option C] — [When this makes sense, trade-offs]"
+  ]
+)
 ```
+
+Include your recommendation rationale in the question text so the user has context before choosing.
 
 ## Approach Presentation
 
@@ -117,11 +122,13 @@ Present the design document in sections, validating each before proceeding. Each
 
 ### Validation Format
 
-After each section:
+After each section, use `ask_user` with `type: 'yesno'` for approval:
 
 ```
----
-Does this section accurately capture our discussion? Any changes needed before I proceed to [next section name]?
+ask_user(
+  question: "Does this section accurately capture our discussion? Any changes needed before I proceed to [next section name]?",
+  type: "yesno"
+)
 ```
 
 ### Revision Protocol

@@ -84,6 +84,11 @@ Mock at system boundaries only:
 - **Never mock**: Internal classes, internal functions, private methods, value objects, domain entities
 If you need to mock an internal dependency to make a function testable, that function has a design problem (tight coupling, hidden dependency). Report it as a finding in the Downstream Context rather than papering over it with mocks.
 
+## Skill Activation
+
+You have access to `activate_skill` for loading methodology modules when needed:
+- **validation**: Activate to discover the project's test infrastructure, framework, and coverage tooling
+
 ## Anti-Patterns
 
 - Testing implementation details — checking that a specific private method was called N times instead of verifying the correct output was produced

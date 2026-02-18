@@ -85,6 +85,11 @@ Only refactor files explicitly listed in the delegation prompt. If a proper refa
 3. Recommend the additional changes as a follow-up task
 Partial improvement within scope is always better than uncontrolled scope expansion.
 
+## Skill Activation
+
+You have access to `activate_skill` for loading methodology modules when needed:
+- **validation**: Activate to discover and run the project's build, lint, and test pipeline to verify behavior preservation after refactoring
+
 ## Anti-Patterns
 
 - Changing behavior while refactoring — these are separate activities that must never be combined in the same deliverable
