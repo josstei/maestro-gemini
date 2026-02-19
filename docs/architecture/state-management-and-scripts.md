@@ -103,10 +103,8 @@ Configured in `hooks/hooks.json`:
 
 | Event | Script | Behavior |
 | --- | --- | --- |
-| `SessionStart` | `hooks/session-start.sh` | Creates per-session temp state under `/tmp/maestro-hooks`, prunes old hook directories |
 | `BeforeAgent` | `hooks/before-agent.sh` | Tracks active agent, injects compact phase/status context from active session |
 | `AfterAgent` | `hooks/after-agent.sh` | Validates delegated response contains `Task Report` and `Downstream Context`; requests one retry if malformed |
-| `SessionEnd` | `hooks/session-end.sh` | Deletes `/tmp/maestro-hooks/<session-id>` and logs cleanup |
 
 Shared hook helpers live in `hooks/lib/common.sh`.
 
@@ -114,7 +112,7 @@ Gemini CLI hook-schema compatibility notes:
 
 - Hook entries must use `type: "command"` with a non-empty `command` string.
 - Hook definitions may include `matcher`, `sequential`, `env`, and `timeout`.
-- Maestro intentionally subscribes only to SessionStart, BeforeAgent, AfterAgent, and SessionEnd, even though Gemini CLI exposes additional hook events.
+- Maestro intentionally subscribes only to BeforeAgent and AfterAgent by default, even though Gemini CLI exposes additional hook events.
 
 ## Session State Lifecycle
 

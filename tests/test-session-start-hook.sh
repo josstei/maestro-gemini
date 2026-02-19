@@ -5,11 +5,21 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 HOOK="$PROJECT_ROOT/hooks/session-start.sh"
 STATE_DIR="/tmp/maestro-hooks"
+INACTIVE_CWD="$(mktemp -d)"
+ACTIVE_CWD="$(mktemp -d)"
+
+mkdir -p "$ACTIVE_CWD/.gemini/state"
+cat > "$ACTIVE_CWD/.gemini/state/active-session.md" <<'STATE'
+---
+session_id: "test-active"
+status: "in_progress"
+---
+STATE
 
 echo "=== Test: SessionStart Hook ==="
 
 echo "Test 1: Returns valid JSON"
-INPUT='{"session_id":"test-start-001","transcript_path":"/tmp/transcript","cwd":"/tmp/test","hook_event_name":"SessionStart","timestamp":"2026-02-17T00:00:00Z","source":"startup"}'
+INPUT="{\"session_id\":\"test-start-001\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$INACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"startup\"}"
 
 OUTPUT=$(echo "$INPUT" | bash "$HOOK" 2>/dev/null)
 
@@ -20,18 +30,33 @@ assert isinstance(output, dict), "Output must be a JSON object"
 print("PASS: SessionStart hook returns valid JSON")
 PYEOF
 
-echo "Test 2: Session state directory created"
+echo "Test 2: Inactive workspace does not initialize hook state"
 if [ -d "$STATE_DIR/test-start-001" ]; then
-  echo "PASS: Session state directory created"
-else
-  echo "FAIL: Session state directory not created at $STATE_DIR/test-start-001"
+  echo "FAIL: Session state directory should not be created without active Maestro session"
+  rm -rf "$STATE_DIR/test-start-001"
   exit 1
 fi
+echo "PASS: No hook state initialized for inactive workspace"
 
-rm -rf "$STATE_DIR/test-start-001"
+echo "Test 3: Startup source initializes state when active session exists"
+INPUT_STARTUP_ACTIVE="{\"session_id\":\"test-start-startup-active\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"startup\"}"
+OUTPUT_STARTUP_ACTIVE=$(echo "$INPUT_STARTUP_ACTIVE" | bash "$HOOK" 2>/dev/null)
+python3 - "$OUTPUT_STARTUP_ACTIVE" <<'PYEOF' || { echo "FAIL: SessionStart startup(active) output invalid"; exit 1; }
+import json, sys
+output = json.loads(sys.argv[1])
+assert isinstance(output, dict), "Output must be a JSON object"
+print("PASS: SessionStart startup(active) returns valid JSON")
+PYEOF
+if [ -d "$STATE_DIR/test-start-startup-active" ]; then
+  echo "PASS: Session state directory created for startup source with active session"
+else
+  echo "FAIL: Session state directory not created for startup source with active session"
+  exit 1
+fi
+rm -rf "$STATE_DIR/test-start-startup-active"
 
-echo "Test 3: Fires with source=resume and returns valid JSON"
-INPUT_RESUME='{"session_id":"test-start-resume","transcript_path":"/tmp/transcript","cwd":"/tmp/test","hook_event_name":"SessionStart","timestamp":"2026-02-17T00:00:00Z","source":"resume"}'
+echo "Test 4: Fires with source=resume and returns valid JSON"
+INPUT_RESUME="{\"session_id\":\"test-start-resume\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"resume\"}"
 
 OUTPUT_RESUME=$(echo "$INPUT_RESUME" | bash "$HOOK" 2>/dev/null)
 
@@ -42,7 +67,7 @@ assert isinstance(output, dict), "Output must be a JSON object"
 print("PASS: SessionStart hook fires on source=resume with valid JSON")
 PYEOF
 
-echo "Test 4: Session state directory created for resume source"
+echo "Test 5: Session state directory created for resume source"
 if [ -d "$STATE_DIR/test-start-resume" ]; then
   echo "PASS: Session state directory created for resume source"
 else
@@ -52,8 +77,8 @@ fi
 
 rm -rf "$STATE_DIR/test-start-resume"
 
-echo "Test 5: Fires with source=clear and returns valid JSON"
-INPUT_CLEAR='{"session_id":"test-start-clear","transcript_path":"/tmp/transcript","cwd":"/tmp/test","hook_event_name":"SessionStart","timestamp":"2026-02-17T00:00:00Z","source":"clear"}'
+echo "Test 6: Fires with source=clear and returns valid JSON"
+INPUT_CLEAR="{\"session_id\":\"test-start-clear\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"clear\"}"
 
 OUTPUT_CLEAR=$(echo "$INPUT_CLEAR" | bash "$HOOK" 2>/dev/null)
 
@@ -64,7 +89,7 @@ assert isinstance(output, dict), "Output must be a JSON object"
 print("PASS: SessionStart hook fires on source=clear with valid JSON")
 PYEOF
 
-echo "Test 6: Session state directory created for clear source"
+echo "Test 7: Session state directory created for clear source"
 if [ -d "$STATE_DIR/test-start-clear" ]; then
   echo "PASS: Session state directory created for clear source"
 else
@@ -74,10 +99,10 @@ fi
 
 rm -rf "$STATE_DIR/test-start-clear"
 
-echo "Test 7: All three sources produce consistent JSON output"
-OUTPUT_STARTUP=$(echo '{"session_id":"test-start-cmp-startup","transcript_path":"/tmp/transcript","cwd":"/tmp/test","hook_event_name":"SessionStart","timestamp":"2026-02-17T00:00:00Z","source":"startup"}' | bash "$HOOK" 2>/dev/null)
-OUTPUT_RESUME2=$(echo '{"session_id":"test-start-cmp-resume","transcript_path":"/tmp/transcript","cwd":"/tmp/test","hook_event_name":"SessionStart","timestamp":"2026-02-17T00:00:00Z","source":"resume"}' | bash "$HOOK" 2>/dev/null)
-OUTPUT_CLEAR2=$(echo '{"session_id":"test-start-cmp-clear","transcript_path":"/tmp/transcript","cwd":"/tmp/test","hook_event_name":"SessionStart","timestamp":"2026-02-17T00:00:00Z","source":"clear"}' | bash "$HOOK" 2>/dev/null)
+echo "Test 8: All three sources produce consistent JSON output"
+OUTPUT_STARTUP=$(echo "{\"session_id\":\"test-start-cmp-startup\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"startup\"}" | bash "$HOOK" 2>/dev/null)
+OUTPUT_RESUME2=$(echo "{\"session_id\":\"test-start-cmp-resume\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"resume\"}" | bash "$HOOK" 2>/dev/null)
+OUTPUT_CLEAR2=$(echo "{\"session_id\":\"test-start-cmp-clear\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"clear\"}" | bash "$HOOK" 2>/dev/null)
 
 python3 - "$OUTPUT_STARTUP" "$OUTPUT_RESUME2" "$OUTPUT_CLEAR2" <<'PYEOF' || { echo "FAIL: Source outputs are not consistent"; exit 1; }
 import json, sys
@@ -91,4 +116,5 @@ print("PASS: All three sources (startup, resume, clear) produce identical empty 
 PYEOF
 
 rm -rf "$STATE_DIR/test-start-cmp-startup" "$STATE_DIR/test-start-cmp-resume" "$STATE_DIR/test-start-cmp-clear"
+rm -rf "$INACTIVE_CWD" "$ACTIVE_CWD"
 echo "=== All SessionStart hook tests passed ==="

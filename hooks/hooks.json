@@ -1,18 +1,5 @@
 {
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${extensionPath}/hooks/session-start.sh",
-            "name": "maestro-session-start",
-            "description": "Initialize Maestro workspace state directory for the session",
-            "timeout": 5000
-          }
-        ]
-      }
-    ],
     "BeforeAgent": [
       {
         "hooks": [
@@ -35,19 +22,6 @@
             "name": "maestro-after-agent",
             "description": "Validate handoff report format with retry on malformed output",
             "timeout": 10000
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${extensionPath}/hooks/session-end.sh",
-            "name": "maestro-session-end",
-            "description": "Clean up temporary state files on session end",
-            "timeout": 5000
           }
         ]
       }

@@ -7,15 +7,16 @@ main() {
   INPUT=$(read_stdin)
   SESSION_ID=$(json_get "$INPUT" "session_id")
 
-  if validate_session_id "$SESSION_ID" 2>/dev/null; then
-    STATE_DIR="/tmp/maestro-hooks/$SESSION_ID"
-    if [ -d "$STATE_DIR" ]; then
-      rm -rf "$STATE_DIR"
-      log_hook "INFO" "SessionEnd: Cleaned up state directory [session=$SESSION_ID]"
-    fi
+  if ! validate_session_id "$SESSION_ID" 2>/dev/null; then
+    echo '{}'
+    return 0
   fi
 
-  log_hook "INFO" "SessionEnd: Session ended [session=$SESSION_ID]"
+  SESSION_TMP_STATE_DIR="/tmp/maestro-hooks/$SESSION_ID"
+  if [ -d "$SESSION_TMP_STATE_DIR" ]; then
+    rm -rf "$SESSION_TMP_STATE_DIR"
+  fi
+
   echo '{}'
 }
 

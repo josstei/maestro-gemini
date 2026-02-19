@@ -40,14 +40,9 @@ Use `write_file` directly for state writes — it does not enforce ignore patter
 
 ## Hook Lifecycle During Execution
 
-Maestro hooks (`hooks/hooks.json`) fire automatically at session and agent boundaries. The orchestrator does not invoke hooks directly — the Gemini CLI triggers them based on lifecycle events.
+Maestro hooks (`hooks/hooks.json`) fire automatically at agent boundaries. The orchestrator does not invoke hooks directly — the Gemini CLI triggers them based on lifecycle events.
 
-### Session Boundary Hooks
-
-- **SessionStart** (`hooks/session-start.sh`): Fires when the Gemini CLI session begins. Creates `/tmp/maestro-hooks/<session-id>/` for hook-level per-session state and prunes stale state directories older than 2 hours.
-- **SessionEnd** (`hooks/session-end.sh`): Fires when the session ends. Removes the `/tmp/maestro-hooks/<session-id>/` directory.
-
-These hooks manage transient state (active agent tracking) that is separate from orchestration state in `<MAESTRO_STATE_DIR>`.
+Transient hook state (active agent tracking under `/tmp/maestro-hooks/<session-id>/`) is managed lazily by agent hooks and stale-pruned during `BeforeAgent`.
 
 ### Agent Turn Hooks
 
@@ -222,6 +217,32 @@ When all phases are completed:
 2. Verify all deliverables from the implementation plan are accounted for
 3. Cross-reference the file manifest against expected outputs
 
+### Final Code Review Gate (Change-Triggered)
+
+Run this gate after all execution phases are `completed` and before archival.
+
+1. Aggregate unique paths from all phase file manifests (`files_created`, `files_modified`, `files_deleted`)
+2. Classify each path:
+   - **Documentation-only**: `docs/**`, `*.md`, `*.txt`, `*.rst`, `*.adoc`
+   - **Review-required**: all other paths (source, tests, scripts, build/deploy/config)
+3. If no review-required paths exist, record: `Final code review skipped (documentation-only changes)` and continue
+4. If review-required paths exist:
+   - Activate the `code-review` skill
+   - Delegate to the `code-reviewer` agent with:
+     - review-required file paths
+     - relevant implementation-plan objectives/acceptance criteria
+     - latest validation results from execution
+   - Require explicit assessment of both code quality risk and conformance to approved plan/design
+5. Parse review findings by severity:
+   - `Critical` or `Major`: blocking
+   - `Minor` and `Suggestion`: non-blocking
+6. For blocking findings:
+   - Re-open the owning phase (or create a remediation phase)
+   - Delegate fixes to implementation agent(s)
+   - Run validation
+   - Re-run this Final Code Review Gate
+7. Persist final review status and severity counts in session state/log before completion
+
 ### Deliverable Verification
 
 For each phase in the implementation plan:
@@ -257,6 +278,10 @@ Token Usage:
 
 Deviations from Plan:
 - [any changes from original plan, or "None"]
+
+Code Review Gate:
+- Status: [passed | blocked | skipped]
+- Findings: Critical [n], Major [n], Minor [n], Suggestion [n]
 
 Recommended Next Steps:
 - [actionable follow-up items]

@@ -91,6 +91,8 @@ Plan output path handling:
 ### Phase 4: Complete
 
 - Verify deliverables and validation outcomes.
+- If execution changed non-documentation files (source/test/config/scripts), activate `code-review` and run a final `code-reviewer` pass on the changed scope with implementation-plan context.
+- Treat unresolved `Critical` or `Major` review findings as completion blockers; remediate, re-validate, and re-run the review gate before archival.
 - Archive via `session-management` (respecting `MAESTRO_AUTO_ARCHIVE`).
 - Provide final summary and recommended next steps.
 - Save key cross-session memory entries with `[Maestro]` prefix.
@@ -201,10 +203,8 @@ Maestro uses Gemini CLI hooks from `hooks/hooks.json`:
 
 | Hook | Script | Purpose |
 | --- | --- | --- |
-| SessionStart | `hooks/session-start.sh` | Initialize per-session hook state |
 | BeforeAgent | `hooks/before-agent.sh` | Track active agent and inject compact session context |
 | AfterAgent | `hooks/after-agent.sh` | Enforce handoff format (`Task Report` + `Downstream Context`) |
-| SessionEnd | `hooks/session-end.sh` | Cleanup temp hook state |
 
 ## Alignment Notes
 

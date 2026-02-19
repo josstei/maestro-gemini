@@ -11,7 +11,7 @@ Maestro is configuration-driven. The runtime is composed of:
 - `commands/maestro/*.toml`: slash command prompts
 - `skills/*/SKILL.md`: on-demand procedural protocols
 - `agents/*.md`: local agent definitions (`tools`, temperature, turn limits, timeout)
-- `hooks/hooks.json` + `hooks/*.sh`: SessionStart/BeforeAgent/AfterAgent/SessionEnd middleware
+- `hooks/hooks.json` + `hooks/*.sh`: BeforeAgent/AfterAgent middleware
 - `scripts/*.sh`: workspace, state, and parallel dispatch helpers
 
 ## Gemini CLI Loader Alignment
@@ -110,10 +110,8 @@ If `MAESTRO_GEMINI_EXTRA_ARGS` includes `--allowed-tools`, dispatch emits a depr
 
 Hooks are configured in `hooks/hooks.json`.
 
-- SessionStart (`hooks/session-start.sh`): session init bookkeeping under `/tmp/maestro-hooks`
 - BeforeAgent (`hooks/before-agent.sh`): detects active agent (`MAESTRO_CURRENT_AGENT` first, regex fallback), stores active agent, injects compact session context
 - AfterAgent (`hooks/after-agent.sh`): validates delegated output contains both `Task Report` and `Downstream Context`, requests one retry on malformed output
-- SessionEnd (`hooks/session-end.sh`): cleans `/tmp/maestro-hooks/<session-id>`
 
 ## Gemini CLI Features Actively Leveraged
 

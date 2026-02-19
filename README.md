@@ -52,7 +52,7 @@ Maestro transforms Gemini CLI into a multi-agent orchestration platform. Instead
 - **Automated Planning** — Generates implementation plans with phase dependencies, agent assignments, and parallelization opportunities
 - **Parallel Execution** — Independent phases run concurrently through shell-based parallel dispatch
 - **Session Persistence** — All orchestration state tracked in YAML+Markdown files for reliable resumption
-- **Hooks-Based Lifecycle Middleware** — Lifecycle hooks for session init, active-agent tracking, handoff validation, and cleanup
+- **Hooks-Based Lifecycle Middleware** — Lifecycle hooks for active-agent tracking and handoff validation
 - **Least-Privilege Security** — Each subagent receives only the tools required for its role
 - **Standalone Commands** — Direct access to code review, debugging, security audit, and performance analysis without full orchestration
 - **Configurable Settings** — 14 environment-variable-driven parameters for model selection, timeouts, validation strictness, and dispatch behavior
@@ -283,10 +283,8 @@ Maestro uses Gemini CLI's hooks system for lifecycle middleware. Tool permission
 
 | Hook | Purpose |
 |------|---------|
-| SessionStart | Initialize per-session hook state and prune stale temp hook directories |
 | BeforeAgent | Track active agent identity, inject session context |
 | AfterAgent | Validate handoff report format, clear agent tracking |
-| SessionEnd | Clean up temp hook state for the session |
 
 Hook handlers are in `hooks/` and registered via `hooks/hooks.json`.
 
@@ -333,7 +331,7 @@ Maestro is built from seven layers, each with a distinct responsibility:
 | **Agents** | `agents/` | Markdown + YAML frontmatter | 12 subagent persona definitions with tool permissions and model config |
 | **Skills** | `skills/` | Markdown (`SKILL.md` per directory) | Reusable methodology modules with embedded protocols |
 | **Scripts** | `scripts/` | Shell | Execution infrastructure (parallel dispatch) |
-| **Hooks** | `hooks/` | JSON + Shell | Lifecycle middleware for session init, active-agent tracking, handoff validation, and cleanup |
+| **Hooks** | `hooks/` | JSON + Shell | Lifecycle middleware for active-agent tracking and handoff validation |
 | **Templates** | `templates/` | Markdown | Structure templates for generated artifacts (designs, plans, sessions) |
 
 ### Workflow Phases

@@ -80,6 +80,37 @@ log_hook() {
   echo "[$level] maestro: $msg" >&2
 }
 
+resolve_active_session_path() {
+  local cwd="$1"
+  local state_dir="${MAESTRO_STATE_DIR:-.gemini}"
+
+  if [[ "$state_dir" == /* ]]; then
+    echo "$state_dir/state/active-session.md"
+    return
+  fi
+
+  if [ -n "$cwd" ]; then
+    echo "$cwd/$state_dir/state/active-session.md"
+    return
+  fi
+
+  echo "$PWD/$state_dir/state/active-session.md"
+}
+
+has_active_maestro_session() {
+  local cwd="$1"
+  local active_session
+  active_session="$(resolve_active_session_path "$cwd")"
+  [ -f "$active_session" ]
+}
+
+prune_stale_hook_state() {
+  local state_dir="/tmp/maestro-hooks"
+  if [ -d "$state_dir" ]; then
+    find "$state_dir" -maxdepth 1 -type d -mmin +120 -not -path "$state_dir" -exec rm -rf {} \; 2>/dev/null || true
+  fi
+}
+
 validate_session_id() {
   local session_id="$1"
   if [[ ! "$session_id" =~ ^[a-zA-Z0-9_-]+$ ]]; then

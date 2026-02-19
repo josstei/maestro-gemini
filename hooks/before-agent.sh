@@ -13,6 +13,8 @@ main() {
     HOOK_EVENT_NAME="BeforeAgent"
   fi
 
+  prune_stale_hook_state
+
   AGENT_NAME="${MAESTRO_CURRENT_AGENT:-}"
   # MAESTRO_CURRENT_AGENT is set by parallel-dispatch.sh (exported to the
   # subprocess environment). In parallel dispatch, hooks inherit it via
