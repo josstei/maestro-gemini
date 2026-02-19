@@ -19,4 +19,4 @@ main() {
   echo '{}'
 }
 
-safe_main main
+safe_main main advisory
