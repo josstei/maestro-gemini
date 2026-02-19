@@ -7,7 +7,11 @@ const { log } = require('./logger');
 const { validateSessionId } = require('./validation');
 const { HOOK_STATE_TTL_MS } = require('./constants');
 
-let _baseDir = path.join(os.tmpdir(), 'maestro-hooks');
+const DEFAULT_BASE_DIR = process.platform === 'win32'
+  ? path.join(os.tmpdir(), 'maestro-hooks')
+  : '/tmp/maestro-hooks';
+
+let _baseDir = DEFAULT_BASE_DIR;
 
 function getBaseDir() {
   return _baseDir;
