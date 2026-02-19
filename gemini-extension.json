@@ -63,6 +63,11 @@
       "name": "Stagger Delay",
       "description": "Seconds between parallel agent launches.",
       "envVar": "MAESTRO_STAGGER_DELAY"
+    },
+    {
+      "name": "Execution Mode",
+      "description": "Phase 3 dispatch mode: 'parallel' (concurrent agents), 'sequential' (one at a time), or 'ask' (prompt each time). Default: ask.",
+      "envVar": "MAESTRO_EXECUTION_MODE"
     }
   ]
 }
