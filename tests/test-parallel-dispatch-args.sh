@@ -17,6 +17,7 @@ DISPATCH_DIR="$TMP_DIR/.maestro-parallel"
 RESULT_DIR="$DISPATCH_DIR/results"
 BIN_DIR="$TMP_DIR/bin"
 CAPTURE_FILE="$TMP_DIR/gemini-argv.bin"
+STDIN_CAPTURE_FILE="$TMP_DIR/gemini-stdin.txt"
 
 mkdir -p "$DISPATCH_DIR/prompts" "$BIN_DIR"
 
@@ -29,8 +30,10 @@ cat > "$BIN_DIR/gemini" <<'STUB'
 set -euo pipefail
 
 : "${MAESTRO_TEST_ARGV_CAPTURE:?missing MAESTRO_TEST_ARGV_CAPTURE}"
+: "${MAESTRO_TEST_STDIN_CAPTURE:?missing MAESTRO_TEST_STDIN_CAPTURE}"
 
 printf '%s\0' "$@" > "$MAESTRO_TEST_ARGV_CAPTURE"
+cat > "$MAESTRO_TEST_STDIN_CAPTURE"
 echo '{"status":"ok"}'
 STUB
 
@@ -38,6 +41,7 @@ chmod +x "$BIN_DIR/gemini"
 
 PATH="$BIN_DIR:$PATH" \
 MAESTRO_TEST_ARGV_CAPTURE="$CAPTURE_FILE" \
+MAESTRO_TEST_STDIN_CAPTURE="$STDIN_CAPTURE_FILE" \
 MAESTRO_DEFAULT_MODEL="gemini-2.5-pro" \
 MAESTRO_GEMINI_EXTRA_ARGS="--sandbox --policy .gemini/policies/maestro.toml" \
 MAESTRO_AGENT_TIMEOUT=2 \
@@ -50,12 +54,13 @@ if [[ ! -f "$CAPTURE_FILE" ]]; then
   exit 1
 fi
 
-python3 - "$CAPTURE_FILE" <<'PYEOF' || { echo "FAIL: Dispatch arguments did not match expectations"; exit 1; }
+python3 - "$CAPTURE_FILE" "$STDIN_CAPTURE_FILE" <<'PYEOF' || { echo "FAIL: Dispatch arguments did not match expectations"; exit 1; }
 import pathlib
 import sys
 
 raw = pathlib.Path(sys.argv[1]).read_bytes().split(b"\0")
 args = [part.decode() for part in raw if part]
+stdin_payload = pathlib.Path(sys.argv[2]).read_text()
 
 def require(condition, message):
     if not condition:
@@ -78,14 +83,11 @@ require(
     f"Expected forwarded policy path value, got args: {args}",
 )
 
-require("--prompt" in args, f"Missing --prompt flag in args: {args}")
-prompt_idx = args.index("--prompt")
-require(prompt_idx + 1 < len(args), f"--prompt has no value: {args}")
-prompt_value = args[prompt_idx + 1]
-require("PROJECT ROOT:" in prompt_value, "Expected prompt payload to include PROJECT ROOT preamble")
-require("Review the project architecture" in prompt_value, "Expected prompt payload to include prompt file content")
+require("--prompt" not in args, f"Expected no deprecated --prompt flag in args: {args}")
+require("PROJECT ROOT:" in stdin_payload, "Expected stdin payload to include PROJECT ROOT preamble")
+require("Review the project architecture" in stdin_payload, "Expected stdin payload to include prompt file content")
 
-print("PASS: Dispatch forwards args and uses --prompt flag")
+print("PASS: Dispatch forwards args and streams prompt payload over stdin")
 PYEOF
 
 if [[ ! -f "$RESULT_DIR/architect.json" ]]; then

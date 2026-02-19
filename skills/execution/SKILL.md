@@ -67,18 +67,18 @@ For phases at the same dependency depth with no file overlap, use shell-based pa
    ```bash
    mkdir -p <state_dir>/parallel/<batch-id>/prompts
    ```
-4. Write each agent's full delegation prompt (including injected base protocol, context chain, and downstream consumer declaration) to its prompt file
-5. Invoke the parallel dispatch script via `run_shell_command`:
+5. Write each agent's full delegation prompt (including injected base protocol, context chain, and downstream consumer declaration) to its prompt file
+6. Invoke the parallel dispatch script via `run_shell_command`:
    ```bash
    ${extensionPath}/scripts/parallel-dispatch.sh <state_dir>/parallel/<batch-id>
    ```
-6. The script spawns one `gemini --approval-mode=yolo --output-format json "<prompt>"` process per prompt file
-7. All agents execute concurrently as independent CLI processes
-8. The script waits for all agents, collects exit codes, and writes `results/summary.json`
-9. Read the batch summary via run_shell_command: `${extensionPath}/scripts/read-state.sh <state_dir>/parallel/<batch-id>/results/summary.json`
-10. For each agent, read its JSON output via run_shell_command: `${extensionPath}/scripts/read-state.sh <state_dir>/parallel/<batch-id>/results/<agent-name>.json` and parse the Task Report
-11. Update session state for all phases in the batch
-12. Only proceed to the next batch when all phases in the current batch are completed
+7. The script spawns one `gemini --approval-mode=yolo --output-format json` process per prompt file and streams each full prompt payload over stdin
+8. All agents execute concurrently as independent CLI processes
+9. The script waits for all agents, collects exit codes, and writes `results/summary.json`
+10. Read the batch summary via run_shell_command: `${extensionPath}/scripts/read-state.sh <state_dir>/parallel/<batch-id>/results/summary.json`
+11. For each agent, read its JSON output via run_shell_command: `${extensionPath}/scripts/read-state.sh <state_dir>/parallel/<batch-id>/results/<agent-name>.json` and parse the Task Report
+12. Update session state for all phases in the batch
+13. Only proceed to the next batch when all phases in the current batch are completed
 
 #### Parallel Dispatch Constraints
 

@@ -42,9 +42,9 @@ Maestro requires Gemini CLI's experimental subagent system. Enable it in your Ge
 
 If the file does not exist, create it with the content above. If it exists, add the `experimental` section to your existing configuration.
 
-**Important**: Subagents operate in autonomous mode — they execute tools (shell commands, file writes, file deletions) without individual confirmation for each step. Review the [Gemini CLI subagents documentation](https://geminicli.com/docs/core/subagents/) for full details.
+**Important**: Parallel-dispatched agents run in autonomous mode (`--approval-mode=yolo`). Sequential delegation uses your current Gemini CLI approval mode. Review the [Gemini CLI subagents documentation](https://geminicli.com/docs/core/subagents/) for full details.
 
-Maestro will check for subagent support on startup and offer to enable it if missing.
+Maestro does not auto-edit `~/.gemini/settings.json`; enable `experimental.enableAgents` manually before orchestration.
 
 ## Installation
 
@@ -81,6 +81,8 @@ gemini extensions list
 You should see `maestro` in the list of active extensions.
 
 ## Quick Start
+
+Path examples in this guide use the default `MAESTRO_STATE_DIR=.gemini` unless noted otherwise.
 
 This walkthrough demonstrates a complete orchestration from start to finish.
 
@@ -1242,7 +1244,14 @@ Maestro works out of the box with sensible defaults. To customize behavior, set 
 | `MAESTRO_STATE_DIR` | `.gemini` | Directory for session state and plans |
 | `MAESTRO_MAX_CONCURRENT` | `0` (unlimited) | Max simultaneous agents in parallel dispatch |
 | `MAESTRO_STAGGER_DELAY` | `5` | Seconds between parallel agent launches |
+| `MAESTRO_GEMINI_EXTRA_ARGS` | _(none)_ | Extra Gemini CLI args forwarded to each parallel dispatch process (prefer `--policy`) |
 | `MAESTRO_EXECUTION_MODE` | `ask` | Phase 3 dispatch mode: `parallel`, `sequential`, or `ask` |
+
+You can set extension-scoped values interactively with:
+
+```bash
+gemini extensions config maestro
+```
 
 ### Configuration Examples
 
@@ -1270,6 +1279,13 @@ export MAESTRO_DISABLED_AGENTS=devops-engineer,performance-engineer
 ```bash
 export MAESTRO_EXECUTION_MODE=parallel
 ```
+
+**Forward extra Gemini CLI args to parallel dispatch**:
+```bash
+export MAESTRO_GEMINI_EXTRA_ARGS="--sandbox --policy .gemini/policies/maestro.toml"
+```
+
+Prefer `--policy` over deprecated `--allowed-tools`.
 
 **Custom state directory**:
 ```bash
@@ -1465,7 +1481,7 @@ Check `~/.gemini/settings.json` for:
 2. Add the `experimental` section (or update existing file)
 3. Save and restart Gemini CLI
 
-Maestro will offer to enable subagents automatically if missing.
+Maestro will not update this setting automatically; update `~/.gemini/settings.json` manually, then restart Gemini CLI.
 
 ### Session State Corrupted
 

@@ -179,7 +179,17 @@ run_with_timeout() {
     return $?
   fi
 
-  "$@" &
+  local stdin_capture=""
+  if ! [ -t 0 ]; then
+    stdin_capture="$(mktemp /tmp/maestro-timeout-stdin-XXXXXX)"
+    cat > "$stdin_capture"
+  fi
+
+  if [[ -n "$stdin_capture" ]]; then
+    "$@" < "$stdin_capture" &
+  else
+    "$@" &
+  fi
   local cmd_pid=$!
   local cancel_file="/tmp/maestro-watchdog-$$-$cmd_pid"
   local timeout_file="/tmp/maestro-watchdog-timeout-$$-$cmd_pid"
@@ -205,6 +215,7 @@ run_with_timeout() {
   kill "$watchdog_pid" 2>/dev/null || true
   wait "$watchdog_pid" 2>/dev/null || true
   rm -f "$cancel_file"
+  [[ -n "$stdin_capture" ]] && rm -f "$stdin_capture"
 
   if [ -f "$timeout_file" ]; then
     rm -f "$timeout_file"
@@ -262,17 +273,10 @@ for PROMPT_INDEX in "${!PROMPT_FILES[@]}"; do
     exit 1
   fi
 
-  PROMPT_CONTENT=$(cat "$PROMPT_FILE")
-
-  if [[ -z "${PROMPT_CONTENT// /}" ]]; then
+  if ! grep -q '[^[:space:]]' "$PROMPT_FILE"; then
     echo "ERROR: Prompt file $AGENT_NAME is empty or whitespace-only" >&2
     exit 1
   fi
-
-  PROMPT_CONTENT="PROJECT ROOT: ${PROJECT_ROOT}
-All file paths in this task are relative to this directory. When using write_file, replace, or read_file, construct absolute paths by prepending this root. When using run_shell_command, execute from this directory.
-
-${PROMPT_CONTENT}"
 
   if [[ "$MAX_CONCURRENT" -gt 0 ]] && [[ "$LAUNCHED" -ge "$MAX_CONCURRENT" ]]; then
     if [[ "$SUPPORTS_WAIT_N" == true ]]; then
@@ -291,12 +295,16 @@ ${PROMPT_CONTENT}"
       AGENT_MODEL_FLAGS=("-m" "$WRITER_MODEL")
     fi
     set +e
-    run_with_timeout "$TIMEOUT_SECS" gemini \
+    {
+      printf 'PROJECT ROOT: %s\n' "$PROJECT_ROOT"
+      printf '%s\n' 'All file paths in this task are relative to this directory. When using write_file, replace, or read_file, construct absolute paths by prepending this root. When using run_shell_command, execute from this directory.'
+      printf '\n'
+      cat "$PROMPT_FILE"
+    } | run_with_timeout "$TIMEOUT_SECS" gemini \
       --approval-mode=yolo \
       --output-format json \
       ${AGENT_MODEL_FLAGS[@]+"${AGENT_MODEL_FLAGS[@]}"} \
       ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} \
-      --prompt "$PROMPT_CONTENT" \
       > "$RESULT_JSON" \
       2> "$RESULT_LOG"
     AGENT_EXIT_CODE=$?

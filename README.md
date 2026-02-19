@@ -52,10 +52,10 @@ Maestro transforms Gemini CLI into a multi-agent orchestration platform. Instead
 - **Automated Planning** — Generates implementation plans with phase dependencies, agent assignments, and parallelization opportunities
 - **Parallel Execution** — Independent phases run concurrently through shell-based parallel dispatch
 - **Session Persistence** — All orchestration state tracked in YAML+Markdown files for reliable resumption
-- **Hooks-Based Lifecycle Middleware** — Lifecycle hooks for session init, agent tracking, model overrides, and handoff validation
+- **Hooks-Based Lifecycle Middleware** — Lifecycle hooks for session init, active-agent tracking, handoff validation, and cleanup
 - **Least-Privilege Security** — Each subagent receives only the tools required for its role
 - **Standalone Commands** — Direct access to code review, debugging, security audit, and performance analysis without full orchestration
-- **Configurable Settings** — 13 environment-variable-driven parameters for model selection, timeouts, validation strictness, and more
+- **Configurable Settings** — 14 environment-variable-driven parameters for model selection, timeouts, validation strictness, and dispatch behavior
 
 ## Getting Started
 
@@ -71,13 +71,13 @@ Maestro relies on Gemini CLI's experimental subagent system. Enable it in your G
 }
 ```
 
-> **Warning**: Subagents are experimental and operate in YOLO mode — they execute tools (shell commands, file writes) without individual confirmation for each step. Review the [subagents documentation](https://geminicli.com/docs/core/subagents/) for details.
+> **Warning**: Parallel-dispatched agents run in autonomous mode (`--approval-mode=yolo`). Sequential delegation uses your current Gemini CLI approval mode. Review the [subagents documentation](https://geminicli.com/docs/core/subagents/) for details.
 
 The `settings.json` file is located at:
 - **macOS/Linux**: `~/.gemini/settings.json`
 - **Windows**: `%USERPROFILE%\.gemini\settings.json`
 
-Maestro checks for subagent support on startup and offers to enable it if missing.
+Maestro does not auto-edit `settings.json`. Enable `experimental.enableAgents` manually before running orchestration commands.
 
 ### Installation
 
@@ -134,7 +134,7 @@ Initiates the full Maestro orchestration workflow.
 **Usage**: `/maestro:orchestrate <task description>`
 
 **Behavior**:
-1. Checks for existing active sessions in `.gemini/state/`
+1. Checks for existing active sessions in `<MAESTRO_STATE_DIR>/state/` (default: `.gemini/state/`)
 2. If an active session exists, offers to resume or archive it
 3. Begins the four-phase orchestration workflow:
    - Phase 1: Design Dialogue
@@ -162,7 +162,7 @@ Resumes an interrupted orchestration session.
 **Usage**: `/maestro:resume`
 
 **Behavior**:
-1. Reads `.gemini/state/active-session.md` directly via file injection
+1. Reads active session state through `scripts/read-active-session.sh` (default path: `.gemini/state/active-session.md`)
 2. Parses session metadata and phase statuses
 3. Presents a status summary with completed/pending/failed phases
 4. If errors exist from the previous run, presents them and asks for guidance
@@ -261,9 +261,12 @@ Maestro works out of the box with sensible defaults. To customize behavior, set 
 | `MAESTRO_STATE_DIR` | `.gemini` | Directory for session state and plans |
 | `MAESTRO_MAX_CONCURRENT` | `0` (unlimited) | Max simultaneous agents in parallel dispatch |
 | `MAESTRO_STAGGER_DELAY` | `5` | Seconds between parallel agent launches |
+| `MAESTRO_GEMINI_EXTRA_ARGS` | _(none)_ | Extra Gemini CLI args forwarded to each parallel dispatch process (prefer `--policy`) |
 | `MAESTRO_EXECUTION_MODE` | `ask` | Phase 3 dispatch: `parallel` / `sequential` / `ask` |
 
 All settings are optional. The orchestrator uses the defaults shown above when a variable is not set.
+Script-backed setting precedence is: exported env var -> workspace `.env` -> extension `.env` -> default.
+You can configure extension-scoped settings interactively with `gemini extensions config maestro`.
 
 ### Model Configuration
 
@@ -280,10 +283,10 @@ Maestro uses Gemini CLI's hooks system for lifecycle middleware. Tool permission
 
 | Hook | Purpose |
 |------|---------|
-| SessionStart | Initialize session state, inject workspace context |
+| SessionStart | Initialize per-session hook state and prune stale temp hook directories |
 | BeforeAgent | Track active agent identity, inject session context |
 | AfterAgent | Validate handoff report format, clear agent tracking |
-| SessionEnd | Finalize session state, clean up tracking files |
+| SessionEnd | Clean up temp hook state for the session |
 
 Hook handlers are in `hooks/` and registered via `hooks/hooks.json`.
 
@@ -330,7 +333,7 @@ Maestro is built from seven layers, each with a distinct responsibility:
 | **Agents** | `agents/` | Markdown + YAML frontmatter | 12 subagent persona definitions with tool permissions and model config |
 | **Skills** | `skills/` | Markdown (`SKILL.md` per directory) | Reusable methodology modules with embedded protocols |
 | **Scripts** | `scripts/` | Shell | Execution infrastructure (parallel dispatch) |
-| **Hooks** | `hooks/` | JSON + Shell | Lifecycle middleware for agent tracking, model config, session init, and handoff validation |
+| **Hooks** | `hooks/` | JSON + Shell | Lifecycle middleware for session init, active-agent tracking, handoff validation, and cleanup |
 | **Templates** | `templates/` | Markdown | Structure templates for generated artifacts (designs, plans, sessions) |
 
 ### Workflow Phases
@@ -375,25 +378,24 @@ Maestro coordinates 12 specialized subagents:
 
 | Agent | Specialization | Tools | Model |
 |-------|---------------|-------|-------|
-| architect | System design, technology selection, component design | read, glob, search, web search | inherit |
-| api-designer | REST/GraphQL endpoint design, API contracts | read, glob, search | inherit |
+| architect | System design, technology selection, component design | read, glob, search, web search/fetch | inherit |
+| api-designer | REST/GraphQL endpoint design, API contracts | read, glob, search, web search/fetch | inherit |
 | coder | Feature implementation, clean code, SOLID principles | read, glob, search, write, replace, shell | inherit |
 | code-reviewer | Code quality review, best practices, security | read, glob, search | inherit |
-| data-engineer | Schema design, query optimization, ETL pipelines | read, glob, search, write, replace, shell | inherit |
+| data-engineer | Schema design, query optimization, ETL pipelines | read, glob, search, write, replace, shell, web search | inherit |
 | debugger | Root cause analysis, log analysis, execution tracing | read, glob, search, shell | inherit |
-| devops-engineer | CI/CD pipelines, containerization, infrastructure | read, glob, search, write, replace, shell | inherit |
-| performance-engineer | Profiling, bottleneck identification, optimization | read, glob, search, shell | inherit |
-| refactor | Code modernization, technical debt, design patterns | read, glob, search, write, replace, shell | inherit |
-| security-engineer | Vulnerability assessment, OWASP, threat modeling | read, glob, search, shell | inherit |
-| tester | Unit/integration/E2E tests, TDD, coverage analysis | read, glob, search, write, replace, shell | inherit |
-| technical-writer | API docs, READMEs, architecture documentation | read, glob, search, write, replace | inherit |
+| devops-engineer | CI/CD pipelines, containerization, infrastructure | read, glob, search, write, replace, shell, web search/fetch | inherit |
+| performance-engineer | Profiling, bottleneck identification, optimization | read, glob, search, shell, web search/fetch | inherit |
+| refactor | Code modernization, technical debt, design patterns | read, glob, search, write, replace | inherit |
+| security-engineer | Vulnerability assessment, OWASP, threat modeling | read, glob, search, shell, web search/fetch | inherit |
+| tester | Unit/integration/E2E tests, TDD, coverage analysis | read, glob, search, write, replace, shell, web search | inherit |
+| technical-writer | API docs, READMEs, architecture documentation | read, glob, search, write, replace, web search | inherit |
 
 ### Tool Access Philosophy
 
 - **Read-only agents** (architect, api-designer, code-reviewer): Produce analysis and recommendations
 - **Read + Shell agents** (debugger, performance-engineer, security-engineer): Investigate without modifying files
-- **Read + Write + Shell agents** (refactor): Modify code with validation capability
-- **Read + Write agents** (technical-writer): Modify docs without shell access
+- **Read + Write agents** (refactor, technical-writer): Modify code/docs without shell access
 - **Full access agents** (coder, data-engineer, devops-engineer, tester): Complete implementation capabilities
 
 ## Skills
@@ -412,7 +414,7 @@ Maestro uses skills to encapsulate detailed methodologies that are activated on 
 
 ## Parallel Execution
 
-Maestro 1.1.0 introduces shell-based parallel dispatch, enabling independent implementation phases to run concurrently instead of sequentially.
+Maestro uses shell-based parallel dispatch, enabling independent implementation phases to run concurrently instead of sequentially.
 
 ### How It Works
 
@@ -421,7 +423,7 @@ The TechLead orchestrator uses `scripts/parallel-dispatch.sh` to spawn concurren
 **Dispatch flow:**
 1. The orchestrator writes self-contained delegation prompts to a dispatch directory
 2. Invokes `parallel-dispatch.sh` via shell
-3. The script spawns one `gemini --approval-mode=yolo --output-format json "<prompt>"` process per prompt file
+3. The script spawns one `gemini --approval-mode=yolo --output-format json` process per prompt file, streaming prompt content over stdin
 4. All agents execute concurrently as independent OS processes
 5. Results are collected with exit codes, logs, and structured JSON output
 6. The orchestrator reads results and updates session state
@@ -472,7 +474,7 @@ Maestro creates the following directories in your project:
         └── active-session.md           # Current orchestration state
 ```
 
-Maestro tracks orchestration progress in `.gemini/state/active-session.md` with:
+Maestro tracks orchestration progress in `<MAESTRO_STATE_DIR>/state/active-session.md` (default: `.gemini/state/active-session.md`) with:
 
 - **Phase status tracking**: pending, in_progress, completed, failed, skipped
 - **File manifest**: Files created, modified, and deleted per phase
@@ -505,7 +507,7 @@ All state files use YAML frontmatter for machine-readable metadata and Markdown 
 
 ### Session Resume Fails
 
-1. Verify `.gemini/state/active-session.md` exists in your project
+1. Verify `active-session.md` exists under your configured state directory (`.gemini/state/` by default)
 2. Check the YAML frontmatter is valid (no syntax errors)
 3. If corrupted, manually fix the YAML or delete and start fresh with `/maestro:orchestrate`
 
