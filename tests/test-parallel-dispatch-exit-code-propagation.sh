@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DISPATCH_SCRIPT="$PROJECT_ROOT/scripts/parallel-dispatch.sh"
+DISPATCH_SCRIPT="$PROJECT_ROOT/scripts/parallel-dispatch.js"
 
 echo "=== Test: Parallel Dispatch Exit Code Propagation ==="
 
@@ -34,7 +34,7 @@ chmod +x "$BIN_DIR/gemini"
 set +e
 PATH="$BIN_DIR:$PATH" \
 MAESTRO_AGENT_TIMEOUT=2 \
-"$DISPATCH_SCRIPT" "$DISPATCH_DIR" > "$RUN_LOG" 2>&1
+node "$DISPATCH_SCRIPT" "$DISPATCH_DIR" > "$RUN_LOG" 2>&1
 DISPATCH_EXIT=$?
 set -e
 

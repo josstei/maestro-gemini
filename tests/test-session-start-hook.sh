@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-HOOK="$PROJECT_ROOT/hooks/session-start.sh"
+HOOK="$PROJECT_ROOT/hooks/session-start.js"
 STATE_DIR="/tmp/maestro-hooks"
 INACTIVE_CWD="$(mktemp -d)"
 ACTIVE_CWD="$(mktemp -d)"
@@ -21,7 +21,7 @@ echo "=== Test: SessionStart Hook ==="
 echo "Test 1: Returns valid JSON"
 INPUT="{\"session_id\":\"test-start-001\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$INACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"startup\"}"
 
-OUTPUT=$(echo "$INPUT" | bash "$HOOK" 2>/dev/null)
+OUTPUT=$(echo "$INPUT" | node "$HOOK" 2>/dev/null)
 
 python3 - "$OUTPUT" <<'PYEOF' || { echo "FAIL: SessionStart hook output invalid"; exit 1; }
 import json, sys
@@ -40,7 +40,7 @@ echo "PASS: No hook state initialized for inactive workspace"
 
 echo "Test 3: Startup source initializes state when active session exists"
 INPUT_STARTUP_ACTIVE="{\"session_id\":\"test-start-startup-active\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"startup\"}"
-OUTPUT_STARTUP_ACTIVE=$(echo "$INPUT_STARTUP_ACTIVE" | bash "$HOOK" 2>/dev/null)
+OUTPUT_STARTUP_ACTIVE=$(echo "$INPUT_STARTUP_ACTIVE" | node "$HOOK" 2>/dev/null)
 python3 - "$OUTPUT_STARTUP_ACTIVE" <<'PYEOF' || { echo "FAIL: SessionStart startup(active) output invalid"; exit 1; }
 import json, sys
 output = json.loads(sys.argv[1])
@@ -58,7 +58,7 @@ rm -rf "$STATE_DIR/test-start-startup-active"
 echo "Test 4: Fires with source=resume and returns valid JSON"
 INPUT_RESUME="{\"session_id\":\"test-start-resume\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"resume\"}"
 
-OUTPUT_RESUME=$(echo "$INPUT_RESUME" | bash "$HOOK" 2>/dev/null)
+OUTPUT_RESUME=$(echo "$INPUT_RESUME" | node "$HOOK" 2>/dev/null)
 
 python3 - "$OUTPUT_RESUME" <<'PYEOF' || { echo "FAIL: SessionStart resume output invalid"; exit 1; }
 import json, sys
@@ -80,7 +80,7 @@ rm -rf "$STATE_DIR/test-start-resume"
 echo "Test 6: Fires with source=clear and returns valid JSON"
 INPUT_CLEAR="{\"session_id\":\"test-start-clear\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"clear\"}"
 
-OUTPUT_CLEAR=$(echo "$INPUT_CLEAR" | bash "$HOOK" 2>/dev/null)
+OUTPUT_CLEAR=$(echo "$INPUT_CLEAR" | node "$HOOK" 2>/dev/null)
 
 python3 - "$OUTPUT_CLEAR" <<'PYEOF' || { echo "FAIL: SessionStart clear output invalid"; exit 1; }
 import json, sys
@@ -100,9 +100,9 @@ fi
 rm -rf "$STATE_DIR/test-start-clear"
 
 echo "Test 8: All three sources produce consistent JSON output"
-OUTPUT_STARTUP=$(echo "{\"session_id\":\"test-start-cmp-startup\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"startup\"}" | bash "$HOOK" 2>/dev/null)
-OUTPUT_RESUME2=$(echo "{\"session_id\":\"test-start-cmp-resume\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"resume\"}" | bash "$HOOK" 2>/dev/null)
-OUTPUT_CLEAR2=$(echo "{\"session_id\":\"test-start-cmp-clear\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"clear\"}" | bash "$HOOK" 2>/dev/null)
+OUTPUT_STARTUP=$(echo "{\"session_id\":\"test-start-cmp-startup\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"startup\"}" | node "$HOOK" 2>/dev/null)
+OUTPUT_RESUME2=$(echo "{\"session_id\":\"test-start-cmp-resume\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"resume\"}" | node "$HOOK" 2>/dev/null)
+OUTPUT_CLEAR2=$(echo "{\"session_id\":\"test-start-cmp-clear\",\"transcript_path\":\"/tmp/transcript\",\"cwd\":\"$ACTIVE_CWD\",\"hook_event_name\":\"SessionStart\",\"timestamp\":\"2026-02-17T00:00:00Z\",\"source\":\"clear\"}" | node "$HOOK" 2>/dev/null)
 
 python3 - "$OUTPUT_STARTUP" "$OUTPUT_RESUME2" "$OUTPUT_CLEAR2" <<'PYEOF' || { echo "FAIL: Source outputs are not consistent"; exit 1; }
 import json, sys

@@ -3,13 +3,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SCRIPT="$PROJECT_ROOT/scripts/read-active-session.sh"
+SCRIPT="$PROJECT_ROOT/scripts/read-active-session.js"
 
 echo "=== Test: read-active-session script ==="
 
 echo "Test 1: Default behavior returns 'No active session' when missing"
 TEMP_PROJECT_1="$(mktemp -d)"
-OUTPUT="$(cd "$TEMP_PROJECT_1" && bash "$SCRIPT")"
+OUTPUT="$(cd "$TEMP_PROJECT_1" && node "$SCRIPT")"
 if [[ "$OUTPUT" == "No active session" ]]; then
   echo "PASS: Missing state returns fallback message"
 else
@@ -28,7 +28,7 @@ status: in_progress
 ---
 default marker
 STATE
-OUTPUT="$(cd "$TEMP_PROJECT_2" && bash "$SCRIPT")"
+OUTPUT="$(cd "$TEMP_PROJECT_2" && node "$SCRIPT")"
 if [[ "$OUTPUT" == *"default marker"* ]]; then
   echo "PASS: Default state file read successfully"
 else
@@ -47,7 +47,7 @@ status: in_progress
 ---
 relative marker
 STATE
-OUTPUT="$(cd "$TEMP_PROJECT_3" && MAESTRO_STATE_DIR=".maestro" bash "$SCRIPT")"
+OUTPUT="$(cd "$TEMP_PROJECT_3" && MAESTRO_STATE_DIR=".maestro" node "$SCRIPT")"
 if [[ "$OUTPUT" == *"relative marker"* ]]; then
   echo "PASS: Relative override read successfully"
 else
@@ -67,7 +67,7 @@ status: in_progress
 ---
 absolute marker
 STATE
-OUTPUT="$(cd "$TEMP_PROJECT_4" && MAESTRO_STATE_DIR="$ABS_STATE_DIR" bash "$SCRIPT")"
+OUTPUT="$(cd "$TEMP_PROJECT_4" && MAESTRO_STATE_DIR="$ABS_STATE_DIR" node "$SCRIPT")"
 if [[ "$OUTPUT" == *"absolute marker"* ]]; then
   echo "PASS: Absolute override read successfully"
 else
@@ -89,7 +89,7 @@ status: in_progress
 ---
 env marker
 STATE
-OUTPUT="$(cd "$TEMP_PROJECT_5" && bash "$SCRIPT")"
+OUTPUT="$(cd "$TEMP_PROJECT_5" && node "$SCRIPT")"
 if [[ "$OUTPUT" == *"env marker"* ]]; then
   echo "PASS: Workspace .env override applied"
 else
@@ -113,7 +113,7 @@ status: in_progress
 ---
 extension env marker
 STATE
-OUTPUT="$(cd "$TEMP_PROJECT_6" && HOME="$TEMP_HOME_6" bash "$SCRIPT")"
+OUTPUT="$(cd "$TEMP_PROJECT_6" && HOME="$TEMP_HOME_6" node "$SCRIPT")"
 if [[ "$OUTPUT" == *"extension env marker"* ]]; then
   echo "PASS: Extension .env fallback applied"
 else
@@ -137,7 +137,7 @@ status: in_progress
 ---
 extension path marker
 STATE
-OUTPUT="$(cd "$TEMP_PROJECT_7" && MAESTRO_EXTENSION_PATH="$TEMP_EXTENSION_7" bash "$SCRIPT")"
+OUTPUT="$(cd "$TEMP_PROJECT_7" && MAESTRO_EXTENSION_PATH="$TEMP_EXTENSION_7" node "$SCRIPT")"
 if [[ "$OUTPUT" == *"extension path marker"* ]]; then
   echo "PASS: MAESTRO_EXTENSION_PATH fallback applied"
 else

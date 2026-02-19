@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DISPATCH_SCRIPT="$PROJECT_ROOT/scripts/parallel-dispatch.sh"
+DISPATCH_SCRIPT="$PROJECT_ROOT/scripts/parallel-dispatch.js"
 
 echo "=== Test: Parallel Dispatch Argument Forwarding ==="
 
@@ -47,7 +47,7 @@ MAESTRO_GEMINI_EXTRA_ARGS="--sandbox --policy .gemini/policies/maestro.toml" \
 MAESTRO_AGENT_TIMEOUT=2 \
 MAESTRO_MAX_CONCURRENT=1 \
 MAESTRO_STAGGER_DELAY=0 \
-"$DISPATCH_SCRIPT" "$DISPATCH_DIR"
+node "$DISPATCH_SCRIPT" "$DISPATCH_DIR"
 
 if [[ ! -f "$CAPTURE_FILE" ]]; then
   echo "FAIL: Gemini argv capture file was not created"

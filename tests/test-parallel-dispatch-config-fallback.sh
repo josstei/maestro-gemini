@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DISPATCH_SCRIPT="$PROJECT_ROOT/scripts/parallel-dispatch.sh"
+DISPATCH_SCRIPT="$PROJECT_ROOT/scripts/parallel-dispatch.js"
 
 echo "=== Test: Parallel Dispatch Config Fallback + Bash Compatibility ==="
 
@@ -57,7 +57,7 @@ ENV
 PATH="$BIN_DIR:$PATH" \
 HOME="$FAKE_HOME" \
 MAESTRO_TEST_ARGV_CAPTURE="$CAPTURE_FILE" \
-"$DISPATCH_SCRIPT" "$DISPATCH_DIR" > "$RUN_LOG" 2>&1
+node "$DISPATCH_SCRIPT" "$DISPATCH_DIR" > "$RUN_LOG" 2>&1
 
 if ! rg -n "Model: gemini-ext-fallback-model" "$RUN_LOG" >/dev/null; then
   echo "FAIL: Dispatch log did not use fallback MAESTRO_DEFAULT_MODEL from extension .env"
