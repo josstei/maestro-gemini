@@ -97,7 +97,7 @@ Parallel batches are executed by `scripts/parallel-dispatch.sh`.
 ### Dispatch Controls
 
 - `MAESTRO_DEFAULT_MODEL`: model for all dispatched agents
-- `MAESTRO_WRITER_MODEL`: override for `technical-writer`
+- `MAESTRO_WRITER_MODEL`: override for `technical_writer`
 - `MAESTRO_AGENT_TIMEOUT`: timeout (minutes)
 - `MAESTRO_MAX_CONCURRENT`: max active processes (`0` = unlimited)
 - `MAESTRO_STAGGER_DELAY`: delay between launches (seconds)

@@ -2,16 +2,16 @@
 
 const KNOWN_AGENTS = Object.freeze([
   'architect',
-  'api-designer',
-  'code-reviewer',
+  'api_designer',
+  'code_reviewer',
   'coder',
-  'data-engineer',
+  'data_engineer',
   'debugger',
-  'devops-engineer',
-  'performance-engineer',
+  'devops_engineer',
+  'performance_engineer',
   'refactor',
-  'security-engineer',
-  'technical-writer',
+  'security_engineer',
+  'technical_writer',
   'tester',
 ]);
 

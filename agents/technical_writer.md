@@ -1,5 +1,5 @@
 ---
-name: technical-writer
+name: technical_writer
 kind: local
 description: "Technical writing specialist for documentation, API references, and architectural diagrams. Use when the task requires writing README files, API documentation, architecture decision records, or inline documentation. For example: writing an OpenAPI description, creating a getting-started guide, or documenting module interfaces."
 tools:
@@ -90,7 +90,7 @@ Every documentation file must declare its source of truth — the code files, co
 
 ## Downstream Consumers
 
-- **code-reviewer**: Needs documentation coverage as a review dimension — were public APIs documented? Do docs match implementation?
+- **code_reviewer**: Needs documentation coverage as a review dimension — were public APIs documented? Do docs match implementation?
 - **orchestrator**: Needs documentation to be verifiable against source code it describes — staleness prevention metadata enables this
 
 ## Output Contract

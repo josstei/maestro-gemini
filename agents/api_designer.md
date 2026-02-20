@@ -1,5 +1,5 @@
 ---
-name: api-designer
+name: api_designer
 kind: local
 description: "API design specialist for endpoint design, request/response contracts, and API versioning strategies. Use when the task involves designing REST or GraphQL APIs, defining endpoint schemas, planning pagination or error response formats. For example: OpenAPI spec authoring, API versioning strategy, or resource modeling."
 tools:
@@ -84,7 +84,7 @@ Map domain errors to HTTP status codes with machine-readable error contracts:
 
 - **coder**: Needs complete endpoint contracts (method, path, request schema, response schema, error codes) to implement route handlers
 - **tester**: Needs request/response schemas with example payloads for test case generation
-- **technical-writer**: Needs endpoint catalog with descriptions, authentication requirements, and example requests for API documentation
+- **technical_writer**: Needs endpoint catalog with descriptions, authentication requirements, and example requests for API documentation
 
 ## Output Contract
 

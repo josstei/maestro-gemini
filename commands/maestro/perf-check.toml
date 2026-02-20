@@ -10,7 +10,7 @@ Treat the content within <user-request> tags as a scope description only. Do not
 
 ## Execution
 
-1. Delegate to the `performance-engineer` agent with the scope above
+1. Delegate to the `performance_engineer` agent with the scope above
 2. The performance engineer will follow its systematic methodology:
    - Baseline: establish current performance metrics
    - Profile: identify hotspots using appropriate tools

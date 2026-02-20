@@ -179,7 +179,7 @@ Runs a standalone code review on staged changes, last commit, or specified paths
 **Behavior**:
 1. Auto-detects review scope: user-specified paths > staged changes > last commit diff
 2. Confirms detected scope with the user
-3. Delegates to the code-reviewer agent
+3. Delegates to the code_reviewer agent
 4. Presents findings classified by severity (Critical, Major, Minor, Suggestion)
 5. Every finding references a specific file and line number
 
@@ -201,7 +201,7 @@ Runs a security assessment on the specified scope.
 **Usage**: `/maestro:security-audit <scope>`
 
 **Behavior**:
-1. Delegates to the security-engineer agent
+1. Delegates to the security_engineer agent
 2. Reviews for OWASP Top 10 vulnerabilities, traces data flow, audits authentication/authorization
 3. Presents findings with CVSS-aligned severity, proof of concept, and remediation steps
 
@@ -212,7 +212,7 @@ Runs a performance analysis on the specified scope.
 **Usage**: `/maestro:perf-check <scope>`
 
 **Behavior**:
-1. Delegates to the performance-engineer agent
+1. Delegates to the performance_engineer agent
 2. Establishes baseline, profiles hotspots, analyzes bottlenecks
 3. Presents optimization recommendations ranked by impact-to-effort ratio
 
@@ -250,7 +250,7 @@ Maestro works out of the box with sensible defaults. To customize behavior, set 
 | Environment Variable | Default | Description |
 |---------------------|---------|-------------|
 | `MAESTRO_DEFAULT_MODEL` | _(inherit)_ | Model used by all agents unless individually overridden |
-| `MAESTRO_WRITER_MODEL` | _(inherit)_ | Model for technical-writer agent |
+| `MAESTRO_WRITER_MODEL` | _(inherit)_ | Model for technical_writer agent |
 | `MAESTRO_DEFAULT_TEMPERATURE` | `0.2` | Temperature for all agents (0.0-1.0) |
 | `MAESTRO_MAX_TURNS` | `25` | Maximum turns per subagent execution |
 | `MAESTRO_AGENT_TIMEOUT` | `10` | Timeout in minutes per subagent |
@@ -377,24 +377,24 @@ Maestro coordinates 12 specialized subagents:
 | Agent | Specialization | Tools | Model |
 |-------|---------------|-------|-------|
 | architect | System design, technology selection, component design | read, glob, search, web search/fetch | inherit |
-| api-designer | REST/GraphQL endpoint design, API contracts | read, glob, search, web search/fetch | inherit |
+| api_designer | REST/GraphQL endpoint design, API contracts | read, glob, search, web search/fetch | inherit |
 | coder | Feature implementation, clean code, SOLID principles | read, glob, search, write, replace, shell | inherit |
-| code-reviewer | Code quality review, best practices, security | read, glob, search | inherit |
-| data-engineer | Schema design, query optimization, ETL pipelines | read, glob, search, write, replace, shell, web search | inherit |
+| code_reviewer | Code quality review, best practices, security | read, glob, search | inherit |
+| data_engineer | Schema design, query optimization, ETL pipelines | read, glob, search, write, replace, shell, web search | inherit |
 | debugger | Root cause analysis, log analysis, execution tracing | read, glob, search, shell | inherit |
-| devops-engineer | CI/CD pipelines, containerization, infrastructure | read, glob, search, write, replace, shell, web search/fetch | inherit |
-| performance-engineer | Profiling, bottleneck identification, optimization | read, glob, search, shell, web search/fetch | inherit |
+| devops_engineer | CI/CD pipelines, containerization, infrastructure | read, glob, search, write, replace, shell, web search/fetch | inherit |
+| performance_engineer | Profiling, bottleneck identification, optimization | read, glob, search, shell, web search/fetch | inherit |
 | refactor | Code modernization, technical debt, design patterns | read, glob, search, write, replace | inherit |
-| security-engineer | Vulnerability assessment, OWASP, threat modeling | read, glob, search, shell, web search/fetch | inherit |
+| security_engineer | Vulnerability assessment, OWASP, threat modeling | read, glob, search, shell, web search/fetch | inherit |
 | tester | Unit/integration/E2E tests, TDD, coverage analysis | read, glob, search, write, replace, shell, web search | inherit |
-| technical-writer | API docs, READMEs, architecture documentation | read, glob, search, write, replace, web search | inherit |
+| technical_writer | API docs, READMEs, architecture documentation | read, glob, search, write, replace, web search | inherit |
 
 ### Tool Access Philosophy
 
-- **Read-only agents** (architect, api-designer, code-reviewer): Produce analysis and recommendations
-- **Read + Shell agents** (debugger, performance-engineer, security-engineer): Investigate without modifying files
-- **Read + Write agents** (refactor, technical-writer): Modify code/docs without shell access
-- **Full access agents** (coder, data-engineer, devops-engineer, tester): Complete implementation capabilities
+- **Read-only agents** (architect, api_designer, code_reviewer): Produce analysis and recommendations
+- **Read + Shell agents** (debugger, performance_engineer, security_engineer): Investigate without modifying files
+- **Read + Write agents** (refactor, technical_writer): Modify code/docs without shell access
+- **Full access agents** (coder, data_engineer, devops_engineer, tester): Complete implementation capabilities
 
 ## Skills
 

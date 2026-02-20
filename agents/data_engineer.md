@@ -1,5 +1,5 @@
 ---
-name: data-engineer
+name: data_engineer
 kind: local
 description: "Data engineering specialist for schema design, query optimization, ETL pipelines, and data modeling. Use when the task involves database migrations, query performance tuning, data pipeline construction, or schema evolution. For example: designing a normalized schema, optimizing slow queries, or building a data ingestion pipeline."
 tools:
@@ -93,7 +93,7 @@ Destructive migrations (DROP COLUMN, DROP TABLE) require a two-phase approach:
 ## Downstream Consumers
 
 - **coder**: Needs schema type definitions and repository interface contracts to implement data access layers correctly
-- **devops-engineer**: Needs migration execution requirements — estimated duration, locks acquired, rollback procedure, and whether maintenance window is needed
+- **devops_engineer**: Needs migration execution requirements — estimated duration, locks acquired, rollback procedure, and whether maintenance window is needed
 
 ## Output Contract
 

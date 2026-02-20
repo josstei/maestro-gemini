@@ -228,7 +228,7 @@ Run this gate after all execution phases are `completed` and before archival.
 3. If no review-required paths exist, record: `Final code review skipped (documentation-only changes)` and continue
 4. If review-required paths exist:
    - Activate the `code-review` skill
-   - Delegate to the `code-reviewer` agent with:
+   - Delegate to the `code_reviewer` agent with:
      - review-required file paths
      - relevant implementation-plan objectives/acceptance criteria
      - latest validation results from execution

@@ -107,17 +107,17 @@ Specific commands to run and expected outcomes:
 | Task Domain | Primary Agent | Secondary Agent | Rationale |
 |-------------|--------------|-----------------|-----------|
 | System design, architecture | architect | - | Read-only analysis, design expertise |
-| API contracts, endpoints | api-designer | coder | Design then implement |
+| API contracts, endpoints | api_designer | coder | Design then implement |
 | Feature implementation | coder | - | Full implementation access |
-| Code quality review | code-reviewer | - | Read-only verification |
-| Database schema, queries | data-engineer | - | Schema + implementation |
+| Code quality review | code_reviewer | - | Read-only verification |
+| Database schema, queries | data_engineer | - | Schema + implementation |
 | Bug investigation | debugger | - | Read + shell for investigation |
-| CI/CD, infrastructure | devops-engineer | - | Full DevOps access |
-| Performance analysis | performance-engineer | - | Read + shell for profiling |
+| CI/CD, infrastructure | devops_engineer | - | Full DevOps access |
+| Performance analysis | performance_engineer | - | Read + shell for profiling |
 | Code restructuring | refactor | - | Write access, no shell needed |
-| Security assessment | security-engineer | - | Read + shell for scanning |
+| Security assessment | security_engineer | - | Read + shell for scanning |
 | Test creation | tester | - | Full test implementation |
-| Documentation | technical-writer | - | Write access for docs |
+| Documentation | technical_writer | - | Write access for docs |
 
 ### Assignment Rules
 1. Match the primary task domain to the agent specialization

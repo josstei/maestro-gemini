@@ -24,8 +24,8 @@ Gemini CLI command-loader constraints in effect:
 | `/maestro:archive` | `commands/maestro/archive.toml` | Archive active session | `session-management` |
 | `/maestro:review` | `commands/maestro/review.toml` | Standalone review workflow | `code-review` |
 | `/maestro:debug` | `commands/maestro/debug.toml` | Root-cause analysis workflow | Delegates to `debugger` agent |
-| `/maestro:perf-check` | `commands/maestro/perf-check.toml` | Performance analysis workflow | Delegates to `performance-engineer` agent |
-| `/maestro:security-audit` | `commands/maestro/security-audit.toml` | Security analysis workflow | Delegates to `security-engineer` agent |
+| `/maestro:perf-check` | `commands/maestro/perf-check.toml` | Performance analysis workflow | Delegates to `performance_engineer` agent |
+| `/maestro:security-audit` | `commands/maestro/security-audit.toml` | Security analysis workflow | Delegates to `security_engineer` agent |
 
 ## Prompt Safety Pattern
 

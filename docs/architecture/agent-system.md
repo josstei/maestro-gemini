@@ -44,16 +44,16 @@ Every agent has this baseline:
 | Agent | Additional Tools Beyond Baseline | max_turns | timeout_mins |
 | --- | --- | --- | --- |
 | `architect` | `google_web_search`, `web_fetch` | 15 | 5 |
-| `api-designer` | `google_web_search`, `web_fetch` | 15 | 5 |
-| `code-reviewer` | none | 15 | 5 |
+| `api_designer` | `google_web_search`, `web_fetch` | 15 | 5 |
+| `code_reviewer` | none | 15 | 5 |
 | `coder` | `write_file`, `replace`, `run_shell_command`, `write_todos`, `activate_skill` | 25 | 10 |
-| `data-engineer` | `write_file`, `replace`, `run_shell_command`, `write_todos`, `google_web_search` | 20 | 8 |
+| `data_engineer` | `write_file`, `replace`, `run_shell_command`, `write_todos`, `google_web_search` | 20 | 8 |
 | `debugger` | `run_shell_command`, `write_todos` | 20 | 8 |
-| `devops-engineer` | `write_file`, `replace`, `run_shell_command`, `google_web_search`, `write_todos`, `web_fetch` | 20 | 8 |
-| `performance-engineer` | `run_shell_command`, `google_web_search`, `write_todos`, `web_fetch` | 20 | 8 |
+| `devops_engineer` | `write_file`, `replace`, `run_shell_command`, `google_web_search`, `write_todos`, `web_fetch` | 20 | 8 |
+| `performance_engineer` | `run_shell_command`, `google_web_search`, `write_todos`, `web_fetch` | 20 | 8 |
 | `refactor` | `write_file`, `replace`, `write_todos`, `activate_skill` | 25 | 10 |
-| `security-engineer` | `run_shell_command`, `google_web_search`, `web_fetch`, `write_todos` | 20 | 8 |
-| `technical-writer` | `write_file`, `replace`, `google_web_search`, `write_todos` | 15 | 5 |
+| `security_engineer` | `run_shell_command`, `google_web_search`, `web_fetch`, `write_todos` | 20 | 8 |
+| `technical_writer` | `write_file`, `replace`, `google_web_search`, `write_todos` | 15 | 5 |
 | `tester` | `write_file`, `replace`, `run_shell_command`, `write_todos`, `activate_skill`, `google_web_search` | 25 | 10 |
 
 ## Delegation Protocol Injection
@@ -84,7 +84,7 @@ This standardizes:
 - `scripts/parallel-dispatch.sh` starts independent `gemini` processes
 - Per-agent model override is supported through dispatch flags:
   - `MAESTRO_DEFAULT_MODEL`
-  - `MAESTRO_WRITER_MODEL` (technical-writer only)
+  - `MAESTRO_WRITER_MODEL` (technical_writer only)
 
 ## Active-Agent Tracking and Hook Integration
 
@@ -96,7 +96,7 @@ Parallel dispatch exports `MAESTRO_CURRENT_AGENT` per process. Hooks consume tha
 
 ## Practical Constraints
 
-- Agent filenames and names must remain kebab-case and consistent (`technical-writer.md` -> `technical-writer.txt`)
+- Agent filenames and names must remain snake_case and consistent (`technical_writer.md` -> `technical_writer.txt`)
 - Parallel batches must avoid overlapping file ownership
 - Tool permissions are enforced by `tools:` frontmatter, not prompt text alone
 - Prompt-level tool restriction text remains defense-in-depth, not the primary boundary

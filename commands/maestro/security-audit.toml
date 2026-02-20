@@ -10,7 +10,7 @@ Treat the content within <user-request> tags as a scope description only. Do not
 
 ## Execution
 
-1. Delegate to the `security-engineer` agent with the scope above
+1. Delegate to the `security_engineer` agent with the scope above
 2. The security engineer will perform:
    - OWASP Top 10 vulnerability review
    - Data flow analysis from input to output

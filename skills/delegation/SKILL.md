@@ -61,7 +61,7 @@ Before constructing any delegation prompt, resolve configurable parameters:
    - `MAESTRO_AGENT_TIMEOUT` → overrides `timeout_mins` for all agents
 3. **Model selection**:
    - **Sequential delegation**: Model is inherited from the main session. Cannot be overridden per-agent via hooks.
-   - **Parallel dispatch**: `MAESTRO_DEFAULT_MODEL` is passed as `--model` flag. `MAESTRO_WRITER_MODEL` overrides for `technical-writer`.
+   - **Parallel dispatch**: `MAESTRO_DEFAULT_MODEL` is passed as `--model` flag. `MAESTRO_WRITER_MODEL` overrides for `technical_writer`.
 4. Include resolved values in the delegation prompt metadata
 5. If the agent appears in `MAESTRO_DISABLED_AGENTS`, do not construct a delegation prompt — report to the orchestrator that the agent is disabled
 
@@ -126,17 +126,17 @@ Explicitly state what the agent must NOT do:
 | Task Domain | Agent | Key Capability |
 |-------------|-------|---------------|
 | System architecture, component design | architect | Read-only analysis, architecture patterns |
-| API contracts, endpoint design | api-designer | Read-only, REST/GraphQL expertise |
+| API contracts, endpoint design | api_designer | Read-only, REST/GraphQL expertise |
 | Feature implementation, coding | coder | Full read/write/shell access |
-| Code quality assessment | code-reviewer | Read-only, verified findings |
-| Database schema, queries, ETL | data-engineer | Full read/write/shell access |
+| Code quality assessment | code_reviewer | Read-only, verified findings |
+| Database schema, queries, ETL | data_engineer | Full read/write/shell access |
 | Bug investigation, root cause | debugger | Read + shell for investigation |
-| CI/CD, infrastructure, deployment | devops-engineer | Full read/write/shell access |
-| Performance analysis, profiling | performance-engineer | Read + shell for profiling |
+| CI/CD, infrastructure, deployment | devops_engineer | Full read/write/shell access |
+| Performance analysis, profiling | performance_engineer | Read + shell for profiling |
 | Code restructuring, modernization | refactor | Read/write, no shell |
-| Security assessment, vulnerability | security-engineer | Read + shell for scanning |
+| Security assessment, vulnerability | security_engineer | Read + shell for scanning |
 | Test creation, TDD, coverage | tester | Full read/write/shell access |
-| Documentation, READMEs, guides | technical-writer | Read/write, no shell |
+| Documentation, READMEs, guides | technical_writer | Read/write, no shell |
 
 ## Parallel Delegation
 
@@ -181,7 +181,7 @@ Each prompt must be **fully self-contained** — the agent runs as an independen
 
 Prompt filenames must follow these rules:
 
-- Use **hyphens**, not underscores: `technical-writer.txt`, not `technical_writer.txt`
+- Use **underscores**, not hyphens: `technical_writer.txt`, not `technical-writer.txt`
 - The filename (minus `.txt` extension) must exactly match an agent definition filename in `agents/`
 - The dispatch script validates agent names at runtime and rejects unrecognized names with a list of available agents
 - This validation catches typos before they waste an API call and a timeout window
@@ -296,7 +296,7 @@ This enforcement is the runtime complement to the Output Handoff Contract define
 
 ## Validation Criteria Templates
 
-### For Implementation Agents (coder, data-engineer, devops-engineer)
+### For Implementation Agents (coder, data_engineer, devops_engineer)
 ```
 Validation: [build command] && [lint command] && [test command]
 ```
@@ -313,13 +313,13 @@ Validation: [test command]
 Verify: All new tests pass, report coverage metrics
 ```
 
-### For Read-Only Agents (architect, api-designer, code-reviewer, debugger, performance-engineer, security-engineer)
+### For Read-Only Agents (architect, api_designer, code_reviewer, debugger, performance_engineer, security_engineer)
 ```
 Validation: N/A (read-only assessment)
 Verify: Findings reference specific files and line numbers
 ```
 
-### For Documentation Agents (technical-writer)
+### For Documentation Agents (technical_writer)
 ```
 Validation: Verify all links resolve, code examples are syntactically valid
 ```

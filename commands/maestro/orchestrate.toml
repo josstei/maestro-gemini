@@ -21,6 +21,6 @@ Follow the Maestro orchestration protocol:
 10. Create the session state file
 11. Begin execution phase by phase, delegating to subagents
 12. Update session state after each phase completion
-13. Before completion/archival, run a final `code-reviewer` quality gate if execution changed non-documentation files; block completion on unresolved Critical/Major findings
+13. Before completion/archival, run a final `code_reviewer` quality gate if execution changed non-documentation files; block completion on unresolved Critical/Major findings
 
 Activate the design-dialogue skill to guide the conversation."""

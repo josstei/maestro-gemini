@@ -159,7 +159,7 @@ After each section, you'll be asked to approve or request changes. Once all sect
 
 Maestro generates a detailed implementation plan with:
 - Phases broken down by task domain
-- Agent assignments (coder, tester, devops-engineer, etc.)
+- Agent assignments (coder, tester, devops_engineer, etc.)
 - Dependency graph showing which phases must run sequentially
 - Parallel execution opportunities
 - Validation criteria per phase
@@ -186,7 +186,7 @@ Choose your mode. Maestro will execute the plan phase by phase, delegating work 
 
 ```
 Phase 1: Database Schema Design
-  Agent: data-engineer
+  Agent: data_engineer
   Status: In Progress...
 
 Phase 2: Authentication Middleware
@@ -194,7 +194,7 @@ Phase 2: Authentication Middleware
   Status: In Progress...
 
 Phase 3: REST API Endpoints
-  Agent: api-designer → coder
+  Agent: api_designer → coder
   Status: Pending (blocked by Phase 2)
 ```
 
@@ -221,7 +221,7 @@ Files Changed:
 
 Token Usage:
 - Total: 125,000 tokens (80,000 input, 45,000 output)
-- By Agent: coder (45k), tester (32k), data-engineer (18k)
+- By Agent: coder (45k), tester (32k), data_engineer (18k)
 
 Deviations from Plan: None
 
@@ -391,7 +391,7 @@ Run a standalone code review on staged changes, last commit, or specified paths.
    - Staged changes (`git diff --staged`)
    - Last commit diff (`git diff HEAD~1`)
 2. Confirms detected scope with you
-3. Delegates to the `code-reviewer` agent
+3. Delegates to the `code_reviewer` agent
 4. Presents findings classified by severity:
    - **Critical**: Security vulnerabilities, data loss risks
    - **Major**: Logic errors, performance issues, broken patterns
@@ -495,7 +495,7 @@ Files Changed:
 
 Token Usage:
 - Total: 45,000 tokens (28,000 input, 17,000 output)
-- By Agent: coder (22k), data-engineer (15k), tester (8k)
+- By Agent: coder (22k), data_engineer (15k), tester (8k)
 
 Errors: None
 ```
@@ -641,7 +641,7 @@ Run a security assessment on the specified scope.
 - `<scope>`: Files, directories, or components to audit (e.g., `src/auth`, `src/api/*.js`, `entire codebase`)
 
 **Behavior**:
-1. Delegates to the `security-engineer` agent with the specified scope
+1. Delegates to the `security_engineer` agent with the specified scope
 2. The security engineer performs:
    - OWASP Top 10 vulnerability review
    - Data flow analysis from input to output
@@ -721,7 +721,7 @@ Run a performance analysis on the specified scope.
 - `<scope>`: Files, directories, or components to analyze (e.g., `src/api/tasks.js`, `database queries`, `entire application`)
 
 **Behavior**:
-1. Delegates to the `performance-engineer` agent with the specified scope
+1. Delegates to the `performance_engineer` agent with the specified scope
 2. The performance engineer follows a systematic methodology:
    - **Baseline**: Establish current performance metrics
    - **Profile**: Identify hotspots using appropriate tools
@@ -884,11 +884,11 @@ flowchart TD
 2. **Agent Assignment**: Each phase is assigned to one or more specialized agents based on task domain:
    - `architect`: System design, component specifications
    - `coder`: Feature implementation
-   - `data-engineer`: Database schema, queries
+   - `data_engineer`: Database schema, queries
    - `tester`: Unit/integration/E2E tests
-   - `devops-engineer`: CI/CD, Docker, infrastructure
-   - `security-engineer`: Authentication, authorization, vulnerability assessment
-   - `technical-writer`: Documentation, API specs
+   - `devops_engineer`: CI/CD, Docker, infrastructure
+   - `security_engineer`: Authentication, authorization, vulnerability assessment
+   - `technical_writer`: Documentation, API specs
 
 3. **Dependency Mapping**: Maestro identifies which phases must run sequentially (blocked by dependencies) and which can run in parallel.
 
@@ -1013,13 +1013,13 @@ token_usage:
   total_output: 17000
   by_agent:
     coder: { input: 22000, output: 8000 }
-    data-engineer: { input: 15000, output: 6000 }
+    data_engineer: { input: 15000, output: 6000 }
 
 phases:
   - id: 1
     name: "Database Schema Design"
     status: "completed"
-    agents: ["data-engineer"]
+    agents: ["data_engineer"]
     started: "2026-02-15T10:35:00Z"
     completed: "2026-02-15T10:45:00Z"
     files_created: ["src/db/schema.sql"]
@@ -1233,7 +1233,7 @@ Maestro works out of the box with sensible defaults. To customize behavior, set 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `MAESTRO_DEFAULT_MODEL` | _(inherit from main session)_ | Model override for agents dispatched via parallel execution (has no effect on sequential delegation) |
-| `MAESTRO_WRITER_MODEL` | _(inherit from main session)_ | Model override for the technical-writer agent in parallel execution (has no effect on sequential delegation) |
+| `MAESTRO_WRITER_MODEL` | _(inherit from main session)_ | Model override for the technical_writer agent in parallel execution (has no effect on sequential delegation) |
 | `MAESTRO_DEFAULT_TEMPERATURE` | `0.2` | Temperature for all agents (0.0-1.0) |
 | `MAESTRO_MAX_TURNS` | `25` | Maximum turns per subagent execution |
 | `MAESTRO_AGENT_TIMEOUT` | `10` | Timeout in minutes per subagent |
@@ -1272,7 +1272,7 @@ export MAESTRO_AUTO_ARCHIVE=false
 
 **Exclude specific agents**:
 ```bash
-export MAESTRO_DISABLED_AGENTS=devops-engineer,performance-engineer
+export MAESTRO_DISABLED_AGENTS=devops_engineer,performance_engineer
 ```
 
 **Use parallel mode by default**:
@@ -1367,25 +1367,25 @@ flowchart TD
 flowchart LR
     subgraph ReadOnly[Read-Only]
         A1[architect]
-        A2[api-designer]
-        A3[code-reviewer]
+        A2[api_designer]
+        A3[code_reviewer]
     end
 
     subgraph ReadShell[Read + Shell]
         B1[debugger]
-        B2[performance-engineer]
-        B3[security-engineer]
+        B2[performance_engineer]
+        B3[security_engineer]
     end
 
     subgraph ReadWrite[Read + Write]
         C1[refactor]
-        C2[technical-writer]
+        C2[technical_writer]
     end
 
     subgraph Full[Full Access]
         D1[coder]
-        D2[data-engineer]
-        D3[devops-engineer]
+        D2[data_engineer]
+        D3[devops_engineer]
         D4[tester]
     end
 
@@ -1395,13 +1395,13 @@ flowchart LR
     Full -.->|Implementation| Output4[Complete Features]
 ```
 
-- **Read-only** (architect, api-designer, code-reviewer): Analysis and recommendations only. Cannot modify files or run commands.
-- **Read + Shell** (debugger, performance-engineer, security-engineer): Investigation tools. Can run commands but not modify files.
-- **Read + Write** (refactor, technical-writer): Can modify files but not run shell commands.
-- **Full Access** (coder, data-engineer, devops-engineer, tester): Complete implementation capabilities.
+- **Read-only** (architect, api_designer, code_reviewer): Analysis and recommendations only. Cannot modify files or run commands.
+- **Read + Shell** (debugger, performance_engineer, security_engineer): Investigation tools. Can run commands but not modify files.
+- **Read + Write** (refactor, technical_writer): Can modify files but not run shell commands.
+- **Full Access** (coder, data_engineer, devops_engineer, tester): Complete implementation capabilities.
 
 **Why This Matters**:
-- Delegating to `code-reviewer` means you get analysis, not fixes
+- Delegating to `code_reviewer` means you get analysis, not fixes
 - Delegating to `coder` means you get working code
 - Delegating to `debugger` means you get root cause analysis, not the fix itself (though the debugger can run tests and examine logs)
 

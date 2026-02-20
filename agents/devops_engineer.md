@@ -1,5 +1,5 @@
 ---
-name: devops-engineer
+name: devops_engineer
 kind: local
 description: "DevOps specialist for CI/CD pipelines, containerization, deployment automation, and infrastructure configuration. Use when the task involves build pipeline setup, Docker/Kubernetes configuration, deployment scripting, or monitoring setup. For example: writing a GitHub Actions workflow, creating a Dockerfile, or configuring Terraform."
 tools:
@@ -101,7 +101,7 @@ Every deployment must satisfy:
 ## Downstream Consumers
 
 - **coder**: Needs environment variable contracts (variable names, types, required vs optional, default values) and configuration schema definitions
-- **security-engineer**: Needs infrastructure configuration details for security review — exposed ports, network policies, secret injection methods, TLS termination points
+- **security_engineer**: Needs infrastructure configuration details for security review — exposed ports, network policies, secret injection methods, TLS termination points
 - **tester**: Needs CI pipeline stage configuration to understand where and how tests are executed, including environment setup and teardown
 
 ## Output Contract

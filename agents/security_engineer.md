@@ -1,5 +1,5 @@
 ---
-name: security-engineer
+name: security_engineer
 kind: local
 description: "Security engineering specialist for vulnerability assessment, threat modeling, and security best practices. Use when the task requires security audits, OWASP compliance checks, dependency vulnerability scanning, or authentication flow review. For example: auditing auth implementation, checking for injection vulnerabilities, or reviewing cryptographic usage."
 tools:
@@ -105,7 +105,7 @@ Theoretical vulnerabilities behind multiple layers of authentication + authoriza
 ## Downstream Consumers
 
 - **coder**: Needs specific remediation code patterns per vulnerability — not just "sanitize input" but the exact function, library, or pattern to use
-- **devops-engineer**: Needs infrastructure-level security findings — missing security headers, TLS configuration issues, secret exposure in environment variables or logs, network policy gaps
+- **devops_engineer**: Needs infrastructure-level security findings — missing security headers, TLS configuration issues, secret exposure in environment variables or logs, network policy gaps
 
 ## Output Contract
 

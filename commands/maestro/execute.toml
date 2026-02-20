@@ -27,6 +27,6 @@ Read the implementation plan file at the specified path. If no path is provided,
 5. Execute phases according to the plan, following the execution skill's protocols
 6. Activate the `validation` skill to verify outputs after each phase
 7. Update session state after every phase transition
-8. Before archival, run a final `code-reviewer` gate when execution changed non-documentation files
+8. Before archival, run a final `code_reviewer` gate when execution changed non-documentation files
 9. Block completion on unresolved Critical/Major review findings; remediate, re-validate, and re-review
 10. On completion, archive the session and deliver the final summary"""

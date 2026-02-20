@@ -95,7 +95,7 @@ You have access to `activate_skill` for loading methodology modules when needed:
 ## Downstream Consumers
 
 - **tester**: Needs clear public API surface with injectable dependencies for test doubles — avoid static methods and hard-coded dependencies
-- **code-reviewer**: Needs clean diffs that separate structural changes from behavioral ones — don't mix refactoring with new features in the same deliverable
+- **code_reviewer**: Needs clean diffs that separate structural changes from behavioral ones — don't mix refactoring with new features in the same deliverable
 
 ## Output Contract
 

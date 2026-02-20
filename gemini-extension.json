@@ -11,7 +11,7 @@
     },
     {
       "name": "Writer Model",
-      "description": "Override the model for the technical-writer agent in parallel dispatch only.",
+      "description": "Override the model for the technical_writer agent in parallel dispatch only.",
       "envVar": "MAESTRO_WRITER_MODEL"
     },
     {

@@ -42,7 +42,7 @@ Before running orchestration commands:
 | Setting | envVar | Default | Usage |
 | --- | --- | --- | --- |
 | Default Model | `MAESTRO_DEFAULT_MODEL` | inherit | Parallel dispatch model flag |
-| Writer Model | `MAESTRO_WRITER_MODEL` | inherit | Parallel dispatch override for `technical-writer` |
+| Writer Model | `MAESTRO_WRITER_MODEL` | inherit | Parallel dispatch override for `technical_writer` |
 | Default Temperature | `MAESTRO_DEFAULT_TEMPERATURE` | `0.2` | Delegation prompt metadata override |
 | Max Agent Turns | `MAESTRO_MAX_TURNS` | `25` | Delegation prompt metadata override |
 | Agent Timeout | `MAESTRO_AGENT_TIMEOUT` | `10` min | Delegation timeout metadata and dispatch timeout |
@@ -91,7 +91,7 @@ Plan output path handling:
 ### Phase 4: Complete
 
 - Verify deliverables and validation outcomes.
-- If execution changed non-documentation files (source/test/config/scripts), activate `code-review` and run a final `code-reviewer` pass on the changed scope with implementation-plan context.
+- If execution changed non-documentation files (source/test/config/scripts), activate `code-review` and run a final `code_reviewer` pass on the changed scope with implementation-plan context.
 - Treat unresolved `Critical` or `Major` review findings as completion blockers; remediate, re-validate, and re-run the review gate before archival.
 - Archive via `session-management` (respecting `MAESTRO_AUTO_ARCHIVE`).
 - Provide final summary and recommended next steps.
@@ -137,11 +137,11 @@ Constraints:
 
 When building delegation prompts:
 
-1. Use agent frontmatter defaults from `agents/<name>.md`.
+1. Use agent frontmatter defaults from `agents/<name>.md`. Agent names use **underscores** (e.g., `technical_writer`, `api_designer`), not hyphens.
 2. Apply global overrides (`MAESTRO_DEFAULT_TEMPERATURE`, `MAESTRO_MAX_TURNS`, `MAESTRO_AGENT_TIMEOUT`).
 3. For parallel dispatch only, apply model flags:
    - `MAESTRO_DEFAULT_MODEL`
-   - `MAESTRO_WRITER_MODEL` for `technical-writer`
+   - `MAESTRO_WRITER_MODEL` for `technical_writer`
 4. Inject shared protocols from:
    - `skills/delegation/protocols/agent-base-protocol.md`
    - `skills/delegation/protocols/filesystem-safety-protocol.md`
@@ -180,21 +180,25 @@ Resolve `<state_dir>` from `MAESTRO_STATE_DIR` (default `.gemini`):
 | `code-review` | Standalone review methodology |
 | `validation` | Build/lint/test validation strategy |
 
+## Agent Naming Convention
+
+All agent names use **snake_case** (underscores, not hyphens). When delegating to or referencing an agent, always use the exact name from the roster below. For example: `technical_writer`, not `technical-writer`.
+
 ## Agent Roster
 
 | Agent | Focus | Key Tool Profile |
 | --- | --- | --- |
 | `architect` | System design | Read tools + web search/fetch |
-| `api-designer` | API contracts | Read tools + web search/fetch |
-| `code-reviewer` | Code quality review | Read-only |
+| `api_designer` | API contracts | Read tools + web search/fetch |
+| `code_reviewer` | Code quality review | Read-only |
 | `coder` | Feature implementation | Read/write/shell + todos + skill activation |
-| `data-engineer` | Schema/data/queries | Read/write/shell + todos + web search |
+| `data_engineer` | Schema/data/queries | Read/write/shell + todos + web search |
 | `debugger` | Root cause analysis | Read + shell + todos |
-| `devops-engineer` | CI/CD and infra | Read/write/shell + todos + web search/fetch |
-| `performance-engineer` | Performance profiling | Read + shell + todos + web search/fetch |
+| `devops_engineer` | CI/CD and infra | Read/write/shell + todos + web search/fetch |
+| `performance_engineer` | Performance profiling | Read + shell + todos + web search/fetch |
 | `refactor` | Structural refactoring | Read/write + todos + skill activation |
-| `security-engineer` | Security auditing | Read + shell + todos + web search/fetch |
-| `technical-writer` | Documentation | Read/write + todos + web search |
+| `security_engineer` | Security auditing | Read + shell + todos + web search/fetch |
+| `technical_writer` | Documentation | Read/write + todos + web search |
 | `tester` | Test implementation | Read/write/shell + todos + skill activation + web search |
 
 ## Hooks

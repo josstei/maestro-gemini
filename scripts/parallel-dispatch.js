@@ -33,7 +33,7 @@ Results:
 
 Environment:
   MAESTRO_DEFAULT_MODEL      Override model for all agents
-  MAESTRO_WRITER_MODEL       Override model for technical-writer agent only
+  MAESTRO_WRITER_MODEL       Override model for technical_writer agent only
   MAESTRO_AGENT_TIMEOUT      Timeout in minutes (default: 10)
   MAESTRO_CLEANUP_DISPATCH   Remove prompt files after dispatch (default: false)
   MAESTRO_MAX_CONCURRENT     Max agents running simultaneously (default: 0 = unlimited)
@@ -157,7 +157,7 @@ async function main() {
     }
     agentNames.push(agentName);
 
-    const normalizedName = agentName.replace(/_/g, '-');
+    const normalizedName = agentName.replace(/-/g, '_');
     if (fs.existsSync(AGENTS_DIR) && !fs.existsSync(path.join(AGENTS_DIR, `${normalizedName}.md`))) {
       process.stderr.write(`ERROR: Agent '${agentName}' not found in ${AGENTS_DIR}/\n`);
       try {
@@ -191,7 +191,7 @@ async function main() {
     const resultLog = path.join(resultDir, `${agentName}.log`);
 
     let modelFlags = [];
-    if (normalizedName === 'technical-writer' && writerModel) {
+    if (normalizedName === 'technical_writer' && writerModel) {
       modelFlags = ['-m', writerModel];
     } else if (defaultModel) {
       modelFlags = ['-m', defaultModel];

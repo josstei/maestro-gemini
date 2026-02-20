@@ -13,9 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Agent tracking** — BeforeAgent/AfterAgent hooks track active agent identity via `/tmp/maestro-hooks/<session-id>/active-agent`; lazy state creation on first write, stale-pruned during BeforeAgent
 - **Handoff report validation** — AfterAgent hook validates delegated agent output includes `Task Report` and `Downstream Context`; skips TechLead and non-delegation turns; requests one retry on malformed output
 - **Active session gating** — `has_active_maestro_session` helper allows hooks to skip initialization when no Maestro session exists in the workspace
-- **Final code review quality gate** — Phase 4 completion requires a `code-reviewer` pass on non-documentation file changes before archival; blocks on unresolved Critical/Major findings with remediation loop
+- **Final code review quality gate** — Phase 4 completion requires a `code_reviewer` pass on non-documentation file changes before archival; blocks on unresolved Critical/Major findings with remediation loop
 - **14 extension settings** — All `MAESTRO_*` env vars declared in `gemini-extension.json`: `DEFAULT_MODEL`, `WRITER_MODEL`, `DEFAULT_TEMPERATURE`, `MAX_TURNS`, `AGENT_TIMEOUT`, `DISABLED_AGENTS`, `MAX_RETRIES`, `AUTO_ARCHIVE`, `VALIDATION_STRICTNESS`, `STATE_DIR`, `MAX_CONCURRENT`, `STAGGER_DELAY`, `GEMINI_EXTRA_ARGS`, `EXECUTION_MODE`
-- **`MAESTRO_WRITER_MODEL`** — Per-agent model override for technical-writer in parallel dispatch
+- **`MAESTRO_WRITER_MODEL`** — Per-agent model override for technical_writer in parallel dispatch
 - **`MAESTRO_GEMINI_EXTRA_ARGS`** — Space-separated Gemini CLI flags forwarded to each parallel dispatch process
 - **`MAESTRO_STATE_DIR`** — Configurable state directory with `extensionPath` resolution and env/workspace/extension/default precedence
 - **`read-active-session.sh`** — Script to resolve the active session file path respecting `MAESTRO_STATE_DIR`
@@ -57,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Delegation paths corrected in skills to use `activate_skill` resources
 - State template synced with runtime expectations
 - `read_file` ignore enforcement and state access asymmetry clarified in skills
-- Agent roster corrections: `run_shell_command` removed from refactor, `get_internal_docs` removed from devops-engineer and technical-writer
+- Agent roster corrections: `run_shell_command` removed from refactor, `get_internal_docs` removed from devops_engineer and technical_writer
 - macOS timeout support in parallel dispatch
 
 ### Removed

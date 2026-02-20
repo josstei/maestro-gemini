@@ -40,10 +40,10 @@ describe('detectAgentFromPrompt()', () => {
     assert.equal(validation.detectAgentFromPrompt('Handing off to @architect'), 'architect');
   });
 
-  it('returns agent for "hand off to the security-engineer" pattern', () => {
+  it('returns agent for "hand off to the security_engineer" pattern', () => {
     assert.equal(
-      validation.detectAgentFromPrompt('hand off to the security-engineer for review'),
-      'security-engineer'
+      validation.detectAgentFromPrompt('hand off to the security_engineer for review'),
+      'security_engineer'
     );
   });
 
