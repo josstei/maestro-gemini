@@ -70,4 +70,35 @@ describe('hook-state', () => {
       assert.equal(hookState.getBaseDir(), testBaseDir);
     });
   });
+
+  describe('ensureSessionDir()', () => {
+    it('creates directory for valid ID', () => {
+      const result = hookState.ensureSessionDir('session-new');
+      assert.equal(result, true);
+      assert.equal(fs.existsSync(path.join(testBaseDir, 'session-new')), true);
+    });
+
+    it('returns false for invalid ID', () => {
+      assert.equal(hookState.ensureSessionDir('../bad'), false);
+    });
+  });
+
+  describe('removeSessionDir()', () => {
+    it('removes existing directory', () => {
+      hookState.ensureSessionDir('session-rm');
+      assert.equal(fs.existsSync(path.join(testBaseDir, 'session-rm')), true);
+      const result = hookState.removeSessionDir('session-rm');
+      assert.equal(result, true);
+      assert.equal(fs.existsSync(path.join(testBaseDir, 'session-rm')), false);
+    });
+
+    it('handles non-existent directory', () => {
+      const result = hookState.removeSessionDir('nonexistent');
+      assert.equal(result, true);
+    });
+
+    it('returns false for invalid ID', () => {
+      assert.equal(hookState.removeSessionDir('../bad'), false);
+    });
+  });
 });

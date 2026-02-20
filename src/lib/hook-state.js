@@ -68,12 +68,28 @@ function createHookState(baseDir = DEFAULT_BASE_DIR) {
     } catch {}
   }
 
+  function ensureSessionDir(sessionId) {
+    if (!validateSessionId(sessionId)) return false;
+    fs.mkdirSync(path.join(baseDir, sessionId), { recursive: true });
+    return true;
+  }
+
+  function removeSessionDir(sessionId) {
+    if (!validateSessionId(sessionId)) return false;
+    try {
+      fs.rmSync(path.join(baseDir, sessionId), { recursive: true, force: true });
+    } catch {}
+    return true;
+  }
+
   return {
     getBaseDir,
     pruneStale,
     setActiveAgent,
     getActiveAgent,
     clearActiveAgent,
+    ensureSessionDir,
+    removeSessionDir,
   };
 }
 
