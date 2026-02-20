@@ -26,8 +26,8 @@ gemini extensions link .
 # Sync package version into gemini-extension.json
 npm version <patch|minor|major>
 
-# Run integration tests
-bash tests/run-all.sh
+# Run all tests (unit + integration)
+node tests/run-all.js
 ```
 
 Useful manual checks after linking:
@@ -53,7 +53,7 @@ Useful manual checks after linking:
 - `scripts/write-state.js`
 - `scripts/read-active-session.js`
 - `scripts/parallel-dispatch.js`
-- `tests/run-all.sh`
+- `tests/run-all.js`
 
 ## Gemini CLI Compatibility Notes
 
@@ -125,7 +125,7 @@ Batch-level behavior:
 
 ## Testing
 
-`bash tests/run-all.sh` covers integration tests, `node --test tests/unit/test-*.js` covers unit tests.
+`node tests/run-all.js` runs all tests. Unit tests are in `tests/unit/`, integration tests are in `tests/integration/`.
 
 Integration tests cover:
 
