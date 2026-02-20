@@ -151,4 +151,21 @@ describe('ensureWorkspace()', () => {
   it('throws for path traversal', () => {
     assert.throws(() => state.ensureWorkspace('..', tmpDir), /traversal/i);
   });
+
+  it('throws when an existing required directory is not writable', () => {
+    if (process.platform === 'win32') return;
+
+    const parallelDir = path.join(tmpDir, '.gemini', 'parallel');
+    fs.mkdirSync(parallelDir, { recursive: true });
+    fs.chmodSync(parallelDir, 0o555);
+
+    try {
+      assert.throws(
+        () => state.ensureWorkspace('.gemini', tmpDir),
+        /Directory not writable: \.gemini[\\/]parallel/
+      );
+    } finally {
+      fs.chmodSync(parallelDir, 0o755);
+    }
+  });
 });

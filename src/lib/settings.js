@@ -12,6 +12,27 @@ function trimQuotes(value) {
   return value;
 }
 
+function stripInlineComment(value) {
+  let activeQuote = '';
+  for (let i = 0; i < value.length; i++) {
+    const ch = value[i];
+    if (activeQuote) {
+      if (ch === activeQuote && value[i - 1] !== '\\') {
+        activeQuote = '';
+      }
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      activeQuote = ch;
+      continue;
+    }
+    if (ch === '#' && i > 0 && /\s/.test(value[i - 1])) {
+      return value.slice(0, i).trimEnd();
+    }
+  }
+  return value;
+}
+
 function parseEnvFile(filePath) {
   const result = {};
   let content;
@@ -28,7 +49,7 @@ function parseEnvFile(filePath) {
     if (eqIndex === -1) continue;
     const key = stripped.slice(0, eqIndex);
     if (!key) continue;
-    const rawValue = stripped.slice(eqIndex + 1).replace(/\s+#.*$/, '');
+    const rawValue = stripInlineComment(stripped.slice(eqIndex + 1));
     result[key] = trimQuotes(rawValue);
   }
   return result;

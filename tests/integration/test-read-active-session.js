@@ -7,6 +7,7 @@ const path = require('path');
 const {
   scriptPath,
   runScript,
+  runScriptWithExit,
   createTempDir,
   writeSessionState,
   removeTempDir,
@@ -119,6 +120,20 @@ describe('read-active-session script', () => {
     } finally {
       removeTempDir(projectDir);
       removeTempDir(fakeExtDir);
+    }
+  });
+
+  it('returns No active session when MAESTRO_STATE_DIR is invalid', () => {
+    const tempDir = createTempDir('maestro-test-ras-invalid-state-dir-');
+    try {
+      const { stdout, exitCode } = runScriptWithExit(SCRIPT_FILE, [], {
+        cwd: tempDir,
+        env: { MAESTRO_STATE_DIR: '../bad' },
+      });
+      assert.equal(exitCode, 0);
+      assert.ok(stdout.includes('No active session'));
+    } finally {
+      removeTempDir(tempDir);
     }
   });
 });

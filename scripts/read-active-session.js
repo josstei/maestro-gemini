@@ -25,9 +25,8 @@ function main() {
     process.env.MAESTRO_STATE_DIR = resolvedStateDir;
   }
 
-  const sessionPath = resolveActiveSessionPath(projectRoot);
-
   try {
+    const sessionPath = resolveActiveSessionPath(projectRoot);
     const content = fs.readFileSync(sessionPath, 'utf8');
     process.stdout.write(content);
   } catch {

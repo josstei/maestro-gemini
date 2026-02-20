@@ -84,6 +84,14 @@ describe('parseEnvFile()', () => {
     assert.equal(result.BAZ, 'hello');
   });
 
+  it('preserves hash characters inside quoted values', () => {
+    const envFile = path.join(tmpDir, '.env');
+    fs.writeFileSync(envFile, 'FOO="alpha # beta"\nBAR=\'gamma # delta\'\n');
+    const result = settings.parseEnvFile(envFile);
+    assert.equal(result.FOO, 'alpha # beta');
+    assert.equal(result.BAR, 'gamma # delta');
+  });
+
   it('skips lines with empty keys', () => {
     const envFile = path.join(tmpDir, '.env');
     fs.writeFileSync(envFile, '=nokey\nFOO=bar\n');

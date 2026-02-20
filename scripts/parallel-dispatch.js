@@ -47,6 +47,31 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function isStrictInteger(value) {
+  return typeof value === 'string' && /^[0-9]+$/.test(value);
+}
+
+function parsePositiveIntegerSetting(varName, rawValue) {
+  if (!isStrictInteger(rawValue)) {
+    process.stderr.write(`ERROR: ${varName} must be a positive integer (got: ${rawValue})\n`);
+    process.exit(1);
+  }
+  const parsed = Number(rawValue);
+  if (parsed <= 0) {
+    process.stderr.write(`ERROR: ${varName} must be a positive integer (got: ${rawValue})\n`);
+    process.exit(1);
+  }
+  return parsed;
+}
+
+function parseNonNegativeIntegerSetting(varName, rawValue) {
+  if (!isStrictInteger(rawValue)) {
+    process.stderr.write(`ERROR: ${varName} must be a non-negative integer (got: ${rawValue})\n`);
+    process.exit(1);
+  }
+  return Number(rawValue);
+}
+
 async function main() {
   const startTime = Date.now();
   const dispatchDir = process.argv[2];
@@ -80,27 +105,15 @@ async function main() {
   const staggerDelayRaw = resolveSetting('MAESTRO_STAGGER_DELAY', projectRoot) || String(DEFAULT_STAGGER_DELAY_SECS);
   const extraArgsRaw = resolveSetting('MAESTRO_GEMINI_EXTRA_ARGS', projectRoot) || '';
 
-  const timeoutMins = parseInt(agentTimeoutRaw, 10);
-  if (isNaN(timeoutMins) || timeoutMins <= 0) {
-    process.stderr.write(`ERROR: MAESTRO_AGENT_TIMEOUT must be a positive integer (got: ${agentTimeoutRaw})\n`);
-    process.exit(1);
-  }
+  const timeoutMins = parsePositiveIntegerSetting('MAESTRO_AGENT_TIMEOUT', agentTimeoutRaw);
   if (timeoutMins > 60) {
     process.stderr.write(`WARNING: Agent timeout set to ${timeoutMins} minutes (over 1 hour)\n`);
   }
   const timeoutMs = timeoutMins * 60 * 1000;
 
-  const maxConcurrent = parseInt(maxConcurrentRaw, 10);
-  if (isNaN(maxConcurrent) || maxConcurrent < 0) {
-    process.stderr.write(`ERROR: MAESTRO_MAX_CONCURRENT must be a non-negative integer (got: ${maxConcurrentRaw})\n`);
-    process.exit(1);
-  }
+  const maxConcurrent = parseNonNegativeIntegerSetting('MAESTRO_MAX_CONCURRENT', maxConcurrentRaw);
 
-  const staggerDelay = parseInt(staggerDelayRaw, 10);
-  if (isNaN(staggerDelay) || staggerDelay < 0) {
-    process.stderr.write(`ERROR: MAESTRO_STAGGER_DELAY must be a non-negative integer (got: ${staggerDelayRaw})\n`);
-    process.exit(1);
-  }
+  const staggerDelay = parseNonNegativeIntegerSetting('MAESTRO_STAGGER_DELAY', staggerDelayRaw);
 
   const extraArgs = extraArgsRaw ? extraArgsRaw.split(/\s+/).filter(Boolean) : [];
   const hasExtraArgs = extraArgs.length > 0;

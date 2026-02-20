@@ -221,4 +221,55 @@ process.stdin.on('end', () => {
       `Expected result file to exist at: ${resultFile}`
     );
   });
+
+  it('rejects non-numeric values for numeric settings', () => {
+    const existingPath = process.env.PATH || '';
+    const baseEnv = {
+      PATH: `${binDir}:${existingPath}`,
+      MAESTRO_AGENT_TIMEOUT: '2',
+      MAESTRO_MAX_CONCURRENT: '1',
+      MAESTRO_STAGGER_DELAY: '0',
+    };
+
+    const cases = [
+      {
+        key: 'MAESTRO_AGENT_TIMEOUT',
+        value: '1minutes',
+        expectedMessage: 'MAESTRO_AGENT_TIMEOUT must be a positive integer',
+      },
+      {
+        key: 'MAESTRO_MAX_CONCURRENT',
+        value: '2workers',
+        expectedMessage: 'MAESTRO_MAX_CONCURRENT must be a non-negative integer',
+      },
+      {
+        key: 'MAESTRO_STAGGER_DELAY',
+        value: '5s',
+        expectedMessage: 'MAESTRO_STAGGER_DELAY must be a non-negative integer',
+      },
+    ];
+
+    for (const testCase of cases) {
+      const env = { ...baseEnv, [testCase.key]: testCase.value };
+      const { exitCode, stderr } = runScriptWithExit(
+        DISPATCH_SCRIPT,
+        [dispatchDir],
+        { env, timeout: 30000 }
+      );
+
+      assert.notEqual(
+        exitCode,
+        0,
+        `Expected non-zero exit for ${testCase.key}=${testCase.value}`
+      );
+      assert.ok(
+        stderr.includes(testCase.expectedMessage),
+        `Expected stderr to include "${testCase.expectedMessage}".\nstderr: ${stderr}`
+      );
+      assert.ok(
+        stderr.includes(testCase.value),
+        `Expected stderr to include rejected value "${testCase.value}".\nstderr: ${stderr}`
+      );
+    }
+  });
 });

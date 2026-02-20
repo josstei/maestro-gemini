@@ -75,7 +75,17 @@ function ensureWorkspace(stateDir, basePath) {
     path.join(fullBase, 'parallel'),
   ];
   for (const dir of dirs) {
-    fs.mkdirSync(dir, { recursive: true });
+    const relativeDir = path.relative(basePath, dir) || dir;
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+    } catch {
+      throw new Error(`Failed to create directory: ${relativeDir}`);
+    }
+    try {
+      fs.accessSync(dir, fs.constants.W_OK);
+    } catch {
+      throw new Error(`Directory not writable: ${relativeDir}`);
+    }
   }
 }
 
