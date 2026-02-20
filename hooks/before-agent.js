@@ -29,16 +29,14 @@ async function main() {
   let contextParts = '';
 
   try {
-    if (fs.existsSync(sessionPath)) {
-      const content = fs.readFileSync(sessionPath, 'utf8');
-      const parts = [];
-      const phaseMatch = content.match(/current_phase:\s*(\S+)/);
-      if (phaseMatch) parts.push(`current_phase=${phaseMatch[1]}`);
-      const statusMatch = content.match(/status:\s*(\S+)/);
-      if (statusMatch) parts.push(`status=${statusMatch[1]}`);
-      if (parts.length > 0) {
-        contextParts = `Active session: ${parts.join(', ')}`;
-      }
+    const content = fs.readFileSync(sessionPath, 'utf8');
+    const parts = [];
+    const phaseMatch = content.match(/current_phase:\s*(\S+)/);
+    if (phaseMatch) parts.push(`current_phase=${phaseMatch[1]}`);
+    const statusMatch = content.match(/status:\s*(\S+)/);
+    if (statusMatch) parts.push(`status=${statusMatch[1]}`);
+    if (parts.length > 0) {
+      contextParts = `Active session: ${parts.join(', ')}`;
     }
   } catch {}
 

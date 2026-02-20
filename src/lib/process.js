@@ -4,6 +4,7 @@ const { spawn, execSync } = require('child_process');
 const { log } = require('./logger');
 
 function killProcess(pid) {
+  if (pid == null) return;
   try {
     if (process.platform === 'win32') {
       execSync(`taskkill /pid ${pid} /t /f`, { stdio: 'ignore' });
@@ -14,6 +15,7 @@ function killProcess(pid) {
 }
 
 function forceKillProcess(pid) {
+  if (pid == null) return;
   try {
     if (process.platform === 'win32') {
       execSync(`taskkill /pid ${pid} /t /f`, { stdio: 'ignore' });
@@ -24,6 +26,10 @@ function forceKillProcess(pid) {
 }
 
 function runWithTimeout(command, args, options = {}, timeoutMs) {
+  if (typeof timeoutMs !== 'number' || !isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new TypeError(`timeoutMs must be a positive finite number (got: ${timeoutMs})`);
+  }
+
   return new Promise((resolve) => {
     const { stdin: stdinStream, stdout: stdoutDest, stderr: stderrDest, cwd, env } = options;
 

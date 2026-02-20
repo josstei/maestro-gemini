@@ -2,47 +2,30 @@
 
 const { describe, it, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('fs');
-const path = require('path');
 
-const { hookPath, runHookJson } = require('./helpers');
+const {
+  hookPath,
+  runHookJson,
+  cleanHookState,
+  readHookStateAgent,
+  writeHookStateAgent,
+} = require('./helpers');
 
 const AFTER_AGENT_HOOK = hookPath('after-agent.js');
-
-const HOOK_STATE_DIR = '/tmp/maestro-hooks';
 
 const WELL_FORMED_RESPONSE =
   '## Task Report\nStatus: success\n## Downstream Context\nNo downstream dependencies.';
 
-function writeAgentState(sessionId, agentName) {
-  const sessionDir = path.join(HOOK_STATE_DIR, sessionId);
-  fs.mkdirSync(sessionDir, { recursive: true });
-  fs.writeFileSync(path.join(sessionDir, 'active-agent'), agentName);
-}
-
-function readAgentState(sessionId) {
-  const agentFile = path.join(HOOK_STATE_DIR, sessionId, 'active-agent');
-  try {
-    return fs.readFileSync(agentFile, 'utf8').trim();
-  } catch {
-    return '';
-  }
-}
-
-function cleanSessionState(sessionId) {
-  fs.rmSync(path.join(HOOK_STATE_DIR, sessionId), { recursive: true, force: true });
-}
-
-describe('AfterAgent hook', () => {
+describe('AfterAgent hook', { concurrency: 1 }, () => {
   afterEach(() => {
-    cleanSessionState('test-after-001');
-    cleanSessionState('test-after-002');
-    cleanSessionState('test-after-003');
-    cleanSessionState('test-after-004');
+    cleanHookState('test-after-001');
+    cleanHookState('test-after-002');
+    cleanHookState('test-after-003');
+    cleanHookState('test-after-004');
   });
 
   it('validates well-formed handoff report and allows', () => {
-    writeAgentState('test-after-001', 'coder');
+    writeHookStateAgent('test-after-001', 'coder');
 
     const input = {
       session_id: 'test-after-001',
@@ -57,11 +40,11 @@ describe('AfterAgent hook', () => {
     const result = runHookJson(AFTER_AGENT_HOOK, input);
 
     assert.equal(result.decision, 'allow');
-    assert.equal(readAgentState('test-after-001'), '');
+    assert.equal(readHookStateAgent('test-after-001'), '');
   });
 
   it('denies malformed handoff report with reason', () => {
-    writeAgentState('test-after-002', 'coder');
+    writeHookStateAgent('test-after-002', 'coder');
 
     const input = {
       session_id: 'test-after-002',
@@ -77,10 +60,11 @@ describe('AfterAgent hook', () => {
 
     assert.equal(result.decision, 'deny');
     assert.ok('reason' in result);
+    assert.equal(readHookStateAgent('test-after-002'), 'coder');
   });
 
   it('allows malformed report when stop_hook_active is true', () => {
-    writeAgentState('test-after-003', 'coder');
+    writeHookStateAgent('test-after-003', 'coder');
 
     const input = {
       session_id: 'test-after-003',

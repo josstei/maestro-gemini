@@ -62,11 +62,22 @@ describe('detectAgentFromPrompt()', () => {
     assert.equal(validation.detectAgentFromPrompt('DELEGATE TO CODER now'), 'coder');
   });
 
-  it('prefers MAESTRO_CURRENT_AGENT env when set', () => {
+  it('prefers MAESTRO_CURRENT_AGENT env when set to a known agent', () => {
     const orig = process.env.MAESTRO_CURRENT_AGENT;
     process.env.MAESTRO_CURRENT_AGENT = 'debugger';
     try {
       assert.equal(validation.detectAgentFromPrompt('delegate to coder'), 'debugger');
+    } finally {
+      if (orig === undefined) delete process.env.MAESTRO_CURRENT_AGENT;
+      else process.env.MAESTRO_CURRENT_AGENT = orig;
+    }
+  });
+
+  it('ignores MAESTRO_CURRENT_AGENT when set to unknown agent', () => {
+    const orig = process.env.MAESTRO_CURRENT_AGENT;
+    process.env.MAESTRO_CURRENT_AGENT = 'unknown_agent';
+    try {
+      assert.equal(validation.detectAgentFromPrompt('delegate to coder'), 'coder');
     } finally {
       if (orig === undefined) delete process.env.MAESTRO_CURRENT_AGENT;
       else process.env.MAESTRO_CURRENT_AGENT = orig;

@@ -26,7 +26,7 @@ const buildInput = (sessionId, cwd, source) => ({
   source,
 });
 
-describe('SessionStart hook', () => {
+describe('SessionStart hook', { concurrency: 1 }, () => {
   let inactiveCwd;
   let activeCwd;
 

@@ -29,7 +29,6 @@ async function main() {
         log('WARN', `AfterAgent [${agentName}]: Retry still malformed: ${reason} — allowing to prevent infinite loop`);
       } else {
         log('WARN', `AfterAgent [${agentName}]: WARN: ${reason} — requesting retry`);
-        hookState.clearActiveAgent(sessionId);
         process.stdout.write(deny(`Handoff report validation failed: ${reason}. Please include both a ## Task Report section and a ## Downstream Context section in your response.`) + '\n');
         return;
       }

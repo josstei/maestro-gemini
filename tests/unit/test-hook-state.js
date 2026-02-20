@@ -5,14 +5,15 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const hookState = require('../../src/lib/hook-state');
+const { createHookState } = require('../../src/lib/hook-state');
 
 describe('hook-state', () => {
   let testBaseDir;
+  let hookState;
 
   beforeEach(() => {
     testBaseDir = fs.mkdtempSync(path.join(os.tmpdir(), 'maestro-test-hookstate-'));
-    hookState._setBaseDirForTest(testBaseDir);
+    hookState = createHookState(testBaseDir);
   });
 
   afterEach(() => {
@@ -61,6 +62,12 @@ describe('hook-state', () => {
       fs.mkdirSync(recentDir, { recursive: true });
       hookState.pruneStale();
       assert.equal(fs.existsSync(recentDir), true);
+    });
+  });
+
+  describe('getBaseDir()', () => {
+    it('returns the configured base directory', () => {
+      assert.equal(hookState.getBaseDir(), testBaseDir);
     });
   });
 });

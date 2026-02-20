@@ -19,7 +19,7 @@ function allowWithContext(context, hookEventName = 'BeforeAgent') {
 }
 
 function advisory() {
-  return '{}';
+  return JSON.stringify({});
 }
 
 module.exports = { allow, deny, allowWithContext, advisory };

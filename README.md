@@ -1,6 +1,6 @@
 # Maestro
 
-[![Version](https://img.shields.io/badge/version-1.2.0-blue)](https://github.com/josstei/maestro-gemini/releases)
+[![Version](https://img.shields.io/badge/version-1.2.1-blue)](https://github.com/josstei/maestro-gemini/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-extension-orange)](https://geminicli.com)
 
@@ -162,7 +162,7 @@ Resumes an interrupted orchestration session.
 **Usage**: `/maestro:resume`
 
 **Behavior**:
-1. Reads active session state through `scripts/read-active-session.sh` (default path: `.gemini/state/active-session.md`)
+1. Reads active session state through `scripts/read-active-session.js` (default path: `.gemini/state/active-session.md`)
 2. Parses session metadata and phase statuses
 3. Presents a status summary with completed/pending/failed phases
 4. If errors exist from the previous run, presents them and asks for guidance
@@ -302,7 +302,7 @@ graph TB
     TL -->|Phase 4| CO[Completion]
 
     EX -->|Sequential| DA[Subagent Tools]
-    EX -->|Parallel| PD[parallel-dispatch.sh]
+    EX -->|Parallel| PD[parallel-dispatch.js]
 
     DA --> Agents
     PD --> Agents
@@ -330,8 +330,8 @@ Maestro is built from seven layers, each with a distinct responsibility:
 | **Commands** | `commands/` | TOML | CLI command definitions mapping user commands to prompts/skills |
 | **Agents** | `agents/` | Markdown + YAML frontmatter | 12 subagent persona definitions with tool permissions and model config |
 | **Skills** | `skills/` | Markdown (`SKILL.md` per directory) | Reusable methodology modules with embedded protocols |
-| **Scripts** | `scripts/` | Shell | Execution infrastructure (parallel dispatch) |
-| **Hooks** | `hooks/` | JSON + Shell | Lifecycle middleware for active-agent tracking and handoff validation |
+| **Scripts** | `scripts/` | Node.js | Execution infrastructure (parallel dispatch) |
+| **Hooks** | `hooks/` | JSON + Node.js | Lifecycle middleware for active-agent tracking and handoff validation |
 | **Templates** | `templates/` | Markdown | Structure templates for generated artifacts (designs, plans, sessions) |
 
 ### Workflow Phases
@@ -412,15 +412,15 @@ Maestro uses skills to encapsulate detailed methodologies that are activated on 
 
 ## Parallel Execution
 
-Maestro uses shell-based parallel dispatch, enabling independent implementation phases to run concurrently instead of sequentially.
+Maestro uses Node.js-based parallel dispatch, enabling independent implementation phases to run concurrently instead of sequentially.
 
 ### How It Works
 
-The TechLead orchestrator uses `scripts/parallel-dispatch.sh` to spawn concurrent Gemini CLI processes that execute independently. This bypasses the sequential subagent tool invocation pattern, which processes one delegation at a time.
+The TechLead orchestrator uses `scripts/parallel-dispatch.js` to spawn concurrent Gemini CLI processes that execute independently. This bypasses the sequential subagent tool invocation pattern, which processes one delegation at a time.
 
 **Dispatch flow:**
 1. The orchestrator writes self-contained delegation prompts to a dispatch directory
-2. Invokes `parallel-dispatch.sh` via shell
+2. Invokes `parallel-dispatch.js` via shell
 3. The script spawns one `gemini --approval-mode=yolo --output-format json` process per prompt file, streaming prompt content over stdin
 4. All agents execute concurrently as independent OS processes
 5. Results are collected with exit codes, logs, and structured JSON output
@@ -529,8 +529,8 @@ All state files use YAML frontmatter for machine-readable metadata and Markdown 
 - Review `summary.json` for per-agent status and exit codes
 
 **Parallel dispatch script not found:**
-- Verify `scripts/parallel-dispatch.sh` exists and is executable
-- Run `chmod +x scripts/parallel-dispatch.sh` if permissions are missing
+- Verify `scripts/parallel-dispatch.js` exists in the extension directory
+- Ensure Node.js is available on PATH (provided by Gemini CLI)
 
 ## Contributing
 
@@ -541,7 +541,7 @@ All state files use YAML frontmatter for machine-readable metadata and Markdown 
 5. Verify commands work in Gemini CLI
 6. Submit a pull request
 
-Run the hooks integration tests with `bash tests/run-all.sh`. All other changes are validated manually via Gemini CLI.
+Run the test suite with `node tests/run-all.js`. All other changes are validated manually via Gemini CLI.
 
 ## License
 

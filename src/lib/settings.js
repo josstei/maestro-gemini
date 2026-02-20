@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 function trimQuotes(value) {
   if ((value.startsWith('"') && value.endsWith('"')) ||
@@ -26,7 +27,8 @@ function parseEnvFile(filePath) {
     const eqIndex = stripped.indexOf('=');
     if (eqIndex === -1) continue;
     const key = stripped.slice(0, eqIndex);
-    const rawValue = stripped.slice(eqIndex + 1);
+    if (!key) continue;
+    const rawValue = stripped.slice(eqIndex + 1).replace(/\s+#.*$/, '');
     result[key] = trimQuotes(rawValue);
   }
   return result;
@@ -40,7 +42,7 @@ function resolveSetting(varName, projectRoot) {
   if (projectEnv[varName] !== undefined && projectEnv[varName] !== '') return projectEnv[varName];
 
   const extensionRoot = process.env.MAESTRO_EXTENSION_PATH ||
-    path.join(process.env.HOME || process.env.USERPROFILE || '', '.gemini', 'extensions', 'maestro');
+    path.join(os.homedir(), '.gemini', 'extensions', 'maestro');
   const extEnv = parseEnvFile(path.join(extensionRoot, '.env'));
   if (extEnv[varName] !== undefined && extEnv[varName] !== '') return extEnv[varName];
 

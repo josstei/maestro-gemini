@@ -13,7 +13,7 @@ const {
 
 const SESSION_END_HOOK = hookPath('session-end.js');
 
-describe('SessionEnd hook', () => {
+describe('SessionEnd hook', { concurrency: 1 }, () => {
   afterEach(() => {
     cleanHookState('test-se-001');
     cleanHookState('test-se-002');

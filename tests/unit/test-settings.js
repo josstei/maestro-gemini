@@ -75,6 +75,22 @@ describe('parseEnvFile()', () => {
     assert.equal(result.FOO, 'bar');
     assert.equal(result['export FOO'], undefined);
   });
+
+  it('strips inline comments', () => {
+    const envFile = path.join(tmpDir, '.env');
+    fs.writeFileSync(envFile, 'FOO=bar # this is a comment\nBAZ="hello" # another\n');
+    const result = settings.parseEnvFile(envFile);
+    assert.equal(result.FOO, 'bar');
+    assert.equal(result.BAZ, 'hello');
+  });
+
+  it('skips lines with empty keys', () => {
+    const envFile = path.join(tmpDir, '.env');
+    fs.writeFileSync(envFile, '=nokey\nFOO=bar\n');
+    const result = settings.parseEnvFile(envFile);
+    assert.equal(result[''], undefined);
+    assert.equal(result.FOO, 'bar');
+  });
 });
 
 describe('resolveSetting()', () => {

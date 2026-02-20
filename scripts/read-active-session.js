@@ -2,10 +2,9 @@
 'use strict';
 
 const fs = require('fs');
-const path = require('path');
 const { execSync } = require('child_process');
 const { resolveSetting } = require('../src/lib/settings');
-const { readState } = require('../src/lib/state');
+const { resolveActiveSessionPath } = require('../src/lib/state');
 
 function resolveProjectRoot() {
   try {
@@ -20,21 +19,16 @@ function resolveProjectRoot() {
 
 function main() {
   const projectRoot = resolveProjectRoot();
-  const stateDir = resolveSetting('MAESTRO_STATE_DIR', projectRoot) || '.gemini';
 
-  if (path.isAbsolute(stateDir)) {
-    const stateFile = path.join(stateDir, 'state', 'active-session.md');
-    try {
-      const content = fs.readFileSync(stateFile, 'utf8');
-      process.stdout.write(content);
-    } catch {
-      process.stdout.write('No active session\n');
-    }
-    return;
+  const resolvedStateDir = resolveSetting('MAESTRO_STATE_DIR', projectRoot);
+  if (resolvedStateDir) {
+    process.env.MAESTRO_STATE_DIR = resolvedStateDir;
   }
 
+  const sessionPath = resolveActiveSessionPath(projectRoot);
+
   try {
-    const content = readState(path.join(stateDir, 'state', 'active-session.md'), projectRoot);
+    const content = fs.readFileSync(sessionPath, 'utf8');
     process.stdout.write(content);
   } catch {
     process.stdout.write('No active session\n');

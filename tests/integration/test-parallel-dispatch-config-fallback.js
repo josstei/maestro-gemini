@@ -87,27 +87,27 @@ describe('parallel-dispatch extension .env config fallback', () => {
     env.HOME = fakeHome;
     env.MAESTRO_TEST_ARGV_CAPTURE = argvCaptureFile;
 
-    const { stdout, exitCode } = runScriptWithExit(
+    const { stdout, stderr, exitCode } = runScriptWithExit(
       DISPATCH_SCRIPT,
       [dispatchDir],
       { env, timeout: 60000 }
     );
 
-    assert.equal(exitCode, 0, `Expected exit 0 but got ${exitCode}.\nstdout: ${stdout}`);
+    assert.equal(exitCode, 0, `Expected exit 0 but got ${exitCode}.\nstderr: ${stderr}`);
 
     assert.ok(
-      stdout.includes('Model: gemini-ext-fallback-model'),
-      `Expected stdout to contain "Model: gemini-ext-fallback-model".\nstdout: ${stdout}`
+      stderr.includes('Model: gemini-ext-fallback-model'),
+      `Expected stderr to contain "Model: gemini-ext-fallback-model".\nstderr: ${stderr}`
     );
 
     assert.ok(
-      stdout.includes('Stagger Delay: 1s'),
-      `Expected stdout to contain "Stagger Delay: 1s".\nstdout: ${stdout}`
+      stderr.includes('Stagger Delay: 1s'),
+      `Expected stderr to contain "Stagger Delay: 1s".\nstderr: ${stderr}`
     );
 
     assert.ok(
-      !stdout.includes('bad array subscript'),
-      `Unexpected bash compatibility error in stdout.\nstdout: ${stdout}`
+      !stderr.includes('bad array subscript'),
+      `Unexpected bash compatibility error in stderr.\nstderr: ${stderr}`
     );
 
     const capturedRaw = fs.readFileSync(argvCaptureFile, 'utf8');

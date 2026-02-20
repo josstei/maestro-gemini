@@ -2,6 +2,8 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
+const { execFileSync } = require('child_process');
+const path = require('path');
 const { get, getBool, getNested } = require('../../src/lib/stdin');
 
 describe('stdin helpers', () => {
@@ -50,6 +52,44 @@ describe('stdin helpers', () => {
     it('returns JSON for non-string leaf', () => {
       const obj = { a: { b: [1, 2] } };
       assert.equal(getNested(obj, 'a', 'b'), '[1,2]');
+    });
+  });
+
+  describe('readJson()', () => {
+    const READJSON_HARNESS = path.resolve(__dirname, '..', '..', 'src', 'lib', 'stdin.js');
+
+    function runReadJsonProcess(stdinContent) {
+      const script = `
+        const { readJson } = require('${READJSON_HARNESS.replace(/\\/g, '\\\\')}');
+        readJson().then((result) => {
+          process.stdout.write(JSON.stringify(result));
+        });
+      `;
+      return execFileSync('node', ['-e', script], {
+        input: stdinContent,
+        encoding: 'utf8',
+        timeout: 5000,
+      });
+    }
+
+    it('parses valid JSON from stdin', () => {
+      const result = JSON.parse(runReadJsonProcess('{"foo":"bar"}'));
+      assert.deepEqual(result, { foo: 'bar' });
+    });
+
+    it('returns empty object for empty stdin', () => {
+      const result = JSON.parse(runReadJsonProcess(''));
+      assert.deepEqual(result, {});
+    });
+
+    it('returns empty object for whitespace-only stdin', () => {
+      const result = JSON.parse(runReadJsonProcess('   \n  '));
+      assert.deepEqual(result, {});
+    });
+
+    it('returns empty object for malformed JSON', () => {
+      const result = JSON.parse(runReadJsonProcess('{not valid json'));
+      assert.deepEqual(result, {});
     });
   });
 });

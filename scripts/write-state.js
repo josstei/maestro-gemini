@@ -16,6 +16,10 @@ async function main() {
     chunks.push(chunk);
   }
   const content = chunks.join('');
+  if (!content) {
+    process.stderr.write('ERROR: stdin content is empty\n');
+    process.exit(1);
+  }
   writeState(stateFile, content, process.cwd());
 }
 

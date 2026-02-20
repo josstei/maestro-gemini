@@ -59,6 +59,89 @@ describe('parallel-dispatch argument forwarding', () => {
     removeTempDir(tempDir);
   });
 
+  it('enforces concurrency gate when MAESTRO_MAX_CONCURRENT is set', () => {
+    const concurrencyTempDir = createTempDir('maestro-test-dispatch-concurrency-');
+    const concurrencyDispatchDir = path.join(concurrencyTempDir, '.maestro-parallel');
+    const concurrencyBinDir = path.join(concurrencyTempDir, 'bin');
+    const concurrencyLogFile = path.join(concurrencyTempDir, 'concurrency-log.txt');
+
+    fs.mkdirSync(path.join(concurrencyDispatchDir, 'prompts'), { recursive: true });
+    fs.writeFileSync(
+      path.join(concurrencyDispatchDir, 'prompts', 'architect.txt'),
+      'Task for architect agent.'
+    );
+    fs.writeFileSync(
+      path.join(concurrencyDispatchDir, 'prompts', 'coder.txt'),
+      'Task for coder agent.'
+    );
+    fs.writeFileSync(
+      path.join(concurrencyDispatchDir, 'prompts', 'tester.txt'),
+      'Task for tester agent.'
+    );
+
+    const concurrencyStub = `#!/usr/bin/env node
+'use strict';
+const fs = require('fs');
+const logFile = process.env.MAESTRO_TEST_CONCURRENCY_LOG;
+const agent = process.env.MAESTRO_CURRENT_AGENT || 'unknown';
+fs.appendFileSync(logFile, 'START:' + agent + ':' + Date.now() + '\\n');
+let data = '';
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', (chunk) => { data += chunk; });
+process.stdin.on('end', () => {
+  setTimeout(() => {
+    fs.appendFileSync(logFile, 'END:' + agent + ':' + Date.now() + '\\n');
+    process.stdout.write('{"status":"ok"}\\n');
+  }, 200);
+});
+`;
+    createGeminiStub(concurrencyBinDir, concurrencyStub);
+
+    try {
+      const existingPath = process.env.PATH || '';
+      const { exitCode } = runScriptWithExit(
+        DISPATCH_SCRIPT,
+        [concurrencyDispatchDir],
+        {
+          env: {
+            PATH: `${concurrencyBinDir}:${existingPath}`,
+            MAESTRO_AGENT_TIMEOUT: '2',
+            MAESTRO_MAX_CONCURRENT: '1',
+            MAESTRO_STAGGER_DELAY: '0',
+            MAESTRO_TEST_CONCURRENCY_LOG: concurrencyLogFile,
+          },
+          timeout: 30000,
+        }
+      );
+
+      assert.equal(exitCode, 0);
+
+      const logContent = fs.readFileSync(concurrencyLogFile, 'utf8');
+      const lines = logContent.trim().split('\n').filter(Boolean);
+      const events = lines.map((line) => {
+        const [type, agent, ts] = line.split(':');
+        return { type, agent, ts: Number(ts) };
+      });
+
+      const starts = events.filter((e) => e.type === 'START');
+      const ends = events.filter((e) => e.type === 'END');
+
+      assert.equal(starts.length, 3, `Expected 3 START events but got ${starts.length}`);
+      assert.equal(ends.length, 3, `Expected 3 END events but got ${ends.length}`);
+
+      for (let i = 1; i < starts.length; i++) {
+        const prevEnd = ends[i - 1].ts;
+        const currStart = starts[i].ts;
+        assert.ok(
+          currStart >= prevEnd,
+          `Agent ${starts[i].agent} started at ${currStart} before previous agent ended at ${prevEnd} — concurrency gate violated`
+        );
+      }
+    } finally {
+      removeTempDir(concurrencyTempDir);
+    }
+  });
+
   it('forwards all expected args and streams prompt payload over stdin', () => {
     const existingPath = process.env.PATH || '';
     const { stdout, exitCode } = runScriptWithExit(

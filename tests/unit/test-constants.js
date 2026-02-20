@@ -20,7 +20,7 @@ describe('constants', () => {
 
   it('exports numeric defaults', () => {
     assert.equal(constants.DEFAULT_TIMEOUT_MINS, 10);
-    assert.equal(constants.DEFAULT_STAGGER_DELAY, 5);
+    assert.equal(constants.DEFAULT_STAGGER_DELAY_SECS, 5);
     assert.equal(constants.HOOK_STATE_TTL_MS, 7200000);
     assert.equal(constants.MAX_PROMPT_SIZE_BYTES, 1000000);
   });

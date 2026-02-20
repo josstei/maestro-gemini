@@ -7,7 +7,7 @@ const { Readable } = require('stream');
 const { resolveSetting } = require('../src/lib/settings');
 const { runWithTimeout } = require('../src/lib/process');
 const { log } = require('../src/lib/logger');
-const { DEFAULT_TIMEOUT_MINS, DEFAULT_STAGGER_DELAY, MAX_PROMPT_SIZE_BYTES } = require('../src/lib/constants');
+const { DEFAULT_TIMEOUT_MINS, DEFAULT_STAGGER_DELAY_SECS, MAX_PROMPT_SIZE_BYTES } = require('../src/lib/constants');
 
 const SCRIPT_DIR = __dirname;
 const EXTENSION_DIR = path.dirname(SCRIPT_DIR);
@@ -78,7 +78,7 @@ async function main() {
   const writerModel = resolveSetting('MAESTRO_WRITER_MODEL', projectRoot) || '';
   const agentTimeoutRaw = resolveSetting('MAESTRO_AGENT_TIMEOUT', projectRoot) || String(DEFAULT_TIMEOUT_MINS);
   const maxConcurrentRaw = resolveSetting('MAESTRO_MAX_CONCURRENT', projectRoot) || '0';
-  const staggerDelayRaw = resolveSetting('MAESTRO_STAGGER_DELAY', projectRoot) || String(DEFAULT_STAGGER_DELAY);
+  const staggerDelayRaw = resolveSetting('MAESTRO_STAGGER_DELAY', projectRoot) || String(DEFAULT_STAGGER_DELAY_SECS);
   const extraArgsRaw = resolveSetting('MAESTRO_GEMINI_EXTRA_ARGS', projectRoot) || '';
 
   const timeoutMins = parseInt(agentTimeoutRaw, 10);
@@ -111,17 +111,16 @@ async function main() {
   }
 
   const concurrentDisplay = maxConcurrent === 0 ? 'unlimited' : String(maxConcurrent);
-  console.log('MAESTRO PARALLEL DISPATCH');
-  console.log('=========================');
-  console.log(`Agents: ${promptFiles.length}`);
-  console.log(`Timeout: ${timeoutMins} minutes`);
-  console.log(`Model: ${defaultModel || 'default'}`);
-  if (writerModel) console.log(`Writer Model: ${writerModel}`);
-  console.log(`Max Concurrent: ${concurrentDisplay}`);
-  console.log(`Stagger Delay: ${staggerDelay}s`);
-  if (hasExtraArgs) console.log(`Extra Gemini Args: ${extraArgsRaw}`);
-  console.log(`Project Root: ${projectRoot}`);
-  console.log('');
+  log('INFO', 'MAESTRO PARALLEL DISPATCH');
+  log('INFO', '=========================');
+  log('INFO', `Agents: ${promptFiles.length}`);
+  log('INFO', `Timeout: ${timeoutMins} minutes`);
+  log('INFO', `Model: ${defaultModel || 'default'}`);
+  if (writerModel) log('INFO', `Writer Model: ${writerModel}`);
+  log('INFO', `Max Concurrent: ${concurrentDisplay}`);
+  log('INFO', `Stagger Delay: ${staggerDelay}s`);
+  if (hasExtraArgs) log('INFO', `Extra Gemini Args: ${extraArgsRaw}`);
+  log('INFO', `Project Root: ${projectRoot}`);
 
   const agentPromises = [];
   let activeCount = 0;
@@ -130,9 +129,8 @@ async function main() {
   function releaseSlot() {
     activeCount--;
     if (slotWaiters.length > 0) {
-      const resolve = slotWaiters.shift();
-      activeCount++;
-      resolve();
+      const waiter = slotWaiters.shift();
+      waiter();
     }
   }
 
@@ -142,7 +140,10 @@ async function main() {
       return Promise.resolve();
     }
     return new Promise((resolve) => {
-      slotWaiters.push(resolve);
+      slotWaiters.push(() => {
+        activeCount++;
+        resolve();
+      });
     });
   }
 
@@ -181,7 +182,7 @@ async function main() {
 
     await waitForSlot();
 
-    console.log(`Dispatching: ${agentName}`);
+    log('INFO', `Dispatching: ${agentName}`);
 
     const resultJson = path.join(resultDir, `${agentName}.json`);
     const resultExit = path.join(resultDir, `${agentName}.exit`);
@@ -233,21 +234,19 @@ async function main() {
     }
   }
 
-  console.log('');
-  console.log('All agents dispatched. Waiting for completion...');
-  console.log('');
+  log('INFO', 'All agents dispatched. Waiting for completion...');
 
   const results = await Promise.all(agentPromises);
   let failures = 0;
 
   for (const result of results) {
     if (result.exitCode === 0) {
-      console.log(`  ${result.agentName}: SUCCESS (exit 0)`);
+      log('INFO', `  ${result.agentName}: SUCCESS (exit 0)`);
     } else if (result.timedOut) {
-      console.log(`  ${result.agentName}: TIMEOUT (exceeded ${timeoutMins}m)`);
+      log('INFO', `  ${result.agentName}: TIMEOUT (exceeded ${timeoutMins}m)`);
       failures++;
     } else {
-      console.log(`  ${result.agentName}: FAILED (exit ${result.exitCode})`);
+      log('INFO', `  ${result.agentName}: FAILED (exit ${result.exitCode})`);
       failures++;
     }
   }
@@ -256,12 +255,11 @@ async function main() {
   const succeeded = results.length - failures;
   const batchStatus = failures === 0 ? 'success' : 'partial_failure';
 
-  console.log('');
-  console.log('BATCH COMPLETE');
-  console.log(`  Total agents: ${results.length}`);
-  console.log(`  Succeeded: ${succeeded}`);
-  console.log(`  Failed: ${failures}`);
-  console.log(`  Wall time: ${elapsed}s`);
+  log('INFO', 'BATCH COMPLETE');
+  log('INFO', `  Total agents: ${results.length}`);
+  log('INFO', `  Succeeded: ${succeeded}`);
+  log('INFO', `  Failed: ${failures}`);
+  log('INFO', `  Wall time: ${elapsed}s`);
 
   const agents = results.map((r) => ({
     name: r.agentName,
@@ -280,14 +278,13 @@ async function main() {
 
   fs.writeFileSync(path.join(resultDir, 'summary.json'), JSON.stringify(summary) + '\n');
 
-  console.log('');
-  console.log(`Results: ${path.join(resultDir, 'summary.json')}`);
+  log('INFO', `Results: ${path.join(resultDir, 'summary.json')}`);
 
   const cleanupSetting = resolveSetting('MAESTRO_CLEANUP_DISPATCH', projectRoot) || 'false';
   if (cleanupSetting === 'true') {
-    if (promptDir.endsWith(path.sep + 'prompts') || promptDir.endsWith('/prompts')) {
+    if (path.basename(promptDir) === 'prompts') {
       fs.rmSync(promptDir, { recursive: true, force: true });
-      console.log('Prompt files cleaned up (MAESTRO_CLEANUP_DISPATCH=true)');
+      log('INFO', 'Prompt files cleaned up (MAESTRO_CLEANUP_DISPATCH=true)');
     } else {
       process.stderr.write(`WARNING: Skipped cleanup — PROMPT_DIR does not match expected pattern: ${promptDir}\n`);
     }

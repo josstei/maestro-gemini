@@ -50,22 +50,19 @@ function runScript(scriptFile, args = [], options = {}) {
 
 function runScriptWithExit(scriptFile, args = [], options = {}) {
   const { env = {}, cwd, input, timeout = 10000 } = options;
-  try {
-    const stdout = execFileSync('node', [scriptFile, ...args], {
-      input,
-      encoding: 'utf8',
-      cwd,
-      env: { ...process.env, ...env },
-      timeout,
-    });
-    return { stdout, exitCode: 0 };
-  } catch (err) {
-    return {
-      stdout: (err.stdout || '').toString(),
-      stderr: (err.stderr || '').toString(),
-      exitCode: err.status ?? 1,
-    };
-  }
+  const { spawnSync } = require('child_process');
+  const result = spawnSync('node', [scriptFile, ...args], {
+    input,
+    encoding: 'utf8',
+    cwd,
+    env: { ...process.env, ...env },
+    timeout,
+  });
+  return {
+    stdout: result.stdout || '',
+    stderr: result.stderr || '',
+    exitCode: result.status ?? 1,
+  };
 }
 
 function createTempDir(prefix = 'maestro-test-') {

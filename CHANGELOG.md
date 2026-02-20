@@ -5,6 +5,31 @@ All notable changes to Maestro will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-02-19
+
+### Changed
+
+- **Cross-platform Node.js rewrite** — All bash and python3 hooks and scripts rewritten to pure Node.js (zero npm dependencies) for Windows PowerShell compatibility
+- **Layered module architecture** — 9 shared `src/lib/` modules (constants, hook-state, logger, process, response, settings, state, stdin, validation) composed by thin hook and script entry points
+- **Hook-state factory pattern** — `createHookState(baseDir)` replaces mutable `_setBaseDirForTest` singleton for clean test isolation
+- **Session hook registration** — SessionStart and SessionEnd hooks registered in `hooks/hooks.json`
+- **Parallel dispatch output** — Status messages moved from stdout to stderr (via logger) to avoid mixing with result data
+- **Settings env resolution** — Uses `os.homedir()` instead of `HOME`/`USERPROFILE` fallback; inline comment stripping in `.env` parsing
+- **Process management** — `child.pid` guarded before kill operations; `timeoutMs` validated as positive finite number
+- **Path validation** — `resolveActiveSessionPath` validates relative `MAESTRO_STATE_DIR` against path traversal
+- **Agent detection** — `MAESTRO_CURRENT_AGENT` env var validated against `KNOWN_AGENTS`; regex patterns hoisted to module-level constants
+- **After-agent retry** — Active agent preserved on deny to enable re-validation on retry
+
+### Added
+
+- **70 unit tests** — `tests/unit/` covering all 9 `src/lib/` modules including readJson, stdin piping, timeoutMs validation, concurrency gate, and inline comment parsing
+- **Node.js integration tests** — All 8 integration tests migrated from bash to Node.js with `node:test`; consistent `{ concurrency: 1 }` across shared-state tests
+
+### Removed
+
+- **bash/python3 runtime dependencies** — Node.js is guaranteed available via Gemini CLI
+- All `.sh` hook and script files replaced by `.js` equivalents
+
 ## [1.2.0] - 2026-02-19
 
 ### Added

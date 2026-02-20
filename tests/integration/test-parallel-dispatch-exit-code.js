@@ -50,7 +50,7 @@ describe('parallel-dispatch exit code propagation', () => {
 
   it('exits with count of failed agents and persists agent exit code in result files', () => {
     const existingPath = process.env.PATH || '';
-    const { stdout, exitCode } = runScriptWithExit(
+    const { stdout, stderr, exitCode } = runScriptWithExit(
       DISPATCH_SCRIPT,
       [dispatchDir],
       {
@@ -62,7 +62,7 @@ describe('parallel-dispatch exit code propagation', () => {
       }
     );
 
-    assert.equal(exitCode, 1, `Expected dispatch exit code 1 (one failed agent) but got ${exitCode}.\nstdout: ${stdout}`);
+    assert.equal(exitCode, 1, `Expected dispatch exit code 1 (one failed agent) but got ${exitCode}.\nstderr: ${stderr}`);
 
     const agentExitFile = path.join(dispatchDir, 'results', 'coder.exit');
     assert.ok(
@@ -91,8 +91,8 @@ describe('parallel-dispatch exit code propagation', () => {
     );
 
     assert.ok(
-      stdout.includes('coder: FAILED (exit 2)'),
-      `Expected stdout to contain "coder: FAILED (exit 2)".\nstdout: ${stdout}`
+      stderr.includes('coder: FAILED (exit 2)'),
+      `Expected stderr to contain "coder: FAILED (exit 2)".\nstderr: ${stderr}`
     );
   });
 });

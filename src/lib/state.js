@@ -21,6 +21,7 @@ function resolveActiveSessionPath(cwd) {
     return path.join(stateDir, 'state', 'active-session.md');
   }
 
+  validateRelativePath(stateDir);
   const base = cwd || process.cwd();
   return path.join(base, stateDir, 'state', 'active-session.md');
 }
