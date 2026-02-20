@@ -2,20 +2,8 @@
 'use strict';
 
 const fs = require('fs');
-const { execSync } = require('child_process');
-const { resolveSetting } = require('../src/lib/settings');
+const { resolveSetting, resolveProjectRoot } = require('../src/lib/settings');
 const { resolveActiveSessionPath } = require('../src/lib/state');
-
-function resolveProjectRoot() {
-  try {
-    return execSync('git rev-parse --show-toplevel', {
-      encoding: 'utf8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    }).trim();
-  } catch {
-    return process.cwd();
-  }
-}
 
 function main() {
   const projectRoot = resolveProjectRoot();

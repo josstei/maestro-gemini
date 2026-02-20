@@ -2,6 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
+const path = require('path');
 const logger = require('../../src/lib/logger');
 
 describe('logger', () => {
@@ -30,6 +31,21 @@ describe('logger', () => {
       assert.equal(captured, '[WARN] maestro: something wrong\n');
     } finally {
       process.stderr.write = original;
+    }
+  });
+});
+
+describe('fatal()', () => {
+  it('writes error to stderr and exits with code 1', () => {
+    const { execFileSync } = require('child_process');
+    const loggerPath = path.resolve(__dirname, '..', '..', 'src', 'lib', 'logger.js');
+    const script = `const { fatal } = require('${loggerPath.replace(/\\/g, '\\\\')}'); fatal('something broke');`;
+    try {
+      execFileSync('node', ['-e', script], { encoding: 'utf8', timeout: 5000 });
+      assert.fail('Expected process to exit with code 1');
+    } catch (err) {
+      assert.equal(err.status, 1);
+      assert.ok(err.stderr.includes('ERROR: something broke'));
     }
   });
 });

@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 'use strict';
 
-const { readJson, getBool } = require('../src/lib/stdin');
+const { getBool } = require('../src/lib/stdin');
 const { allow, deny } = require('../src/lib/response');
 const hookState = require('../src/lib/hook-state');
 const { log } = require('../src/lib/logger');
+const { runHook } = require('../src/lib/hook-runner');
 
-async function main() {
-  const input = await readJson();
+function handler(input) {
   const sessionId = input.session_id || '';
   const stopHookActive = getBool(input, 'stop_hook_active');
 
@@ -29,8 +29,7 @@ async function main() {
         log('WARN', `AfterAgent [${agentName}]: Retry still malformed: ${reason} — allowing to prevent infinite loop`);
       } else {
         log('WARN', `AfterAgent [${agentName}]: WARN: ${reason} — requesting retry`);
-        process.stdout.write(deny(`Handoff report validation failed: ${reason}. Please include both a ## Task Report section and a ## Downstream Context section in your response.`) + '\n');
-        return;
+        return deny(`Handoff report validation failed: ${reason}. Please include both a ## Task Report section and a ## Downstream Context section in your response.`);
       }
     } else {
       log('INFO', `AfterAgent [${agentName}]: Handoff report validated`);
@@ -38,10 +37,9 @@ async function main() {
   }
 
   hookState.clearActiveAgent(sessionId);
-  process.stdout.write(allow() + '\n');
+  return allow();
 }
 
-main().catch((err) => {
-  log('ERROR', `Hook failed — returning safe default: ${err.message}`);
-  process.stdout.write(allow() + '\n');
-});
+runHook(handler, allow);
+
+module.exports = { handler };

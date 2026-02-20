@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { execSync } = require('child_process');
 
 function trimQuotes(value) {
   if ((value.startsWith('"') && value.endsWith('"')) ||
@@ -70,4 +71,15 @@ function resolveSetting(varName, projectRoot) {
   return undefined;
 }
 
-module.exports = { parseEnvFile, resolveSetting };
+function resolveProjectRoot() {
+  try {
+    return execSync('git rev-parse --show-toplevel', {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+  } catch {
+    return process.cwd();
+  }
+}
+
+module.exports = { parseEnvFile, resolveSetting, resolveProjectRoot };

@@ -6,6 +6,7 @@ const os = require('os');
 const { log } = require('./logger');
 const { validateSessionId } = require('./validation');
 const { HOOK_STATE_TTL_MS } = require('./constants');
+const { atomicWriteSync } = require('./file-utils');
 
 const DEFAULT_BASE_DIR = process.platform === 'win32'
   ? path.join(os.tmpdir(), 'maestro-hooks')
@@ -44,12 +45,8 @@ function createHookState(baseDir = DEFAULT_BASE_DIR) {
       log('ERROR', 'Invalid session_id: contains unsafe characters');
       return false;
     }
-    const sessionDir = path.join(baseDir, sessionId);
-    fs.mkdirSync(sessionDir, { recursive: true });
-    const agentFile = path.join(sessionDir, 'active-agent');
-    const tmpFile = `${agentFile}.tmp.${process.pid}`;
-    fs.writeFileSync(tmpFile, agentName);
-    fs.renameSync(tmpFile, agentFile);
+    const agentFile = path.join(baseDir, sessionId, 'active-agent');
+    atomicWriteSync(agentFile, agentName);
     return true;
   }
 

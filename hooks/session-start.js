@@ -3,23 +3,20 @@
 
 const fs = require('fs');
 const path = require('path');
-const { readJson } = require('../src/lib/stdin');
 const { advisory } = require('../src/lib/response');
 const { validateSessionId } = require('../src/lib/validation');
 const hookState = require('../src/lib/hook-state');
 const { hasActiveSession } = require('../src/lib/state');
-const { log } = require('../src/lib/logger');
+const { runHook } = require('../src/lib/hook-runner');
 
-async function main() {
-  const input = await readJson();
+function handler(input) {
   const sessionId = input.session_id || '';
   const cwd = input.cwd || '';
 
   hookState.pruneStale();
 
   if (!hasActiveSession(cwd)) {
-    process.stdout.write(advisory() + '\n');
-    return;
+    return advisory();
   }
 
   if (validateSessionId(sessionId)) {
@@ -27,10 +24,9 @@ async function main() {
     fs.mkdirSync(path.join(baseDir, sessionId), { recursive: true });
   }
 
-  process.stdout.write(advisory() + '\n');
+  return advisory();
 }
 
-main().catch((err) => {
-  log('ERROR', `Hook failed — returning safe default: ${err.message}`);
-  process.stdout.write(advisory() + '\n');
-});
+runHook(handler, advisory);
+
+module.exports = { handler };

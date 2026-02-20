@@ -1,9 +1,9 @@
 'use strict';
 
-function readJson() {
+function readText() {
   return new Promise((resolve) => {
     if (process.stdin.isTTY) {
-      resolve({});
+      resolve('');
       return;
     }
 
@@ -11,18 +11,20 @@ function readJson() {
     process.stdin.setEncoding('utf8');
     process.stdin.on('data', (chunk) => chunks.push(chunk));
     process.stdin.on('end', () => {
-      const raw = chunks.join('');
-      if (!raw.trim()) {
-        resolve({});
-        return;
-      }
-      try {
-        resolve(JSON.parse(raw));
-      } catch {
-        resolve({});
-      }
+      resolve(chunks.join(''));
     });
     process.stdin.resume();
+  });
+}
+
+function readJson() {
+  return readText().then((raw) => {
+    if (!raw.trim()) return {};
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
   });
 }
 
@@ -39,4 +41,4 @@ function getBool(obj, key) {
   return false;
 }
 
-module.exports = { readJson, get, getBool };
+module.exports = { readText, readJson, get, getBool };

@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { DEFAULT_STATE_DIR } = require('./constants');
+const { atomicWriteSync } = require('./file-utils');
 
 function validateRelativePath(filePath) {
   if (path.isAbsolute(filePath)) {
@@ -44,16 +45,7 @@ function readState(relativePath, basePath) {
 function writeState(relativePath, content, basePath) {
   validateRelativePath(relativePath);
   const fullPath = path.join(basePath, relativePath);
-  const parentDir = path.dirname(fullPath);
-  fs.mkdirSync(parentDir, { recursive: true });
-  const tmpFile = fullPath + `.tmp.${process.pid}`;
-  try {
-    fs.writeFileSync(tmpFile, content);
-    fs.renameSync(tmpFile, fullPath);
-  } catch (err) {
-    try { fs.unlinkSync(tmpFile); } catch {}
-    throw err;
-  }
+  atomicWriteSync(fullPath, content);
 }
 
 function ensureWorkspace(stateDir, basePath) {

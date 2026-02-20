@@ -3,24 +3,13 @@
 const { spawn, execSync } = require('child_process');
 const { log } = require('./logger');
 
-function killProcess(pid) {
+function killProcess(pid, signal = 'SIGTERM') {
   if (pid == null) return;
   try {
     if (process.platform === 'win32') {
       execSync(`taskkill /pid ${pid} /t /f`, { stdio: 'ignore' });
     } else {
-      process.kill(pid, 'SIGTERM');
-    }
-  } catch {}
-}
-
-function forceKillProcess(pid) {
-  if (pid == null) return;
-  try {
-    if (process.platform === 'win32') {
-      execSync(`taskkill /pid ${pid} /t /f`, { stdio: 'ignore' });
-    } else {
-      process.kill(pid, 'SIGKILL');
+      process.kill(pid, signal);
     }
   } catch {}
 }
@@ -55,7 +44,7 @@ function runWithTimeout(command, args, options = {}, timeoutMs) {
       forceKillTimer = setTimeout(() => {
         try {
           process.kill(child.pid, 0);
-          forceKillProcess(child.pid);
+          killProcess(child.pid, 'SIGKILL');
         } catch {}
       }, 5000);
     }, timeoutMs);

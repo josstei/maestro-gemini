@@ -143,3 +143,20 @@ describe('resolveSetting()', () => {
     assert.equal(result, 'from-project');
   });
 });
+
+describe('resolveProjectRoot()', () => {
+  it('returns a non-empty string', () => {
+    const root = settings.resolveProjectRoot();
+    assert.ok(root.length > 0);
+  });
+
+  it('returns an absolute path', () => {
+    const root = settings.resolveProjectRoot();
+    assert.ok(path.isAbsolute(root));
+  });
+
+  it('returns a path that exists', () => {
+    const root = settings.resolveProjectRoot();
+    assert.ok(fs.existsSync(root));
+  });
+});
