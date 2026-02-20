@@ -22,10 +22,11 @@ function parseEnvFile(filePath) {
   for (const line of content.split('\n')) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) continue;
-    const eqIndex = trimmed.indexOf('=');
+    const stripped = trimmed.replace(/^export\s+/, '');
+    const eqIndex = stripped.indexOf('=');
     if (eqIndex === -1) continue;
-    const key = trimmed.slice(0, eqIndex);
-    const rawValue = trimmed.slice(eqIndex + 1);
+    const key = stripped.slice(0, eqIndex);
+    const rawValue = stripped.slice(eqIndex + 1);
     result[key] = trimQuotes(rawValue);
   }
   return result;
@@ -36,12 +37,12 @@ function resolveSetting(varName, projectRoot) {
   if (envValue !== undefined && envValue !== '') return envValue;
 
   const projectEnv = parseEnvFile(path.join(projectRoot, '.env'));
-  if (projectEnv[varName] !== undefined) return projectEnv[varName];
+  if (projectEnv[varName] !== undefined && projectEnv[varName] !== '') return projectEnv[varName];
 
   const extensionRoot = process.env.MAESTRO_EXTENSION_PATH ||
     path.join(process.env.HOME || process.env.USERPROFILE || '', '.gemini', 'extensions', 'maestro');
   const extEnv = parseEnvFile(path.join(extensionRoot, '.env'));
-  if (extEnv[varName] !== undefined) return extEnv[varName];
+  if (extEnv[varName] !== undefined && extEnv[varName] !== '') return extEnv[varName];
 
   return undefined;
 }

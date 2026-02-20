@@ -123,7 +123,6 @@ async function main() {
   console.log(`Project Root: ${projectRoot}`);
   console.log('');
 
-  const agentNames = [];
   const agentPromises = [];
   let activeCount = 0;
   const slotWaiters = [];
@@ -155,8 +154,6 @@ async function main() {
       process.stderr.write(`ERROR: Prompt file ${path.basename(promptFile)} produces empty agent name after sanitization\n`);
       process.exit(1);
     }
-    agentNames.push(agentName);
-
     const normalizedName = agentName.replace(/-/g, '_');
     if (fs.existsSync(AGENTS_DIR) && !fs.existsSync(path.join(AGENTS_DIR, `${normalizedName}.md`))) {
       process.stderr.write(`ERROR: Agent '${agentName}' not found in ${AGENTS_DIR}/\n`);
@@ -218,7 +215,7 @@ async function main() {
         stdout: stdoutFd,
         stderr: stderrFd,
         cwd: projectRoot,
-        env: { ...process.env, MAESTRO_CURRENT_AGENT: agentName },
+        env: { ...process.env, MAESTRO_CURRENT_AGENT: normalizedName },
       },
       timeoutMs
     ).then((result) => {

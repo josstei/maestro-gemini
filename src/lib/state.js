@@ -8,7 +8,8 @@ function validateRelativePath(filePath) {
   if (path.isAbsolute(filePath)) {
     throw new Error(`Path must be relative (got: ${filePath})`);
   }
-  if (filePath.includes('..')) {
+  const segments = filePath.split(/[/\\]/);
+  if (segments.includes('..')) {
     throw new Error(`Path traversal not allowed (got: ${filePath})`);
   }
 }

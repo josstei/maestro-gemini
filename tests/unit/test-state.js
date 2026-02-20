@@ -92,6 +92,12 @@ describe('readState()', () => {
     assert.throws(() => state.readState('../escape/file', tmpDir), /traversal/i);
   });
 
+  it('allows filenames containing double-dot substrings', () => {
+    fs.writeFileSync(path.join(tmpDir, 'file..name.md'), 'data');
+    const content = state.readState('file..name.md', tmpDir);
+    assert.equal(content, 'data');
+  });
+
   it('throws for missing file', () => {
     assert.throws(() => state.readState('nonexistent.md', tmpDir));
   });

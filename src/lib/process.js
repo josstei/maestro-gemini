@@ -41,11 +41,12 @@ function runWithTimeout(command, args, options = {}, timeoutMs) {
     let timedOut = false;
     let settled = false;
 
+    let forceKillTimer = null;
     const timer = setTimeout(() => {
       timedOut = true;
       log('WARN', `Process ${child.pid} timed out after ${timeoutMs}ms`);
       killProcess(child.pid);
-      setTimeout(() => {
+      forceKillTimer = setTimeout(() => {
         try {
           process.kill(child.pid, 0);
           forceKillProcess(child.pid);
@@ -61,6 +62,7 @@ function runWithTimeout(command, args, options = {}, timeoutMs) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      clearTimeout(forceKillTimer);
       resolve({
         exitCode: timedOut ? 124 : (code ?? 255),
         timedOut,
@@ -71,6 +73,7 @@ function runWithTimeout(command, args, options = {}, timeoutMs) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      clearTimeout(forceKillTimer);
       log('ERROR', `Process spawn error: ${err.message}`);
       resolve({ exitCode: 255, timedOut: false });
     });

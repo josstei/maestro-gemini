@@ -59,6 +59,22 @@ describe('parseEnvFile()', () => {
     const result = settings.parseEnvFile(envFile);
     assert.equal(result.FOO, 'second');
   });
+
+  it('strips export prefix from keys', () => {
+    const envFile = path.join(tmpDir, '.env');
+    fs.writeFileSync(envFile, 'export FOO=bar\nexport BAZ="qux"\n');
+    const result = settings.parseEnvFile(envFile);
+    assert.equal(result.FOO, 'bar');
+    assert.equal(result.BAZ, 'qux');
+  });
+
+  it('handles export with no space before equals', () => {
+    const envFile = path.join(tmpDir, '.env');
+    fs.writeFileSync(envFile, 'export FOO=bar\n');
+    const result = settings.parseEnvFile(envFile);
+    assert.equal(result.FOO, 'bar');
+    assert.equal(result['export FOO'], undefined);
+  });
 });
 
 describe('resolveSetting()', () => {
@@ -88,5 +104,18 @@ describe('resolveSetting()', () => {
   it('returns undefined when not found anywhere', () => {
     const result = settings.resolveSetting('TEST_MAESTRO_VAR', tmpDir);
     assert.equal(result, undefined);
+  });
+
+  it('empty .env value falls through to next tier', () => {
+    fs.writeFileSync(path.join(tmpDir, '.env'), 'TEST_MAESTRO_VAR=\n');
+    const result = settings.resolveSetting('TEST_MAESTRO_VAR', tmpDir);
+    assert.equal(result, undefined);
+  });
+
+  it('empty env var falls through to project .env', () => {
+    process.env.TEST_MAESTRO_VAR = '';
+    fs.writeFileSync(path.join(tmpDir, '.env'), 'TEST_MAESTRO_VAR=from-project\n');
+    const result = settings.resolveSetting('TEST_MAESTRO_VAR', tmpDir);
+    assert.equal(result, 'from-project');
   });
 });
