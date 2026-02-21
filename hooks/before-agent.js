@@ -2,7 +2,7 @@
 'use strict';
 
 const fs = require('fs');
-const { defineHook, response, validation, hookState, state, log } = require('../src/lib/maestro');
+const { defineHook, response, validation, hookState, state, log } = require('../src/lib/hooks/hook-facade');
 
 function handler(ctx) {
   hookState.pruneStale();

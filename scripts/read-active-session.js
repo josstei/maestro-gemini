@@ -2,8 +2,9 @@
 'use strict';
 
 const fs = require('fs');
-const { resolveSetting, resolveProjectRoot } = require('../src/lib/settings');
-const { resolveActiveSessionPath } = require('../src/lib/state');
+const { resolveSetting } = require('../src/lib/config/setting-resolver');
+const { resolveProjectRoot } = require('../src/lib/core/project-root-resolver');
+const { resolveActiveSessionPath } = require('../src/lib/state/session-state');
 
 function main() {
   const projectRoot = resolveProjectRoot();

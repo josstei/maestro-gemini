@@ -4,12 +4,13 @@
 const fs = require('fs');
 const path = require('path');
 const { Readable } = require('stream');
-const { resolveDispatchConfig } = require('../src/lib/dispatch-config');
-const { ConcurrencyLimiter } = require('../src/lib/concurrency');
-const { resolveSetting } = require('../src/lib/settings');
-const { runWithTimeout } = require('../src/lib/process');
-const { log, fatal } = require('../src/lib/logger');
-const { MAX_PROMPT_SIZE_BYTES } = require('../src/lib/constants');
+const { resolveDispatchConfig } = require('../src/lib/config/dispatch-config-resolver');
+const { ConcurrencyLimiter } = require('../src/lib/dispatch/concurrency-limiter');
+const { resolveSetting } = require('../src/lib/config/setting-resolver');
+const { runWithTimeout } = require('../src/lib/dispatch/process-runner');
+const { log, fatal } = require('../src/lib/core/logger');
+
+const MAX_PROMPT_SIZE_BYTES = 1_000_000;
 
 const SCRIPT_DIR = __dirname;
 const EXTENSION_DIR = path.dirname(SCRIPT_DIR);

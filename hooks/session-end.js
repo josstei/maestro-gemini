@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-const { defineHook, response, hookState } = require('../src/lib/maestro');
+const { defineHook, response, hookState } = require('../src/lib/hooks/hook-facade');
 
 function handler(ctx) {
   hookState.removeSessionDir(ctx.sessionId);

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-const { defineHook, response, hookState, log } = require('../src/lib/maestro');
+const { defineHook, response, hookState, log } = require('../src/lib/hooks/hook-facade');
 
 function handler(ctx) {
   const agentName = hookState.getActiveAgent(ctx.sessionId);
