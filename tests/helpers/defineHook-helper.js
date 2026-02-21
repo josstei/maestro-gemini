@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-const { defineHook } = require('../../src/lib/maestro');
+const { defineHook } = require('../../src/lib/hooks/hook-facade');
 
 const mode = process.argv[2];
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-const { parsePositiveInteger, parseNonNegativeInteger } = require('../../src/lib/dispatch-config');
+const { parsePositiveInteger, parseNonNegativeInteger } = require('../../src/lib/core/integer-parser');
 
 const type = process.argv[2];
 const varName = process.argv[3];

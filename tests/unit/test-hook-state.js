@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { createHookState } = require('../../src/lib/hook-state');
+const { createHookState } = require('../../src/lib/hooks/hook-state');
 
 describe('hook-state', () => {
   let testBaseDir;
