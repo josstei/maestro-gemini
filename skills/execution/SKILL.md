@@ -23,20 +23,15 @@ Before executing any phases in Phase 3:
 
 ## State File Access
 
-The `read_file` tool enforces `.gitignore` and `.geminiignore` patterns via `shouldIgnoreFile()`, and `.gemini/` is typically gitignored. All reads of files within `<MAESTRO_STATE_DIR>` must use the shell script to bypass this restriction:
+Both `read_file` and `write_file` work on state paths inside `<MAESTRO_STATE_DIR>`. The project `.geminiignore` negates the `.gitignore` exclusion of `.gemini/` for Gemini CLI tools.
+
+The `read-state.js` script remains available as an alternative for TOML shell blocks that inject state before the model's first turn:
 
 ```bash
 run_shell_command: node ${extensionPath}/scripts/read-state.js <relative-path>
 ```
 
 The command path must use `${extensionPath}` so orchestration works when the extension is installed outside the workspace root.
-
-This applies to:
-- Reading `summary.json` from parallel dispatch results
-- Reading individual agent `.json` output files
-- Reading `active-session.md` for state checks
-
-Use `write_file` directly for state writes — it does not enforce ignore patterns. Never use `read_file` for paths inside `<MAESTRO_STATE_DIR>`.
 
 ## Hook Lifecycle During Execution
 
@@ -97,8 +92,8 @@ For phases at the same dependency depth with no file overlap, use Node.js-based 
 7. The script spawns one `gemini --approval-mode=yolo --output-format json` process per prompt file and streams each full prompt payload over stdin
 8. All agents execute concurrently as independent CLI processes
 9. The script waits for all agents, collects exit codes, and writes `results/summary.json`
-10. Read the batch summary via run_shell_command: `node ${extensionPath}/scripts/read-state.js <state_dir>/parallel/<batch-id>/results/summary.json`
-11. For each agent, read its JSON output via run_shell_command: `node ${extensionPath}/scripts/read-state.js <state_dir>/parallel/<batch-id>/results/<agent-name>.json` and parse the Task Report
+10. Read the batch summary via `read_file`: `<state_dir>/parallel/<batch-id>/results/summary.json`
+11. For each agent, read its JSON output via `read_file`: `<state_dir>/parallel/<batch-id>/results/<agent-name>.json` and parse the Task Report
 12. Update session state for all phases in the batch
 13. Only proceed to the next batch when all phases in the current batch are completed
 
@@ -108,7 +103,7 @@ For phases at the same dependency depth with no file overlap, use Node.js-based 
 - Agents inherit the project directory and linked extensions, but do NOT share the orchestrator's session
 - The orchestrator must write complete, self-contained prompts — parallel agents cannot ask follow-up questions
 - File ownership must be strictly non-overlapping — the dispatch script provides no file locking
-- `MAESTRO_DEFAULT_MODEL` and `MAESTRO_AGENT_TIMEOUT` environment variables are respected by the dispatch script
+- `MAESTRO_DEFAULT_MODEL`, `MAESTRO_WRITER_MODEL`, `MAESTRO_AGENT_TIMEOUT`, `MAESTRO_MAX_CONCURRENT`, `MAESTRO_STAGGER_DELAY`, `MAESTRO_GEMINI_EXTRA_ARGS`, and `MAESTRO_CLEANUP_DISPATCH` environment variables are respected by the dispatch script
 - If any agent in the batch fails, the summary reports `partial_failure` — the orchestrator decides whether to retry or escalate
 
 #### Fallback to Sequential

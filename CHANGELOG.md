@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Documentation accuracy audit (3-agent parallel)** — Opus-parallel audit of all documentation against source code, fixing 7 discrepancies across 6 files:
+  - CHANGELOG.md: Noted `hookEventName` restoration in 1.2.1 (was listed as removed in 1.2.0, re-added in Node.js rewrite)
+  - CLAUDE.md: Expanded `allowWithContext()` description to include both `hookEventName` and `additionalContext` fields
+  - GEMINI.md: Added missing "no active agent" skip condition to AfterAgent hook description
+  - skills/delegation/SKILL.md: Changed "Read-Only Agents" label to "Assessment Agents" for agents with shell access but no write tools
+  - skills/design-dialogue/SKILL.md: Aligned section name to match `templates/design-document.md` ("Agent Team")
+  - docs/architecture/agent-system.md: Documented hyphen-to-underscore normalization in prompt filename matching
 - **Documentation accuracy audit** — Systematic audit of all documentation against source code, fixing discrepancies across 8 files:
   - CLAUDE.md: Added missing `templates/*.md` and `package.json` to runtime surfaces and source-of-truth files
   - README.md: Fixed agent tool table to show baseline tool set (`read_file`, `list_directory`, `glob`, `grep_search`, `read_many_files`, `ask_user`) separately from additional per-agent tools; added `ask_user` to Tool Access Philosophy; linked `comprehensive-map.md`
@@ -29,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Cross-platform Node.js rewrite** — All bash and python3 hooks and scripts rewritten to pure Node.js (zero npm dependencies) for Windows PowerShell compatibility
+- **Cross-platform Node.js rewrite** — All bash and python3 hooks and scripts rewritten to pure Node.js (zero npm dependencies) for Windows PowerShell compatibility; `hookEventName` re-added to hook output (removed in 1.2.0 bash version, restored as part of `allowWithContext()` response structure)
 - **Layered module architecture** — 13 shared `src/lib/` modules (constants, hook-state, logger, process, response, settings, state, stdin, validation, file-utils, dispatch-config, concurrency, maestro) composed by thin hook and script entry points
 - **Hook-state factory pattern** — `createHookState(baseDir)` replaces mutable `_setBaseDirForTest` singleton for clean test isolation
 - **Session hook registration** — SessionStart and SessionEnd hooks registered in `hooks/hooks.json`

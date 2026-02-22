@@ -96,7 +96,7 @@ Parallel dispatch exports `MAESTRO_CURRENT_AGENT` per process. Hooks consume tha
 
 ## Practical Constraints
 
-- Agent definition filenames use snake_case (e.g., `agents/technical_writer.md`). Parallel dispatch prompt filenames must match the agent definition name (e.g., `prompts/technical_writer.txt` maps to agent `technical_writer`).
+- Agent definition filenames use snake_case (e.g., `agents/technical_writer.md`). Parallel dispatch prompt filenames must match the agent definition name after normalization — hyphens are automatically converted to underscores (e.g., both `prompts/technical_writer.txt` and `prompts/technical-writer.txt` map to agent `technical_writer`).
 - Parallel batches must avoid overlapping file ownership
 - Tool permissions are enforced by `tools:` frontmatter, not prompt text alone
 - Prompt-level tool restriction text remains defense-in-depth, not the primary boundary

@@ -49,7 +49,7 @@ Maestro follows a sequential four-phase lifecycle:
 1.  **Design**: Requirements gathering and architectural convergence using the `design-dialogue` skill.
 2.  **Plan**: Decomposition of the task into phases, agent assignments, and dependency mapping using `implementation-planning` and `session-management`.
 3.  **Execute**: Delegation of tasks to specialized agents using `execution`, `delegation`, and `validation` skills. This phase can run in `parallel`, `sequential`, or `ask` mode.
-4.  **Complete**: Final validation, optional code review pass, and session archival.
+4.  **Complete**: Final validation using `code-review` and `session-management` skills, optional code review pass, and session archival.
 
 ---
 
@@ -115,7 +115,7 @@ Maestro maintains state in a project-local directory (configurable via `MAESTRO_
 
 ### Persistence Logic
 - **Active Session**: Updated after every phase or parallel batch.
-- **Utility Scripts**: `scripts/read-active-session.js`, `scripts/read-state.js`, and `scripts/write-state.js` are used to bypass `.gitignore` restrictions when reading and writing state.
+- **Utility Scripts**: `scripts/read-active-session.js`, `scripts/read-state.js`, and `scripts/write-state.js` provide state access for TOML shell blocks, hooks, and programmatic workflows.
 
 ---
 

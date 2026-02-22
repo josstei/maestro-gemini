@@ -36,6 +36,7 @@ Before running orchestration commands:
 - Maestro slash commands are file commands loaded from `commands/maestro/*.toml`; they are expected to resolve as `/maestro:*`.
 - Hook entries must remain `type: "command"` in `hooks/hooks.json` for compatibility with current Gemini CLI hook validation.
 - Extension workflows run only when the extension is linked/enabled and workspace trust allows extension assets.
+- `ask_user` header fields must not exceed 16 characters. Keep headers short (e.g., `Database`, `Auth`, `Approach`). This limit is enforced by Gemini CLI validation on all `ask_user` calls.
 
 ## Settings Reference
 
@@ -169,7 +170,9 @@ Resolve `<state_dir>` from `MAESTRO_STATE_DIR` (default `.gemini`):
 - Archives: `<state_dir>/state/archive/`, `<state_dir>/plans/archive/`
 - Parallel batches: `<state_dir>/parallel/`
 
-`/maestro:status` and `/maestro:resume` read active session through `node ${MAESTRO_EXTENSION_PATH:-$HOME/.gemini/extensions/maestro}/scripts/read-active-session.js`.
+Use `read_file` and `write_file` directly on state paths — the project `.geminiignore` makes them accessible to Gemini CLI tools.
+
+`/maestro:status` and `/maestro:resume` use `node ${MAESTRO_EXTENSION_PATH:-$HOME/.gemini/extensions/maestro}/scripts/read-active-session.js` in their TOML shell blocks to inject state before the model's first turn.
 
 ## Skills Reference
 
@@ -212,7 +215,7 @@ Maestro uses Gemini CLI hooks from `hooks/hooks.json`:
 | --- | --- | --- |
 | SessionStart | `hooks/session-start.js` | Prune stale sessions, initialize hook state when active session exists |
 | BeforeAgent | `hooks/before-agent.js` | Prune stale sessions, track active agent, inject compact session context |
-| AfterAgent | `hooks/after-agent.js` | Enforce handoff format (`Task Report` + `Downstream Context`); skips `techlead`/`orchestrator` |
+| AfterAgent | `hooks/after-agent.js` | Enforce handoff format (`Task Report` + `Downstream Context`); skips when no active agent or for `techlead`/`orchestrator` |
 | SessionEnd | `hooks/session-end.js` | Clean up hook state for ended session |
 
 ## Alignment Notes

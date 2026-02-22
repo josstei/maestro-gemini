@@ -313,9 +313,9 @@ Validation: [test command]
 Verify: All new tests pass, report coverage metrics
 ```
 
-### For Read-Only Agents (architect, api_designer, code_reviewer, debugger, performance_engineer, security_engineer)
+### For Assessment Agents (architect, api_designer, code_reviewer, debugger, performance_engineer, security_engineer)
 ```
-Validation: N/A (read-only assessment)
+Validation: N/A (assessment-only — no write tools)
 Verify: Findings reference specific files and line numbers
 ```
 

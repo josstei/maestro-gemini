@@ -21,7 +21,7 @@ State is project-local under `MAESTRO_STATE_DIR` (default `.gemini`):
       results/
 ```
 
-`<state_dir>` can be relative (resolved from project root) or absolute for session path resolution (`resolveActiveSessionPath`). Note that `ensureWorkspace`, `readState`, and `writeState` enforce relative paths only and reject absolute values.
+`<state_dir>` can be relative or absolute for session path resolution. The `resolveActiveSessionPath` function resolves relative paths from the `cwd` parameter provided by its caller (`read-active-session.js` passes the git repository root via `resolveProjectRoot()`). Note that `ensureWorkspace`, `readState`, and `writeState` enforce relative paths only and reject absolute values.
 
 ## Resolution Precedence
 
@@ -32,16 +32,18 @@ For script-backed settings:
 3. Extension `.env` (`${MAESTRO_EXTENSION_PATH:-$HOME/.gemini/extensions/maestro}/.env`)
 4. Default
 
-`read-active-session.js` and `parallel-dispatch.js` both implement this precedence, though they resolve project root differently: `read-active-session.js` uses the git repository root (via `resolveProjectRoot()`, falling back to `process.cwd()` outside git repos), while `parallel-dispatch.js` uses the current working directory (`process.cwd()`).
+`read-active-session.js` resolves `MAESTRO_STATE_DIR` through this precedence, while `parallel-dispatch.js` resolves six dispatch settings (`MAESTRO_DEFAULT_MODEL`, `MAESTRO_WRITER_MODEL`, `MAESTRO_AGENT_TIMEOUT`, `MAESTRO_MAX_CONCURRENT`, `MAESTRO_STAGGER_DELAY`, `MAESTRO_GEMINI_EXTRA_ARGS`) through `dispatch-config-resolver.js` and additionally resolves `MAESTRO_CLEANUP_DISPATCH` directly via `resolveSetting()`. They resolve project root differently: `read-active-session.js` uses the git repository root (via `resolveProjectRoot()`, falling back to `process.cwd()` outside git repos), while `parallel-dispatch.js` uses the current working directory (`process.cwd()`).
 
-## Why Scripts Are Required for State Reads
+## State File Access
 
-`read_file` follows ignore rules; `.gemini/` is commonly ignored. Maestro therefore uses Node.js helpers for state reads under `<state_dir>`:
+The project `.geminiignore` negates the `.gitignore` exclusion of `.gemini/`, so `read_file` and `write_file` both work on state paths directly.
+
+The Node.js helper scripts remain available and are used by TOML shell blocks in `/maestro:status` and `/maestro:resume` to inject state before the model's first turn:
 
 - `node scripts/read-state.js <relative-path>`
 - `node scripts/read-active-session.js`
 
-State writes are typically done with `write_file`. For shell-piped writes, use `node scripts/write-state.js` (atomic temp-file + rename).
+For shell-piped writes, use `node scripts/write-state.js` (atomic temp-file + rename).
 
 ## Script Reference
 
@@ -111,7 +113,7 @@ Configured in `hooks/hooks.json`:
 | `AfterAgent` | `hooks/after-agent.js` | Validates delegated response contains `Task Report` and `Downstream Context`; requests one retry if malformed |
 | `SessionEnd` | `hooks/session-end.js` | Removes session hook state directory |
 
-Shared hook helpers live in `src/lib/` modules (`hooks/hook-state`, `hooks/hook-response`, `hooks/hook-facade`, `core/logger`, `core/stdin-reader`, `state/session-id-validator`, `core/agent-registry`).
+Shared hook helpers live in `src/lib/` modules (`hooks/hook-state`, `hooks/hook-response`, `hooks/hook-facade`, `state/session-state`, `core/logger`, `core/stdin-reader`, `state/session-id-validator`, `core/agent-registry`).
 
 Gemini CLI hook-schema compatibility notes:
 

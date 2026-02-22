@@ -72,7 +72,7 @@ Use `ask_user` with `type: 'choice'` for structured selections:
 }
 ```
 
-- `header`: Short label displayed as a chip/tag. Keep it <= 12 chars for cross-client compatibility (some clients enforce stricter limits than 16). Examples: `Database`, `Auth`, `Runtime`.
+- `header`: Short label displayed as a chip/tag. Must not exceed 16 characters (enforced by Gemini CLI validation). Examples: `Database`, `Auth`, `Runtime`.
 - `options`: 2-4 items, each with `label` (1-5 words) and `description`
 
 Include your recommendation rationale in the question text so the user has context before choosing.
@@ -125,7 +125,7 @@ Present the design document in sections, validating each before proceeding. Each
 2. Requirements (Functional, Non-Functional, Constraints)
 3. Approach (Selected Approach, Alternatives Considered)
 4. Architecture (Component Diagram, Data Flow, Key Interfaces)
-5. Agent Team Composition & Phase Plan
+5. Agent Team
 6. Risk Assessment & Mitigation
 7. Success Criteria
 
