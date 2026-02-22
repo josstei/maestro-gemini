@@ -249,10 +249,10 @@ Maestro works out of the box with sensible defaults. To customize behavior, set 
 
 | Environment Variable | Default | Description |
 |---------------------|---------|-------------|
-| `MAESTRO_DEFAULT_MODEL` | _(inherit)_ | Model used by all agents unless individually overridden |
-| `MAESTRO_WRITER_MODEL` | _(inherit)_ | Model for technical_writer agent |
-| `MAESTRO_DEFAULT_TEMPERATURE` | `0.2` | Temperature for all agents (0.0-2.0) |
-| `MAESTRO_MAX_TURNS` | `25` | Maximum turns per subagent execution |
+| `MAESTRO_DEFAULT_MODEL` | _(inherit)_ | Model override for parallel-dispatched agents (sequential delegation inherits main session model) |
+| `MAESTRO_WRITER_MODEL` | _(inherit)_ | Model override for technical_writer agent in parallel dispatch only |
+| `MAESTRO_DEFAULT_TEMPERATURE` | _(inherit)_ | Temperature override for delegation prompts (agents define own defaults in frontmatter) |
+| `MAESTRO_MAX_TURNS` | _(inherit)_ | Max turns override per agent (agents define own defaults in frontmatter) |
 | `MAESTRO_AGENT_TIMEOUT` | `10` | Timeout in minutes per subagent |
 | `MAESTRO_DISABLED_AGENTS` | _(none)_ | Comma-separated list of agents to exclude |
 | `MAESTRO_MAX_RETRIES` | `2` | Retry attempts per phase before escalation |
@@ -273,7 +273,7 @@ You can configure extension-scoped settings interactively with `gemini extension
 | Role | Model | Purpose |
 |------|-------|---------|
 | Inherited | _(main session model)_ | All agents inherit the model from the main Gemini CLI session |
-| Override | `MAESTRO_DEFAULT_MODEL` | Set to a specific model (e.g., `gemini-2.5-pro`) to override all agents |
+| Override | `MAESTRO_DEFAULT_MODEL` | Set to a specific model (e.g., `gemini-2.5-pro`) to override parallel-dispatched agents |
 
 All agents omit the `model` field by default, inheriting the main session's model selection. Override via `MAESTRO_DEFAULT_MODEL` or `MAESTRO_WRITER_MODEL` environment variables. These overrides apply to parallel dispatch only — sequentially delegated subagents always inherit the main session model.
 
@@ -303,7 +303,7 @@ graph TB
     TL -->|Phase 3| EX[Execution]
     TL -->|Phase 4| CO[Completion]
 
-    EX -->|Sequential| DA[Subagent Tools]
+    EX -->|Sequential| DA[Gemini CLI Delegation]
     EX -->|Parallel| PD[parallel-dispatch.js]
 
     DA --> Agents
@@ -365,7 +365,7 @@ With plan approval, the TechLead:
 #### Phase 4: Completion
 
 After all phases complete:
-- Final review of all deliverables
+- Final `code_reviewer` quality gate — blocks completion on unresolved Critical/Major findings
 - Session state marked as completed
 - Plans and state files archived to `archive/` subdirectories
 - Summary delivered with files changed, token usage, and next steps
@@ -469,6 +469,7 @@ Maestro creates the following directories in your project:
 ```
 <your-project>/
 └── .gemini/
+    ├── parallel/                       # Parallel dispatch batches
     ├── plans/                          # Active design docs and implementation plans
     │   ├── archive/                    # Completed plans
     │   ├── YYYY-MM-DD-<topic>-design.md

@@ -1240,8 +1240,8 @@ Maestro works out of the box with sensible defaults. To customize behavior, set 
 |----------|---------|-------------|
 | `MAESTRO_DEFAULT_MODEL` | _(inherit from main session)_ | Model override for agents dispatched via parallel execution (has no effect on sequential delegation) |
 | `MAESTRO_WRITER_MODEL` | _(inherit from main session)_ | Model override for the technical_writer agent in parallel execution (has no effect on sequential delegation) |
-| `MAESTRO_DEFAULT_TEMPERATURE` | `0.2` | Temperature for all agents (0.0-2.0) |
-| `MAESTRO_MAX_TURNS` | `25` | Maximum turns per subagent execution |
+| `MAESTRO_DEFAULT_TEMPERATURE` | _(inherit)_ | Temperature override for delegation prompts (agents define own defaults in frontmatter) |
+| `MAESTRO_MAX_TURNS` | _(inherit)_ | Max turns override per agent (agents define own defaults in frontmatter) |
 | `MAESTRO_AGENT_TIMEOUT` | `10` | Timeout in minutes per subagent |
 | `MAESTRO_DISABLED_AGENTS` | _(none)_ | Comma-separated list of agents to exclude from planning |
 | `MAESTRO_MAX_RETRIES` | `2` | Retry attempts per phase before user escalation |
