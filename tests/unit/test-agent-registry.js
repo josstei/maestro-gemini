@@ -35,6 +35,21 @@ describe('detectAgentFromPrompt()', () => {
     );
   });
 
+  it('accepts hyphenated agent aliases in delegation patterns', () => {
+    assert.equal(
+      detectAgentFromPrompt('hand off to the security-engineer for review'),
+      'security_engineer'
+    );
+    assert.equal(
+      detectAgentFromPrompt('delegate to technical-writer for docs'),
+      'technical_writer'
+    );
+  });
+
+  it('accepts hyphenated agent aliases in @mentions', () => {
+    assert.equal(detectAgentFromPrompt('Please ask @code-reviewer to audit this'), 'code_reviewer');
+  });
+
   it('returns empty string for no delegation pattern', () => {
     assert.equal(
       detectAgentFromPrompt('You are the tester agent. Run the test suite.'),
@@ -66,6 +81,17 @@ describe('detectAgentFromPrompt()', () => {
     process.env.MAESTRO_CURRENT_AGENT = 'unknown_agent';
     try {
       assert.equal(detectAgentFromPrompt('delegate to coder'), 'coder');
+    } finally {
+      if (orig === undefined) delete process.env.MAESTRO_CURRENT_AGENT;
+      else process.env.MAESTRO_CURRENT_AGENT = orig;
+    }
+  });
+
+  it('normalizes hyphenated MAESTRO_CURRENT_AGENT to canonical name', () => {
+    const orig = process.env.MAESTRO_CURRENT_AGENT;
+    process.env.MAESTRO_CURRENT_AGENT = 'code-reviewer';
+    try {
+      assert.equal(detectAgentFromPrompt('delegate to coder'), 'code_reviewer');
     } finally {
       if (orig === undefined) delete process.env.MAESTRO_CURRENT_AGENT;
       else process.env.MAESTRO_CURRENT_AGENT = orig;

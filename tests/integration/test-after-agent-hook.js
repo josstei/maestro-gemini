@@ -22,6 +22,7 @@ describe('AfterAgent hook', { concurrency: 1 }, () => {
     cleanHookState('test-after-002');
     cleanHookState('test-after-003');
     cleanHookState('test-after-004');
+    cleanHookState('test-after-005');
   });
 
   it('validates well-formed handoff report and allows', () => {
@@ -60,7 +61,33 @@ describe('AfterAgent hook', { concurrency: 1 }, () => {
 
     assert.equal(result.decision, 'deny');
     assert.ok('reason' in result);
-    assert.equal(readHookStateAgent('test-after-002'), 'coder');
+    assert.equal(readHookStateAgent('test-after-002'), '');
+  });
+
+  it('does not keep stale active agent after deny', () => {
+    writeHookStateAgent('test-after-005', 'coder');
+
+    const first = runHookJson(AFTER_AGENT_HOOK, {
+      session_id: 'test-after-005',
+      transcript_path: '/tmp/t',
+      cwd: '/tmp',
+      hook_event_name: 'AfterAgent',
+      timestamp: '2026-02-17T00:00:00Z',
+      prompt_response: 'missing expected sections',
+      stop_hook_active: false,
+    });
+    assert.equal(first.decision, 'deny');
+
+    const second = runHookJson(AFTER_AGENT_HOOK, {
+      session_id: 'test-after-005',
+      transcript_path: '/tmp/t',
+      cwd: '/tmp',
+      hook_event_name: 'AfterAgent',
+      timestamp: '2026-02-17T00:00:01Z',
+      prompt_response: 'also missing expected sections',
+      stop_hook_active: false,
+    });
+    assert.equal(second.decision, 'allow');
   });
 
   it('allows malformed report when stop_hook_active is true', () => {

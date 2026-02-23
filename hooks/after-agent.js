@@ -21,6 +21,7 @@ function handler(ctx) {
         log('WARN', `AfterAgent [${agentName}]: Retry still malformed: ${reason} — allowing to prevent infinite loop`);
       } else {
         log('WARN', `AfterAgent [${agentName}]: WARN: ${reason} — requesting retry`);
+        hookState.clearActiveAgent(ctx.sessionId);
         return response.deny(`Handoff report validation failed: ${reason}. Please include both a ## Task Report section and a ## Downstream Context section in your response.`);
       }
     } else {
