@@ -178,6 +178,7 @@ async function main() {
         stderr: stderrFd,
         cwd: projectRoot,
         env: { ...process.env, MAESTRO_CURRENT_AGENT: normalizedName },
+        shell: process.platform === 'win32',
       },
       config.timeoutMs
     ).then((result) => {

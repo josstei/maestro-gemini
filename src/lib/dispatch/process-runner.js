@@ -20,7 +20,7 @@ function runWithTimeout(command, args, options = {}, timeoutMs) {
   }
 
   return new Promise((resolve) => {
-    const { stdin: stdinStream, stdout: stdoutDest, stderr: stderrDest, cwd, env } = options;
+    const { stdin: stdinStream, stdout: stdoutDest, stderr: stderrDest, cwd, env, shell } = options;
 
     const spawnOptions = {
       stdio: [
@@ -30,7 +30,7 @@ function runWithTimeout(command, args, options = {}, timeoutMs) {
       ],
       cwd,
       env: env || process.env,
-      shell: process.platform === 'win32',
+      shell: shell || false,
     };
 
     const child = spawn(command, args, spawnOptions);
