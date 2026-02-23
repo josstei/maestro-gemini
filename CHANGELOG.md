@@ -5,64 +5,6 @@ All notable changes to Maestro will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Fixed
-
-- **Documentation accuracy audit (3-agent parallel, round 2)** — Second Opus-parallel audit of all documentation against source code, fixing 11 discrepancies across 5 files:
-  - README.md: Fixed broken anchor link `#maestroOrchestrate` → `#maestroorchestrate`
-  - CHANGELOG.md: Fixed v1.1.0 settings count (10 → 13), marked `MAESTRO_WRITER_MODEL` and `MAESTRO_STATE_DIR` as restored in v1.2.0, corrected `model: auto` to `model` field omitted, added module count (13 → 16) to [Unreleased] reorganization entry
-  - skills/delegation/SKILL.md: Clarified active agent clearing behavior (cleared on every allow, preserved on deny for retry)
-  - skills/execution/SKILL.md: Distinguished dispatch config resolution from direct `resolveSetting()` for `MAESTRO_CLEANUP_DISPATCH`
-  - docs/architecture/comprehensive-map.md: Added "(no fetch)" qualifier to `data_engineer` and `technical_writer` web tool entries
-- **Documentation accuracy audit (3-agent parallel)** — Opus-parallel audit of all documentation against source code, fixing 7 discrepancies across 6 files:
-  - CHANGELOG.md: Noted `hookEventName` restoration in 1.2.1 (was listed as removed in 1.2.0, re-added in Node.js rewrite)
-  - CLAUDE.md: Expanded `allowWithContext()` description to include both `hookEventName` and `additionalContext` fields
-  - GEMINI.md: Added missing "no active agent" skip condition to AfterAgent hook description
-  - skills/delegation/SKILL.md: Changed "Read-Only Agents" label to "Assessment Agents" for agents with shell access but no write tools
-  - skills/design-dialogue/SKILL.md: Aligned section name to match `templates/design-document.md` ("Agent Team")
-  - docs/architecture/agent-system.md: Documented hyphen-to-underscore normalization in prompt filename matching
-- **Documentation accuracy audit** — Systematic audit of all documentation against source code, fixing discrepancies across 8 files:
-  - CLAUDE.md: Added missing `templates/*.md` and `package.json` to runtime surfaces and source-of-truth files
-  - README.md: Fixed agent tool table to show baseline tool set (`read_file`, `list_directory`, `glob`, `grep_search`, `read_many_files`, `ask_user`) separately from additional per-agent tools; added `ask_user` to Tool Access Philosophy; linked `comprehensive-map.md`
-  - USAGE.md: Documented `code_reviewer` quality gate in Phase 4 for both `/maestro:orchestrate` and `/maestro:execute`; fixed incomplete workspace directory tree to include `plans/`, `plans/archive/`, and `parallel/`
-  - skills-and-commands.md: Corrected inaccurate claim that `code-review` is activated "transitively via execution skill" — it runs directly in Phase 4
-  - system-overview.md: Fixed incomplete hook list summary to mention all four lifecycle hooks
-  - agent-system.md: Added missing `after-agent.js` active agent clearing behavior
-  - comprehensive-map.md: Added `gemini-extension.json`, `GEMINI.md`, `package.json` to component map; fixed agent names to use canonical `snake_case`; expanded `templates/`, `skills/`, and `tests/` descriptions
-
-### Changed
-
-- **src/lib reorganization** — Flat 13-module `src/lib/` directory decomposed into 16 domain-scoped modules across subdirectories (`core/`, `config/`, `hooks/`, `state/`, `dispatch/`) with single-responsibility modules and improved naming conventions
-- **Constants dissolved** — Grab-bag `constants.js` eliminated; each constant inlined into its domain owner
-- **Mixed-concern files split** — `settings.js` split into `env-file-parser`, `setting-resolver`, `project-root-resolver`; `validation.js` split into `session-id-validator` and `agent-registry`; `dispatch-config.js` split into `integer-parser` and `dispatch-config-resolver`; `stdin.js` split into `stdin-reader` with `get`/`getBool` absorbed into hook facade
-- **Improved naming** — `file-utils.js` → `atomic-write.js`, `process.js` → `process-runner.js`, `response.js` → `hook-response.js`, `maestro.js` → `hook-facade.js`, `concurrency.js` → `concurrency-limiter.js`
-
-## [1.2.1] - 2026-02-19
-
-### Changed
-
-- **Cross-platform Node.js rewrite** — All bash and python3 hooks and scripts rewritten to pure Node.js (zero npm dependencies) for Windows PowerShell compatibility; `hookEventName` re-added to hook output (removed in 1.2.0 bash version, restored as part of `allowWithContext()` response structure)
-- **Layered module architecture** — 13 shared `src/lib/` modules (constants, hook-state, logger, process, response, settings, state, stdin, validation, file-utils, dispatch-config, concurrency, maestro) composed by thin hook and script entry points
-- **Hook-state factory pattern** — `createHookState(baseDir)` replaces mutable `_setBaseDirForTest` singleton for clean test isolation
-- **Session hook registration** — SessionStart and SessionEnd hooks registered in `hooks/hooks.json`
-- **Parallel dispatch output** — Status messages moved from stdout to stderr (via logger) to avoid mixing with result data
-- **Settings env resolution** — Uses `os.homedir()` instead of `HOME`/`USERPROFILE` fallback; inline comment stripping in `.env` parsing
-- **Process management** — `child.pid` guarded before kill operations; `timeoutMs` validated as positive finite number
-- **Path validation** — `resolveActiveSessionPath` validates relative `MAESTRO_STATE_DIR` against path traversal
-- **Agent detection** — `MAESTRO_CURRENT_AGENT` env var validated against `KNOWN_AGENTS`; regex patterns hoisted to module-level constants
-- **After-agent retry** — Active agent preserved on deny to enable re-validation on retry
-
-### Added
-
-- **91 unit tests** — `tests/unit/` covering all 13 `src/lib/` modules including readJson, stdin piping, timeoutMs validation, concurrency gate, and inline comment parsing
-- **Node.js integration tests** — All 8 integration tests migrated from bash to Node.js with `node:test`; consistent `{ concurrency: 1 }` across shared-state tests
-
-### Removed
-
-- **bash/python3 runtime dependencies** — Node.js is guaranteed available via Gemini CLI
-- All `.sh` hook and script files replaced by `.js` equivalents
-
 ## [1.2.0] - 2026-02-19
 
 ### Added
@@ -71,11 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Agent tracking** — BeforeAgent/AfterAgent hooks track active agent identity via `/tmp/maestro-hooks/<session-id>/active-agent`; lazy state creation on first write, stale-pruned during BeforeAgent
 - **Handoff report validation** — AfterAgent hook validates delegated agent output includes `Task Report` and `Downstream Context`; skips TechLead and non-delegation turns; requests one retry on malformed output
 - **Active session gating** — `has_active_maestro_session` helper allows hooks to skip initialization when no Maestro session exists in the workspace
-- **Final code review quality gate** — Phase 4 completion requires a `code_reviewer` pass on non-documentation file changes before archival; blocks on unresolved Critical/Major findings with remediation loop
+- **Final code review quality gate** — Phase 4 completion requires a `code-reviewer` pass on non-documentation file changes before archival; blocks on unresolved Critical/Major findings with remediation loop
 - **14 extension settings** — All `MAESTRO_*` env vars declared in `gemini-extension.json`: `DEFAULT_MODEL`, `WRITER_MODEL`, `DEFAULT_TEMPERATURE`, `MAX_TURNS`, `AGENT_TIMEOUT`, `DISABLED_AGENTS`, `MAX_RETRIES`, `AUTO_ARCHIVE`, `VALIDATION_STRICTNESS`, `STATE_DIR`, `MAX_CONCURRENT`, `STAGGER_DELAY`, `GEMINI_EXTRA_ARGS`, `EXECUTION_MODE`
-- **`MAESTRO_WRITER_MODEL`** (restored) — Per-agent model override for technical_writer in parallel dispatch
+- **`MAESTRO_WRITER_MODEL`** — Per-agent model override for technical-writer in parallel dispatch
 - **`MAESTRO_GEMINI_EXTRA_ARGS`** — Space-separated Gemini CLI flags forwarded to each parallel dispatch process
-- **`MAESTRO_STATE_DIR`** (restored) — Configurable state directory with `extensionPath` resolution and env/workspace/extension/default precedence
+- **`MAESTRO_STATE_DIR`** — Configurable state directory with `extensionPath` resolution and env/workspace/extension/default precedence
 - **`read-active-session.sh`** — Script to resolve the active session file path respecting `MAESTRO_STATE_DIR`
 - **macOS timeout fallback** — Cancel-file-based watchdog with SIGTERM/SIGKILL for systems without GNU `timeout`
 - **Shell helper library** (`hooks/lib/common.sh`) — `read_stdin`, `json_get`, `json_get_bool`, `respond_allow`, `respond_block`, `log_hook`, `validate_session_id`, `resolve_active_session_path`, `has_active_maestro_session`, `prune_stale_hook_state`
@@ -90,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Lazy hook lifecycle** — SessionStart and SessionEnd removed from `hooks.json` registration; hook state created lazily by BeforeAgent and stale-pruned inline (2-hour threshold)
-- All 12 agents: `model` field omitted (inherits main session model), canonical `grep_search` tool name, unified Handoff Report output contract
+- All 12 agents: switched to `model: auto` (inherits main session model), canonical `grep_search` tool name, unified Handoff Report output contract
 - `parallel-dispatch.sh`: sets `MAESTRO_CURRENT_AGENT` per spawned process, forwards `MAESTRO_GEMINI_EXTRA_ARGS`, warns on deprecated `--allowed-tools` flag
 - Commands moved from `commands/maestro.*.toml` to `commands/maestro/*.toml` (directory-based namespace)
 - Protocols moved from `protocols/` to `skills/delegation/protocols/` (co-located with delegation skill)
@@ -115,11 +57,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Delegation paths corrected in skills to use `activate_skill` resources
 - State template synced with runtime expectations
 - `read_file` ignore enforcement and state access asymmetry clarified in skills
-- Agent roster corrections: `run_shell_command` removed from refactor, `get_internal_docs` removed from devops_engineer and technical_writer
+- Agent roster corrections: `run_shell_command` removed from refactor, `get_internal_docs` removed from devops-engineer and technical-writer
 - macOS timeout support in parallel dispatch
 
 ### Removed
 
+- **SessionStart/SessionEnd hook registrations** from `hooks.json` — functionality absorbed by BeforeAgent lazy init and inline pruning; scripts retained as standalone utilities
 - `before-tool.sh`, `before-tool-selection.sh`, `after-tool.sh` hooks — native frontmatter `tools:` handles tool enforcement
 - `BeforeModel` hook — Gemini CLI discards model field from hook output
 - `permissions.json` and `generate-permissions.sh` — redundant with native frontmatter enforcement
@@ -142,7 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Extension settings with 13 configurable parameters via environment variables
+- Extension settings with 10 configurable parameters via environment variables
 - Maestro branded dark theme with warm gold accents
 - Shell-based parallel dispatch for concurrent subagent execution (`scripts/parallel-dispatch.sh`)
 - Agent base protocol with pre-flight procedures and structured output formatting
