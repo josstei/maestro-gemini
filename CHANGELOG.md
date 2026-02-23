@@ -5,6 +5,31 @@ All notable changes to Maestro will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-02-19
+
+### Added
+
+- Expanded Node.js unit and integration test coverage for hooks, dispatch, settings resolution, state helpers, and process timeout behavior
+- Pull request CI workflow running `node tests/run-all.js` on both `ubuntu-latest` and `windows-latest`
+
+### Changed
+
+- **Cross-platform Node.js runtime** — Hook and script execution migrated from bash/python to pure Node.js for Windows PowerShell compatibility
+- **`src/lib` decomposition** — Shared runtime logic reorganized into domain modules under `core/`, `config/`, `hooks/`, `state/`, and `dispatch/`
+- **Agent naming standardization** — Canonical agent identifiers now use `snake_case`; prompt/env handling normalizes hyphenated aliases to canonical names
+- **Windows shell safety** — Shell mode made opt-in to avoid `cmd.exe` argument mangling on Windows terminals
+
+### Fixed
+
+- **AfterAgent stale-state loop** — Active agent state is cleared before deny responses to prevent sticky handoff validation on unrelated turns
+- **Windows test stability** — Dispatch and session test behavior aligned with `windows-latest` runner semantics
+- **Hook/process robustness** — Timeout handling, PID guards, and file-descriptor cleanup hardened across dispatch and hook pathways
+
+### Removed
+
+- Bash and Python runtime dependencies for hooks/scripts
+- Legacy `.sh` hook and state helper scripts, replaced by `.js` entry points
+
 ## [1.2.0] - 2026-02-19
 
 ### Added
