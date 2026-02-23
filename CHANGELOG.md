@@ -5,72 +5,31 @@ All notable changes to Maestro will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.1] - 2026-02-19
 
 ### Added
 
+- **Expanded test coverage** — Added 91 unit tests and migrated integration tests to Node.js to validate hooks, dispatch, state handling, config resolution, and timeout behavior
 - **Cross-platform PR CI matrix** — Added GitHub Actions workflow (`.github/workflows/ci.yml`) running `node tests/run-all.js` on both `ubuntu-latest` and `windows-latest`
+
+### Changed
+
+- **Cross-platform runtime migration** — Replaced bash/Python hook and script execution paths with Node.js entry points for Windows PowerShell compatibility
+- **Layered module architecture** — Reorganized shared runtime into focused modules under `src/lib/core`, `src/lib/config`, `src/lib/hooks`, `src/lib/state`, and `src/lib/dispatch`
+- **Hook lifecycle and context output** — Registered SessionStart/SessionEnd hooks and standardized hook response context metadata (`hookEventName` + `additionalContext`) via shared hook helpers
+- **Dispatch and settings behavior** — Moved operational logs to stderr, standardized env resolution/parsing, strengthened integer/path validation, and enforced canonical snake_case agent naming with hyphen alias normalization
+- **Windows shell behavior** — Made shell mode opt-in to avoid `cmd.exe` argument mangling in Windows terminal flows
+- **Documentation alignment** — Updated project documentation to align with current codebase behavior, naming conventions, and workflows
 
 ### Fixed
 
-- **Windows validation stability** — Resolved Windows-specific dispatch/session test failures and aligned integration harness behavior with `windows-latest` runner semantics
-- **AfterAgent stale-state loop** — Active agent state now clears on deny responses to prevent sticky handoff validation across unrelated turns
-- **Agent alias compatibility** — Prompt detection and `MAESTRO_CURRENT_AGENT` now accept hyphenated aliases (for example `code-reviewer`) while normalizing to canonical `snake_case`
-- **Settings header limits** — Extension setting names shortened where needed to satisfy Gemini CLI `ask_user` header length validation
-- **Documentation accuracy audit (3-agent parallel, round 2)** — Second Opus-parallel audit of all documentation against source code, fixing 11 discrepancies across 5 files:
-  - README.md: Fixed broken anchor link `#maestroOrchestrate` → `#maestroorchestrate`
-  - CHANGELOG.md: Fixed v1.1.0 settings count (10 → 13), marked `MAESTRO_WRITER_MODEL` and `MAESTRO_STATE_DIR` as restored in v1.2.0, corrected `model: auto` to `model` field omitted, added module count (13 → 16) to [Unreleased] reorganization entry
-  - skills/delegation/SKILL.md: Clarified active agent clearing behavior
-  - skills/execution/SKILL.md: Distinguished dispatch config resolution from direct `resolveSetting()` for `MAESTRO_CLEANUP_DISPATCH`
-  - docs/architecture/comprehensive-map.md: Added "(no fetch)" qualifier to `data_engineer` and `technical_writer` web tool entries
-- **Documentation accuracy audit (3-agent parallel)** — Opus-parallel audit of all documentation against source code, fixing 7 discrepancies across 6 files:
-  - CHANGELOG.md: Noted `hookEventName` restoration in 1.2.1 (was listed as removed in 1.2.0, re-added in Node.js rewrite)
-  - CLAUDE.md: Expanded `allowWithContext()` description to include both `hookEventName` and `additionalContext` fields
-  - GEMINI.md: Added missing "no active agent" skip condition to AfterAgent hook description
-  - skills/delegation/SKILL.md: Changed "Read-Only Agents" label to "Assessment Agents" for agents with shell access but no write tools
-  - skills/design-dialogue/SKILL.md: Aligned section name to match `templates/design-document.md` ("Agent Team")
-  - docs/architecture/agent-system.md: Documented hyphen-to-underscore normalization in prompt filename matching
-- **Documentation accuracy audit** — Systematic audit of all documentation against source code, fixing discrepancies across 8 files:
-  - CLAUDE.md: Added missing `templates/*.md` and `package.json` to runtime surfaces and source-of-truth files
-  - README.md: Fixed agent tool table to show baseline tool set (`read_file`, `list_directory`, `glob`, `grep_search`, `read_many_files`, `ask_user`) separately from additional per-agent tools; added `ask_user` to Tool Access Philosophy; linked `comprehensive-map.md`
-  - USAGE.md: Documented `code_reviewer` quality gate in Phase 4 for both `/maestro:orchestrate` and `/maestro:execute`; fixed incomplete workspace directory tree to include `plans/`, `plans/archive/`, and `parallel/`
-  - skills-and-commands.md: Corrected inaccurate claim that `code-review` is activated "transitively via execution skill" — it runs directly in Phase 4
-  - system-overview.md: Fixed incomplete hook list summary to mention all four lifecycle hooks
-  - agent-system.md: Added missing `after-agent.js` active agent clearing behavior
-  - comprehensive-map.md: Added `gemini-extension.json`, `GEMINI.md`, `package.json` to component map; fixed agent names to use canonical `snake_case`; expanded `templates/`, `skills/`, and `tests/` descriptions
-
-### Changed
-
-- **Windows shell invocation mode** — Shell mode is now opt-in to avoid `cmd.exe` argument mangling in Windows terminal flows
-- **src/lib reorganization** — Flat 13-module `src/lib/` directory decomposed into 16 domain-scoped modules across subdirectories (`core/`, `config/`, `hooks/`, `state/`, `dispatch/`) with single-responsibility modules and improved naming conventions
-- **Constants dissolved** — Grab-bag `constants.js` eliminated; each constant inlined into its domain owner
-- **Mixed-concern files split** — `settings.js` split into `env-file-parser`, `setting-resolver`, `project-root-resolver`; `validation.js` split into `session-id-validator` and `agent-registry`; `dispatch-config.js` split into `integer-parser` and `dispatch-config-resolver`; `stdin.js` split into `stdin-reader` with `get`/`getBool` absorbed into hook facade
-- **Improved naming** — `file-utils.js` → `atomic-write.js`, `process.js` → `process-runner.js`, `response.js` → `hook-response.js`, `maestro.js` → `hook-facade.js`, `concurrency.js` → `concurrency-limiter.js`
-
-## [1.2.1] - 2026-02-19
-
-### Changed
-
-- **Cross-platform Node.js rewrite** — All bash and python3 hooks and scripts rewritten to pure Node.js (zero npm dependencies) for Windows PowerShell compatibility; `hookEventName` re-added to hook output (removed in 1.2.0 bash version, restored as part of `allowWithContext()` response structure)
-- **Layered module architecture** — 13 shared `src/lib/` modules (constants, hook-state, logger, process, response, settings, state, stdin, validation, file-utils, dispatch-config, concurrency, maestro) composed by thin hook and script entry points
-- **Hook-state factory pattern** — `createHookState(baseDir)` replaces mutable `_setBaseDirForTest` singleton for clean test isolation
-- **Session hook registration** — SessionStart and SessionEnd hooks registered in `hooks/hooks.json`
-- **Parallel dispatch output** — Status messages moved from stdout to stderr (via logger) to avoid mixing with result data
-- **Settings env resolution** — Uses `os.homedir()` instead of `HOME`/`USERPROFILE` fallback; inline comment stripping in `.env` parsing
-- **Process management** — `child.pid` guarded before kill operations; `timeoutMs` validated as positive finite number
-- **Path validation** — `resolveActiveSessionPath` validates relative `MAESTRO_STATE_DIR` against path traversal
-- **Agent detection** — `MAESTRO_CURRENT_AGENT` env var validated against `KNOWN_AGENTS`; regex patterns hoisted to module-level constants
-- **After-agent retry** — Active agent preserved on deny to enable re-validation on retry
-
-### Added
-
-- **91 unit tests** — `tests/unit/` covering all 13 `src/lib/` modules including readJson, stdin piping, timeoutMs validation, concurrency gate, and inline comment parsing
-- **Node.js integration tests** — All 8 integration tests migrated from bash to Node.js with `node:test`; consistent `{ concurrency: 1 }` across shared-state tests
+- **Windows stability fixes** — Resolved Windows-specific dispatch/session regressions and aligned integration harness behavior with `windows-latest` runner semantics
+- **AfterAgent stale-state handling** — Cleared active-agent state on deny responses to prevent sticky handoff validation across unrelated turns
+- **Process safety hardening** — Added PID guards, timeout validation, descriptor cleanup safeguards, and safer stale hook-state handling
 
 ### Removed
 
-- **bash/python3 runtime dependencies** — Node.js is guaranteed available via Gemini CLI
-- All `.sh` hook and script files replaced by `.js` equivalents
+- **Legacy shell runtime paths** — Removed `.sh` hooks/scripts and bash/Python runtime dependencies in favor of Node.js equivalents
 
 ## [1.2.0] - 2026-02-19
 
