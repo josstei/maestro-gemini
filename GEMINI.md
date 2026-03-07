@@ -42,28 +42,20 @@ Before running orchestration commands:
 
 | Setting | envVar | Default | Usage |
 | --- | --- | --- | --- |
-| Default Model | `MAESTRO_DEFAULT_MODEL` | inherit | Parallel dispatch model flag |
-| Writer Model | `MAESTRO_WRITER_MODEL` | inherit | Parallel dispatch override for `technical_writer` |
-| Temperature | `MAESTRO_DEFAULT_TEMPERATURE` | inherit | Delegation prompt metadata override (agents define own defaults in frontmatter) |
-| Max Agent Turns | `MAESTRO_MAX_TURNS` | inherit | Delegation prompt metadata override (agents define own defaults in frontmatter) |
-| Agent Timeout | `MAESTRO_AGENT_TIMEOUT` | `10` min | Delegation timeout metadata and dispatch timeout |
 | Disabled Agents | `MAESTRO_DISABLED_AGENTS` | none | Exclude agents from assignment |
 | Max Retries | `MAESTRO_MAX_RETRIES` | `2` | Phase retry limit |
 | Auto Archive | `MAESTRO_AUTO_ARCHIVE` | `true` | Auto archive on success |
 | Validation | `MAESTRO_VALIDATION_STRICTNESS` | `normal` | Validation gating mode |
-| State Directory | `MAESTRO_STATE_DIR` | `.gemini` | Session/plans/parallel state root |
-| Max Concurrent | `MAESTRO_MAX_CONCURRENT` | `0` | Parallel concurrency cap |
-| Stagger Delay | `MAESTRO_STAGGER_DELAY` | `5` sec | Launch delay between parallel agents |
-| Extra CLI Args | `MAESTRO_GEMINI_EXTRA_ARGS` | none | Forwarded to each parallel-dispatched `gemini` process |
+| State Directory | `MAESTRO_STATE_DIR` | `.gemini` | Session and plan state root |
+| Max Concurrent | `MAESTRO_MAX_CONCURRENT` | `0` | Native parallel batch chunk size (`0` means dispatch the entire ready batch) |
 | Execution Mode | `MAESTRO_EXECUTION_MODE` | `ask` | Execute phase mode selection (`ask`, `parallel`, `sequential`) |
 
-**Note:** Settings fall into three categories. *Dispatch-backed* settings (`MAESTRO_DEFAULT_MODEL`, `MAESTRO_WRITER_MODEL`, `MAESTRO_AGENT_TIMEOUT`, `MAESTRO_MAX_CONCURRENT`, `MAESTRO_STAGGER_DELAY`, `MAESTRO_GEMINI_EXTRA_ARGS`) are resolved by `dispatch-config-resolver.js` with code-level defaults. *State-resolution* setting (`MAESTRO_STATE_DIR`) is resolved by `read-active-session.js` via `resolveSetting()` and consumed by `session-state.js` with `.gemini` default — it is not part of the dispatch config pipeline. *Orchestrator-prompt-only* settings (`MAESTRO_DEFAULT_TEMPERATURE`, `MAESTRO_MAX_TURNS`, `MAESTRO_MAX_RETRIES`, `MAESTRO_AUTO_ARCHIVE`, `MAESTRO_VALIDATION_STRICTNESS`, `MAESTRO_DISABLED_AGENTS`, `MAESTRO_EXECUTION_MODE`) are consumed from this prompt context and have no code-level consumer.
+**Note:** `MAESTRO_STATE_DIR` is resolved by `read-active-session.js` through exported env, workspace `.env`, extension `.env`, then default `.gemini`. The remaining Maestro settings are orchestration inputs. Native agent model, temperature, turn, and timeout tuning come from agent frontmatter and Gemini CLI `agents.overrides`, not Maestro process flags.
 
-Additional script-only controls:
+Additional controls:
 
-- `MAESTRO_CLEANUP_DISPATCH=true`: remove prompt directory after dispatch
-- `MAESTRO_CURRENT_AGENT`: exported per parallel process for hook correlation
 - `MAESTRO_EXTENSION_PATH`: override extension root for setting resolution (defaults to ~/.gemini/extensions/maestro)
+- `MAESTRO_CURRENT_AGENT`: legacy fallback for hook correlation only; primary identity now comes from the required `Agent:` delegation header
 
 ## Four-Phase Workflow
 
@@ -88,6 +80,7 @@ Plan output path handling:
 ### Phase 3: Execute
 
 - Activate `execution` and `delegation`.
+- **Resolve execution mode gate** before any delegation (mandatory — see execution skill).
 - Activate `validation` for quality gates.
 - Keep `write_todos` in sync with execution progress.
 - Update session state after each phase or parallel batch.
@@ -105,51 +98,51 @@ Plan output path handling:
 
 `MAESTRO_EXECUTION_MODE` controls execute behavior:
 
-- `ask`: prompt user before execute phase
-- `parallel`: run parallel dispatch without prompting
+- `ask`: prompt user before execute phase with plan-based recommendation
+- `parallel`: run ready phases as native parallel subagent batches
 - `sequential`: run one phase at a time without prompting
 
-Record selected mode in session state as `execution_mode`.
+The execution skill's mode gate is the authoritative protocol. It analyzes the implementation plan and presents a recommendation via `ask_user`. The gate must resolve before any delegation proceeds.
 
-## Parallel Dispatch Contract
+Record selected mode in session state as `execution_mode`. Set `execution_backend: native`.
 
-Parallel batches are executed by `node scripts/parallel-dispatch.js`.
+## Native Parallel Contract
+
+Parallel batches use Gemini CLI's native subagent scheduler. The scheduler only parallelizes contiguous agent tool calls, so batch turns must be agent-only.
 
 Workflow:
 
-1. Write full per-agent prompts to `<state_dir>/parallel/<batch-id>/prompts/*.txt`.
-2. Run dispatch script: `node ./scripts/parallel-dispatch.js <dispatch-dir>`.
-3. Script resolves model/timeout/concurrency/extra args using precedence above.
-4. Script starts one process per prompt:
-   - `gemini --approval-mode=yolo --output-format json [model flags] [extra args]`
-5. Prompt payload is streamed to `gemini` over stdin (not `--prompt`).
-6. Script writes:
-   - `<dispatch-dir>/results/<agent>.json`
-   - `<dispatch-dir>/results/<agent>.exit`
-   - `<dispatch-dir>/results/<agent>.log`
-   - `<dispatch-dir>/results/summary.json`
-7. Script exits with failure count; timeout maps to exit `124`.
+1. Identify the ready batch from the approved plan. Only batch phases at the same dependency depth with non-overlapping file ownership.
+2. Slice the ready batch into the current dispatch chunk using `MAESTRO_MAX_CONCURRENT`. `0` means dispatch the entire ready batch in one turn.
+3. Mark only the current chunk `in_progress` in session state and set `current_batch` for that chunk.
+4. Call `write_todos` once for the current chunk.
+5. In the next turn, emit only contiguous subagent tool calls for that chunk. Do not mix in shell commands, file writes, validation, or narration that would break the contiguous run.
+6. Every delegation query must begin with:
+   - `Agent: <agent_name>`
+   - `Phase: <id>/<total>`
+   - `Batch: <batch_id|single>`
+   - `Session: <session_id>`
+7. Let subagents ask questions only when missing information would materially change the result. Native parallel batches may pause for those questions.
+8. Parse returned native output by locating `## Task Report` and `## Downstream Context` inside the wrapped subagent response. Do not assume the handoff starts at byte 0.
+9. Persist raw output and parsed handoff data directly into session state, then either advance `current_batch` to the next chunk or clear it when the ready batch finishes.
 
 Constraints:
 
-- Parallel prompts must be complete and self-contained.
-- Parallel agents run with `--approval-mode=yolo`; assume autonomous operation.
+- Native subagents currently run in YOLO mode.
 - Avoid overlapping file ownership across agents in the same batch.
-- Prefer `--policy` in `MAESTRO_GEMINI_EXTRA_ARGS`; `--allowed-tools` is deprecated.
+- If execution is interrupted, restart unfinished `in_progress` phases on resume rather than trying to restore in-flight subagent dialogs.
 
 ## Delegation Rules
 
 When building delegation prompts:
 
 1. Use agent frontmatter defaults from `agents/<name>.md`. Agent names use **underscores** (e.g., `technical_writer`, `api_designer`), not hyphens.
-2. Apply global overrides (`MAESTRO_DEFAULT_TEMPERATURE`, `MAESTRO_MAX_TURNS`, `MAESTRO_AGENT_TIMEOUT`).
-3. For parallel dispatch only, apply model flags:
-   - `MAESTRO_DEFAULT_MODEL`
-   - `MAESTRO_WRITER_MODEL` for `technical_writer`
-4. Inject shared protocols from:
+2. Do not rely on Maestro-level model, temperature, turn, or timeout overrides. Use agent frontmatter and Gemini CLI `agents.overrides` for native tuning.
+3. Inject shared protocols from:
    - `skills/delegation/protocols/agent-base-protocol.md`
    - `skills/delegation/protocols/filesystem-safety-protocol.md`
-5. Include dependency downstream context from session state.
+4. Include dependency downstream context from session state.
+5. Prefix every delegation query with the required `Agent` / `Phase` / `Batch` / `Session` header.
 
 ## Content Writing Rule
 
@@ -168,9 +161,8 @@ Resolve `<state_dir>` from `MAESTRO_STATE_DIR` (default `.gemini`):
 - Active session: `<state_dir>/state/active-session.md`
 - Plans: `<state_dir>/plans/`
 - Archives: `<state_dir>/state/archive/`, `<state_dir>/plans/archive/`
-- Parallel batches: `<state_dir>/parallel/`
 
-Use `read_file` and `write_file` directly on state paths — the project `.geminiignore` makes them accessible to Gemini CLI tools.
+Use `read_file` and `write_file` directly on state paths — the project `.geminiignore` makes them accessible to Gemini CLI tools. Native parallel execution does not create prompt/result artifact directories under state; batch output is recorded directly in session state.
 
 `/maestro:status` and `/maestro:resume` use `node ${MAESTRO_EXTENSION_PATH:-$HOME/.gemini/extensions/maestro}/scripts/read-active-session.js` in their TOML shell blocks to inject state before the model's first turn.
 

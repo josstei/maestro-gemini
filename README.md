@@ -1,6 +1,6 @@
 # Maestro
 
-[![Version](https://img.shields.io/badge/version-1.2.1-blue)](https://github.com/josstei/maestro-gemini/releases)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue)](https://github.com/josstei/maestro-gemini/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-extension-orange)](https://geminicli.com)
 

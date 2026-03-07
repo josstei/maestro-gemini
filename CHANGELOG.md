@@ -5,6 +5,27 @@ All notable changes to Maestro will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-03-07
+
+### Added
+
+- **Plan-based execution mode recommendation** — When `MAESTRO_EXECUTION_MODE=ask` (default), the orchestrator analyzes the implementation plan's dependency graph and presents a data-driven parallel vs sequential recommendation via `ask_user`
+- **Execution mode gate enforcement** — `<HARD-GATE>` language in the execution skill ensures the mode prompt cannot be skipped; safety fallback stops delegation if `execution_mode` is missing from session state
+- **Mandatory gate references across all entry points** — `orchestrate`, `execute`, and `resume` command prompts all enforce the execution mode gate before any delegation proceeds
+
+### Changed
+
+- **Native-only parallel execution** — Replaced script-based parallel dispatch (`parallel-dispatch.js`, `process-runner.js`, `concurrency-limiter.js`) with Gemini CLI's native subagent scheduler; parallel batches are now contiguous agent tool calls in a single turn
+- **Simplified extension settings** — Removed script-dispatch-only settings (`MAESTRO_DEFAULT_MODEL`, `MAESTRO_WRITER_MODEL`, `MAESTRO_DEFAULT_TEMPERATURE`, `MAESTRO_MAX_TURNS`, `MAESTRO_AGENT_TIMEOUT`, `MAESTRO_STAGGER_DELAY`, `MAESTRO_GEMINI_EXTRA_ARGS`); native tuning uses agent frontmatter and Gemini CLI `agents.overrides`
+- **`MAESTRO_MAX_CONCURRENT` redefined** — Now controls native parallel batch chunk size (how many subagent calls per turn) instead of subprocess concurrency limit
+- **Execution skill rewrite** — Structured 5-step mode gate protocol with plan analysis, `ask_user` call format, and recommendation logic covering all parallelization percentages
+- **GEMINI.md orchestrator context** — Updated Phase 3 description and Execution Mode Protocol section to reference the execution skill as the authoritative gate source
+
+### Removed
+
+- **Script-based dispatch backend** — Removed `scripts/parallel-dispatch.js`, `src/lib/dispatch/process-runner.js`, `src/lib/dispatch/concurrency-limiter.js`, `src/lib/config/dispatch-config-resolver.js`, and all associated tests
+- **Dispatch-only extension settings** — Removed 7 settings from `gemini-extension.json` that only applied to the script dispatch backend
+
 ## [1.2.1] - 2026-02-19
 
 ### Added
