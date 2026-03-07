@@ -29,8 +29,9 @@ The current session state is provided below:
    - Any unresolved errors
    - What will happen next
 3. If errors exist from the last run, present them and ask for guidance before retrying
-4. Continue execution from the last active/pending phase using the execution skill's protocols
-5. Activate the `delegation` skill when delegating to subagents
-6. Activate the `validation` skill to verify phase outputs
+4. Verify `execution_mode` is set in session state. If missing, resolve the execution mode gate from the execution skill before any delegation — this is mandatory
+5. Continue execution from the last active/pending phase using the execution skill's protocols
+6. Activate the `delegation` skill when delegating to subagents
+7. Activate the `validation` skill to verify phase outputs
 
 If the session state above shows "No active session", inform the user and suggest using `/maestro:orchestrate` to start one."""

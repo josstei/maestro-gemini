@@ -37,6 +37,7 @@ Record these counts — they feed into the prompt.
 
 - If parallelizable phases > 50% of total phases → recommend **parallel**
 - If parallelizable phases ≤ 1 → recommend **sequential**
+- Otherwise (parallelizable > 1 but ≤ 50%) → recommend **sequential** (limited parallelization benefit)
 - The recommended option appears first in the `ask_user` options list with "(Recommended)" appended to its label
 
 ### Step 4 — Prompt the user
