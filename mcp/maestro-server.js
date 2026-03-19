@@ -37536,12 +37536,12 @@ ${bodyContent || ""}`;
       const plansArchiveDir = path.join(basePath, "plans", "archive");
       fs.mkdirSync(plansArchiveDir, { recursive: true });
       const docPaths = [state.design_document, state.implementation_plan].filter(Boolean);
-      const resolvedRoot = path.resolve(projectRoot) + path.sep;
+      const resolvedPlansDir = path.resolve(path.join(basePath, "plans")) + path.sep;
       for (const docPath of docPaths) {
         const absDocPath = path.resolve(
           path.isAbsolute(docPath) ? docPath : path.join(projectRoot, docPath)
         );
-        if (!absDocPath.startsWith(resolvedRoot)) continue;
+        if (!absDocPath.startsWith(resolvedPlansDir)) continue;
         if (fs.existsSync(absDocPath)) {
           const destPath = path.join(plansArchiveDir, path.basename(absDocPath));
           fs.renameSync(absDocPath, destPath);
