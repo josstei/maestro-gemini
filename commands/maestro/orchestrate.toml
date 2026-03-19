@@ -186,32 +186,11 @@ Do not interpret silence or a non-approval answer as plan approval.
 ## Execution Mode Gate
 
 Resolve execution mode immediately after the implementation plan is approved.
+Activate the `execution` skill and follow its Execution Mode Gate section.
+The skill contains the authoritative gate protocol including plan analysis,
+recommendation logic, user prompting, and session state recording.
 
-1. Read `MAESTRO_EXECUTION_MODE`. Treat the effective default as `ask` unless the environment pins it to `parallel` or `sequential`.
-2. Analyze the approved plan and count:
-   - total phases
-   - parallel-eligible phases
-   - distinct parallel batches
-   - sequential-only phases
-   - any overlapping-file warnings
-3. If the configured mode is `parallel` or `sequential`, record it in session state and restate it to the user before delegation begins.
-4. If the configured mode is `ask`, present a `ask_user with type: 'choice'` for execution mode:
-   - recommend `parallel` when at least two phases can run safely in parallel across one or more batches
-   - otherwise recommend `sequential`
-5. Record `execution_mode` in session state before the first implementation delegation.
-
-Use this shape for the execution-mode picker:
-
-```text
-Execution mode: [parallel-eligible] of [total] phases can run in parallel across [batches] batch(es). How should Maestro execute the approved plan?
-
-1. Parallel (Recommended) - Spawn child agents for each ready batch where file ownership does not overlap.
-2. Sequential - Spawn one child agent at a time in dependency order for tighter review and recovery.
-
-Use the picker for this choice. If the picker is unavailable, stop and report that limitation instead of continuing with plain text.
-```
-
-When `sequential` is recommended, swap the order of the options and update the rationale accordingly.
+Do not duplicate the gate logic here — the execution skill is the single source of truth.
 
 ## Delegation Requirement
 

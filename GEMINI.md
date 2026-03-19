@@ -108,6 +108,25 @@ This routing is a hard gate — do not mix workflows. If Express is selected, sk
 
 Express mode is for `simple` tasks only. It replaces the 4-phase ceremony with a streamlined flow. Do not activate any skills — all behavior is defined inline below.
 
+<HARD-GATE>
+Express sessions MUST contain exactly one implementation phase with exactly one agent.
+If the task requires multiple phases, multiple agents, or cross-phase file dependencies,
+it is not simple — escalate to Standard workflow by overriding classification to `medium`.
+Do not create an Express session with more than one phase under any circumstance.
+</HARD-GATE>
+
+<ANTI-PATTERN>
+WRONG — Express session with multiple phases:
+  phases: [{id: 1, agent: "coder"}, {id: 2, agent: "design_system_engineer"},
+           {id: 3, agent: "technical_writer"}, {id: 4, agent: "code_reviewer"}]
+
+This violates Express. Multiple agents/phases = Standard workflow.
+
+CORRECT — Express session with one phase:
+  phases: [{id: 1, agent: "coder"}]
+  Code review is handled in Express Flow step 5 (a fixed delegation, not a separate implementation phase).
+</ANTI-PATTERN>
+
 ### Express Flow
 
 1. **Clarifying questions** (1-2 `ask_user` turns): Ask from Area 1 (Problem Scope & Boundaries) only. Combine or skip sub-questions already answered by the task description. Use `type: 'choice'` where possible.
@@ -134,11 +153,16 @@ Express mode is for `simple` tasks only. It replaces the 4-phase ceremony with a
    Approve to proceed?
    ```
 
+   The brief describes work for one **implementing** agent in one phase. If you find yourself
+   listing multiple implementing agents or splitting work into stages, STOP — escalate to
+   Standard workflow. (The code review in step 5 is a separate, fixed part of Express ceremony,
+   not an additional implementation phase.)
+
    Before presenting, verify the selected agent is not in `MAESTRO_DISABLED_AGENTS`. If disabled, select an alternative or escalate to Standard workflow.
 
    If rejected: revise and re-present. On second rejection, escalate to Standard workflow — override classification to `medium` and follow the Standard Workflow section from the beginning.
 
-3. **Create session** (1 MCP call): Call `create_session` with `workflow_mode: "express"`, `design_document: null`, `implementation_plan: null`, and a single phase. Do not create the session before brief approval.
+3. **Create session** (1 MCP call): Call `create_session` with `workflow_mode: "express"`, `design_document: null`, `implementation_plan: null`, and exactly one phase (the `phases` array MUST have length 1). Do not create the session before brief approval.
 
 4. **Delegate** (1-2 agent calls): Follow the delegation-rules fragment for protocol injection — read `agent-base-protocol.md` and `filesystem-safety-protocol.md` once, prepend to all delegation prompts. Include required headers (`Agent:`, `Phase: 1/1`, `Session:`). Protocol files are read once and reused for all delegations in this workflow.
 
@@ -228,6 +252,11 @@ Plan output path handling:
 - Archive via `session-management` (respecting `MAESTRO_AUTO_ARCHIVE`).
 - Provide final summary and recommended next steps.
 - If a memory-saving tool is available, save key cross-session findings with `[Maestro]` prefix. Key entries include: architectural decisions, project conventions established, and recurring patterns discovered.
+
+**Pre-check:** If `workflow_mode` is `express`, this entire protocol is skipped.
+Express dispatches sequentially without prompting. Do not continue reading this section.
+
+---
 
 ## Execution Mode Protocol
 

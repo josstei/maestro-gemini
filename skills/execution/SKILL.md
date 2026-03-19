@@ -9,10 +9,15 @@ Activate this skill during Phase 3 (Execution) of Maestro orchestration. This sk
 
 ## Execution Mode Gate
 
+### Step 0 — Express bypass (early return)
+
+If `workflow_mode` is `express` in the current session, STOP HERE. Do not proceed
+to the execution mode gate. Do not prompt the user. Do not resolve execution mode.
+Express always dispatches sequentially. Return to the Express Workflow and continue
+from the delegation step.
+
 <HARD-GATE>
 This gate MUST resolve before ANY delegation proceeds. Do not skip it. Do not defer it. Do not begin delegating to subagents until execution_mode is recorded in session state. If you reach a delegation step and execution_mode is not set, STOP and return here.
-
-**Exception:** If `workflow_mode` is `express`, this gate does not apply. Express workflow bypasses execution-mode resolution entirely and dispatches sequentially.
 </HARD-GATE>
 
 ### Step 1 — Read the configured mode
@@ -31,26 +36,45 @@ Before prompting the user, analyze the approved plan to generate a recommendatio
 2. Count phases marked `parallel: true` (parallelizable phases)
 3. Count distinct parallel batches (groups of parallelizable phases at the same dependency depth)
 4. Count sequential-only phases (phases with `blocked_by` dependencies that prevent parallelization)
-5. Check for any overlapping file ownership warnings across parallel-eligible phases
+5. Cross-check file ownership across all phases. If any two phases share a file in their `files` arrays, those phases CANNOT be parallel-eligible — subtract them from the parallelizable count. Report each overlap as an Overlapping-file Warning in the prompt.
+
+6. If `validate_plan` was called during planning and returned a `parallelization_profile`, use its `parallel_eligible` and `effective_batches` counts as the authoritative source for items 1-5 above. These are computed from actual dependency depths and override any manual flag-based counts. If `parallelization_profile` is not available, use the counts from items 1-5 as-is.
 
 Record these counts — they feed into the prompt.
 
 ### Step 3 — Determine the recommendation
 
+- If parallelizable phases ≤ 1 → auto-select **sequential**. Call `update_session` with `{ execution_mode: 'sequential', execution_backend: 'native' }`. Inform the user: "All phases are sequential — no parallel batches available." Skip to delegation. Do NOT prompt with a choice. (Parallelism requires at least 2 phases at the same dependency depth; a single parallel-eligible phase has nothing to batch with.)
 - If parallelizable phases > 50% of total phases → recommend **parallel**
-- If parallelizable phases ≤ 1 → recommend **sequential**
-- Otherwise (parallelizable > 1 but ≤ 50%) → recommend **sequential** (limited parallelization benefit)
-- The recommended option appears first in the `ask_user` options list with "(Recommended)" appended to its label
-
-### Step 3a — Reconcile with validate_plan profile
-
-If `validate_plan` was called during planning and returned a `parallelization_profile`, use its `parallel_eligible` and `effective_batches` counts as the authoritative source for Steps 2-3. These are computed from actual dependency depths and override any manual flag-based counts.
-
-If `parallelization_profile` is not available, compute counts from the plan's `blocked_by` structure using dependency depth analysis. Do not count `parallel: true` flags without verifying that the flagged phases actually share a dependency depth with at least one other phase.
+- If parallelizable phases ≤ 50% but > 1 → recommend **sequential** (limited benefit)
+- The recommended option appears first in the `ask_user` options list with "(Recommended)" appended to its label. The non-recommended option MUST NOT include "(Recommended)" in its label.
 
 ### Step 4 — Prompt the user
 
-Call `ask_user` with `type: 'choice'`. The question must include the plan analysis numbers so the user can make an informed decision.
+Call `ask_user` with `type: 'choice'` using exactly one of these option sets:
+
+**When recommending parallel:**
+  options:
+    - label: "Parallel (Recommended)"
+      description: "Spawn child agents for each ready batch where file ownership does not overlap."
+    - label: "Sequential (High Precision)"
+      description: "Spawn one child agent at a time in dependency order."
+
+**When recommending sequential:**
+  options:
+    - label: "Sequential (Recommended)"
+      description: "Spawn one child agent at a time in dependency order."
+    - label: "Parallel"
+      description: "Spawn child agents for each ready batch where file ownership does not overlap."
+
+<ANTI-PATTERN>
+WRONG — Both options labeled "(Recommended)":
+  options:
+    - label: "Parallel (Recommended)"
+    - label: "Sequential (High Precision) (Recommended)"
+
+Only ONE option receives the "(Recommended)" suffix. Never both.
+</ANTI-PATTERN>
 
 When parallel is recommended:
 
