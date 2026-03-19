@@ -25,6 +25,7 @@ Thumbs.db
 # AI tooling
 .gemini/
 .claude/
+.superpowers/
 CLAUDE.md
 
 # Worktrees
